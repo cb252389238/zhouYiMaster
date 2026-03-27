@@ -799,22 +799,20 @@ function initLiuYao() {
     lyCurrentYao = 0;
     lyIsTossing = false;
     
-    document.getElementById('lyStartDiv').style.display = 'block';
-    document.getElementById('lyTossArea').style.display = 'none';
-    document.getElementById('lyGuaDiv').style.display = 'none';
-}
-
-// 开始起卦
-function startLiuYao() {
-    lyYaoci = [];
-    lyCurrentYao = 1;
-    lyIsTossing = false;
-    
-    document.getElementById('lyStartDiv').style.display = 'none';
+    // 直接显示铜钱投掷区域，初始展示三枚铜钱字面（正面）
     document.getElementById('lyTossArea').style.display = 'block';
     document.getElementById('lyGuaDiv').style.display = 'none';
     
-    updateLiuYaoProgress();
+    // 设置三枚铜钱初始显示字面（有字面.png）
+    document.getElementById('lyCoin1').src = 'image/有字面.png';
+    document.getElementById('lyCoin2').src = 'image/有字面.png';
+    document.getElementById('lyCoin3').src = 'image/有字面.png';
+    
+    // 清空结果显示
+    document.getElementById('lyResult').innerHTML = '';
+    
+    // 重置进度显示
+    document.getElementById('lyProgress').textContent = '第 1 爻';
 }
 
 // 更新进度显示
@@ -827,21 +825,26 @@ function tossCoins() {
     if (lyIsTossing) return;
     lyIsTossing = true;
     
+    // 第一次投掷时初始化爻序
+    if (lyCurrentYao === 0) {
+        lyCurrentYao = 1;
+        updateLiuYaoProgress();
+    }
+    
     const coins = [
         document.getElementById('lyCoin1'),
         document.getElementById('lyCoin2'),
         document.getElementById('lyCoin3')
     ];
     
-    // 添加滚动动画
+    // 添加滚动动画（添加到wrapper上）
     coins.forEach(coin => {
-        coin.classList.add('rolling');
-        coin.textContent = '';
+        coin.parentElement.classList.add('rolling');
     });
     
-    // 3 秒后停止
+    // 1.5 秒后停止
     setTimeout(() => {
-        coins.forEach(coin => coin.classList.remove('rolling'));
+        coins.forEach(coin => coin.parentElement.classList.remove('rolling'));
         
         // 投掷三枚铜钱
         let total = 0;
@@ -853,9 +856,8 @@ function tossCoins() {
             results.push(value);
             total += value;
             
-            // 显示铜钱结果
-            coin.textContent = value === 3 ? '3' : '2';
-            coin.className = `ly-coin ${value === 3 ? 'yang' : 'yin'}`;
+            // 显示铜钱结果：有字面=2，无字面=3
+            coin.src = value === 2 ? 'image/有字面.png' : 'image/无字面.png';
         });
         
         // 保存爻的结果
@@ -891,7 +893,7 @@ function tossCoins() {
                 showLiuYaoResult();
             }
         }, 500);
-    }, 3000);
+    }, 1500);
 }
 
 // 显示卦象结果
