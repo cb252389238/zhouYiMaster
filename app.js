@@ -27,12 +27,46 @@ let lyYaoci = []; // 存储六爻结果（从下往上）
 let lyCurrentYao = 0; // 当前投掷第几爻（1-6）
 let lyIsTossing = false; // 是否正在投掷
 
+// HTML 转义，避免注音渲染时破坏页面结构
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// 判断是否为汉字
+function isChineseChar(char) {
+    return /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/.test(char);
+}
+
+// 将文本转换为带拼音注音的 HTML
+function formatTextWithPinyin(text) {
+    if (!text) return '';
+
+    return Array.from(text).map(char => {
+        if (!isChineseChar(char)) {
+            return escapeHtml(char);
+        }
+
+        const pinyin = (typeof pinyinMap !== 'undefined' && pinyinMap[char]) ? pinyinMap[char] : '';
+        if (!pinyin) {
+            return `<span class="plain-char">${escapeHtml(char)}</span>`;
+        }
+
+        return `<ruby class="pinyin-ruby"><rb>${escapeHtml(char)}</rb><rt>${escapeHtml(pinyin)}</rt></ruby>`;
+    }).join('');
+}
+
 // 显示首页
 function showHome() {
     hideAllModules();
     document.getElementById('homeModule').style.display = 'grid';
     currentModule = null;
 }
+
 
 // 隐藏所有模块
 function hideAllModules() {
@@ -554,8 +588,9 @@ function showGuaDetail(gua, isRootGua = false) {
     
     document.getElementById('cxGuaName').textContent = guaNameDisplay;
     
-    // 显示卦辞
-    document.getElementById('cxTuanshi').textContent = gua.tuanshi;
+    // 显示卦辞（带拼音注音）
+    document.getElementById('cxTuanshi').innerHTML = formatTextWithPinyin(gua.tuanshi);
+
     
     // 显示爻辞
     renderYaociList(gua);
@@ -584,10 +619,14 @@ function renderYaociList(gua) {
         yaoItem.className = 'yaoci-item';
         yaoItem.dataset.yaoNum = yaoNum;
         yaoItem.onclick = () => toggleYaociChange(yaoNum);
+
+        const parts = yaoci.split('：');
+        const yaociTitle = parts[0] || '';
+        const yaociContent = parts[1] || parts[0] || '';
         
         yaoItem.innerHTML = `
-            <div class="yaoci-title">第${yaoNum}爻：${yaoci.split('：')[0]}</div>
-            <div class="yaoci-content">${yaoci.split('：')[1] || yaoci}</div>
+            <div class="yaoci-title">第${yaoNum}爻：${formatTextWithPinyin(yaociTitle)}</div>
+            <div class="yaoci-content">${formatTextWithPinyin(yaociContent)}</div>
         `;
         
         container.appendChild(yaoItem);

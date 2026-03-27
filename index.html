@@ -289,10 +289,47 @@
 
         .yaoci-item .yaoci-content {
             color: #666;
-            line-height: 1.6;
+            line-height: 1.8;
+        }
+
+        .pinyin-ruby {
+            ruby-align: center;
+            ruby-position: over;
+            margin: 0 0.03em;
+        }
+
+        .pinyin-ruby rt {
+            font-size: 0.55em;
+            color: #667eea;
+            letter-spacing: 0.02em;
+            user-select: none;
+        }
+
+        .plain-char {
+            display: inline;
+        }
+
+        #cxTuanshi,
+        .yaoci-title,
+        .yaoci-content {
+            word-break: break-word;
+        }
+
+        #cxTuanshi {
+            line-height: 2.2;
+            color: #444;
+        }
+
+        .yaoci-title {
+            line-height: 2;
+        }
+
+        .yaoci-content {
+            line-height: 2.1;
         }
 
         /* 卦象符号样式 - 支持变爻高亮 */
+
         .gua-symbol-container {
             display: inline-block;
             text-align: center;
@@ -567,7 +604,7 @@
             <!-- 卦象详情区域 -->
             <div id="cxGuaDetail" style="display: none;">
                 <div style="margin-bottom: 15px;">
-                    <button class="back-btn" onclick="backToBaguaSelect()">← 返回首页</button>
+                    <button class="back-btn" onclick="backToBaguaSelect()">← 返回上一页</button>
                     <button class="back-btn" onclick="backToRootGua()" id="cxBackToRootBtn" style="display: none; margin-left: 10px;">← 返回本卦</button>
                 </div>
                 
@@ -606,6 +643,8 @@
     </div>
 
     <script src="yizhou-data.js"></script>
+    <script src="pinyin-data.js"></script>
     <script src="app.js"></script>
+
 </body>
 </html>
