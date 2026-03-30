@@ -309,11 +309,162 @@
             display: inline;
         }
 
+        .cx-detail-layout {
+            display: block;
+        }
+
+
+        .cx-char-btn {
+            appearance: none;
+            border: none;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            padding: 0.08em 0.12em;
+            margin: 0 0.04em;
+            border-radius: 10px;
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+            vertical-align: baseline;
+            font: inherit;
+            line-height: inherit;
+        }
+
+        .cx-char-btn:hover {
+            background: rgba(102, 126, 234, 0.12);
+            color: #4a59c7;
+            transform: translateY(-1px);
+        }
+
+        .cx-char-btn.active {
+            background: rgba(102, 126, 234, 0.18);
+            color: #3647c1;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.18);
+            transform: scale(1.28);
+        }
+
+        .cx-char-btn-large {
+            font-size: 1.08em;
+        }
+
+        .cx-char-ruby {
+            ruby-align: center;
+            ruby-position: over;
+        }
+
+        .cx-char-panel {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: min(360px, calc(100vw - 24px));
+            background: linear-gradient(180deg, #ffffff 0%, #f6f8ff 100%);
+            border: 1px solid rgba(102, 126, 234, 0.16);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 16px 36px rgba(93, 108, 196, 0.16);
+            display: none;
+            z-index: 1000;
+        }
+
+
+        .cx-char-panel.active {
+            display: block;
+        }
+
+        .cx-char-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .cx-char-panel-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 68px;
+            height: 68px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #667eea, #8a63d2);
+            color: #fff;
+            font-size: 2.1em;
+            font-weight: bold;
+            box-shadow: 0 10px 24px rgba(102, 126, 234, 0.28);
+            flex-shrink: 0;
+        }
+
+        .cx-char-panel-title-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cx-char-panel-title {
+            font-size: 1.2em;
+            color: #27304f;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .cx-char-panel-tip {
+            color: #667085;
+            font-size: 0.92em;
+            line-height: 1.6;
+        }
+
+        .cx-char-panel-close {
+            border: none;
+            background: rgba(102, 126, 234, 0.1);
+            color: #5060c8;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1em;
+            flex-shrink: 0;
+        }
+
+        .cx-char-panel-close:hover {
+            background: rgba(102, 126, 234, 0.18);
+        }
+
+        .cx-char-panel-section {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(102, 126, 234, 0.08);
+        }
+
+        .cx-char-panel-section h4 {
+            color: #5060c8;
+            margin-bottom: 8px;
+            font-size: 0.98em;
+        }
+
+        .cx-char-panel-section p {
+            color: #3f4657;
+            line-height: 1.8;
+            font-size: 0.98em;
+        }
+
+        @keyframes cxPanelFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
         #cxTuanshi,
+
         .yaoci-title,
         .yaoci-content {
             word-break: break-word;
         }
+
 
         #cxTuanshi {
             line-height: 2.2;
@@ -531,9 +682,36 @@
 
         /* 移动端适配 */
         @media (max-width: 768px) {
+            .cx-char-panel {
+                width: min(320px, calc(100vw - 20px));
+                max-height: min(70vh, 560px);
+                overflow-y: auto;
+                border-radius: 20px;
+            }
+
+            .cx-char-panel-header {
+                position: sticky;
+                top: 0;
+                background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(246,248,255,0.96) 100%);
+                padding-bottom: 8px;
+                z-index: 1;
+            }
+
+            .cx-char-panel-badge {
+                width: 56px;
+                height: 56px;
+                font-size: 1.8em;
+            }
+
+            .cx-char-btn.active {
+                transform: scale(1.18);
+            }
+
             body {
                 padding: 10px;
             }
+
+
 
             header h1 {
                 font-size: 2em;
@@ -735,40 +913,69 @@
             
             <!-- 卦象详情区域 -->
             <div id="cxGuaDetail" style="display: none;">
-                <div style="margin-bottom: 15px;">
-                    <button class="back-btn" onclick="backToBaguaSelect()">← 返回上一页</button>
-                    <button class="back-btn" onclick="backToRootGua()" id="cxBackToRootBtn" style="display: none; margin-left: 10px;">← 返回本卦</button>
-                </div>
-                
-                <div class="gua-image">
-                    <div class="gua-symbol" id="cxSymbol"></div>
-                </div>
-                <div class="gua-name-display" id="cxGuaName"></div>
-                
-                <!-- 互卦、综卦、错卦 -->
-                <div style="text-align: center; margin: 20px 0;">
-                    <button class="option-btn" id="cxHuguaBtn" onclick="jumpToGua('hugua')">互卦</button>
-                    <button class="option-btn" id="cxZongguaBtn" onclick="jumpToGua('zonggua')">综卦</button>
-                    <button class="option-btn" id="cxCuoguaBtn" onclick="jumpToGua('cuogua')">错卦</button>
-                </div>
-                
-                <!-- 卦辞 -->
-                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                    <h3 style="color: #667eea; margin-bottom: 10px;">卦辞</h3>
-                    <p id="cxTuanshi" style="font-size: 1.2em; line-height: 1.8;"></p>
-                </div>
-                
-                <!-- 爻辞 -->
-                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                    <h3 style="color: #667eea; margin-bottom: 15px;">爻辞（点击爻可标记变爻）</h3>
-                    <div id="cxYaociList"></div>
-                </div>
-                
-                <!-- 变卦按钮 -->
-                <div id="cvChangeGuaDiv" style="text-align: center; display: none;">
-                    <button class="next-btn" onclick="jumpToBianGua()">查看变卦</button>
+                <div class="cx-detail-layout">
+                    <div>
+                        <div style="margin-bottom: 15px;">
+                            <button class="back-btn" onclick="backToBaguaSelect()">← 返回上一页</button>
+                            <button class="back-btn" onclick="backToRootGua()" id="cxBackToRootBtn" style="display: none; margin-left: 10px;">← 返回本卦</button>
+                        </div>
+                        
+                        <div class="gua-image">
+                            <div class="gua-symbol" id="cxSymbol"></div>
+                        </div>
+                        <div class="gua-name-display" id="cxGuaName"></div>
+                        
+                        <!-- 互卦、综卦、错卦 -->
+                        <div style="text-align: center; margin: 20px 0;">
+                            <button class="option-btn" id="cxHuguaBtn" onclick="jumpToGua('hugua')">互卦</button>
+                            <button class="option-btn" id="cxZongguaBtn" onclick="jumpToGua('zonggua')">综卦</button>
+                            <button class="option-btn" id="cxCuoguaBtn" onclick="jumpToGua('cuogua')">错卦</button>
+                        </div>
+                        
+                        <!-- 卦辞 -->
+                        <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <h3 style="color: #667eea; margin-bottom: 10px;">卦辞</h3>
+                            <p id="cxTuanshi" style="font-size: 1.2em; line-height: 1.8;"></p>
+                        </div>
+                        
+                        <!-- 爻辞 -->
+                        <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">爻辞（点击爻可标记变爻，点击汉字看字源）</h3>
+                            <div id="cxYaociList"></div>
+                        </div>
+                        
+                        <!-- 变卦按钮 -->
+                        <div id="cvChangeGuaDiv" style="text-align: center; display: none;">
+                            <button class="next-btn" onclick="jumpToBianGua()">查看变卦</button>
+                        </div>
+                    </div>
+
+                    <aside id="cxCharPanel" class="cx-char-panel" aria-live="polite">
+                        <div class="cx-char-panel-header">
+                            <div class="cx-char-panel-badge cx-char-panel-glyph">字</div>
+                            <div class="cx-char-panel-title-wrap">
+                                <div class="cx-char-panel-title">点击任意汉字</div>
+                                <div class="cx-char-panel-tip">支持查看卦名、卦辞、爻辞中的单字起源、本义与意义演变。</div>
+                            </div>
+                            <button type="button" class="cx-char-panel-close" id="cxCharPanelClose" aria-label="关闭汉字释义弹窗">✕</button>
+                        </div>
+
+                        <div class="cx-char-panel-section">
+                            <h4>起源</h4>
+                            <p data-field="origin">点击左侧任意汉字后，这里会显示它在古文字或早期语境中的来源说明。</p>
+                        </div>
+                        <div class="cx-char-panel-section">
+                            <h4>最初含义</h4>
+                            <p data-field="originalMeaning">这里会展示该字较早期、更接近本义层面的解释。</p>
+                        </div>
+                        <div class="cx-char-panel-section">
+                            <h4>后续含义演变</h4>
+                            <p data-field="evolution">这里会说明该字在后世、尤其《易经》语境中的延伸含义。</p>
+                        </div>
+                    </aside>
                 </div>
             </div>
+
             
             <div id="cxResult"></div>
         </div>
