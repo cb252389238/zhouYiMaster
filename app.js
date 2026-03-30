@@ -330,7 +330,8 @@ function showGuaCiQuestion() {
     options.forEach(option => {
         const btn = document.createElement('div');
         btn.className = 'yaoci-option';
-        btn.textContent = option;
+        btn.dataset.originalText = option; // 保存原始文本用于答案比对
+        btn.innerHTML = formatTextWithPinyin(option); // 使用注音渲染
         btn.onclick = () => checkYaoCiAnswer(option, btn, currentGua.tuanshi);
         optionsContainer.appendChild(btn);
     });
@@ -353,7 +354,8 @@ function showYaoCiQuestion(yaoIndex) {
     options.forEach(option => {
         const btn = document.createElement('div');
         btn.className = 'yaoci-option';
-        btn.textContent = option;
+        btn.dataset.originalText = option; // 保存原始文本用于答案比对
+        btn.innerHTML = formatTextWithPinyin(option); // 使用注音渲染
         btn.onclick = () => checkYaoCiAnswer(option, btn, correctYaoci);
         optionsContainer.appendChild(btn);
     });
@@ -402,11 +404,11 @@ function checkYaoCiAnswer(selectedAnswer, btnElement, correctAnswer) {
     } else {
         btnElement.classList.add('wrong');
         resultDiv.className = 'result-area wrong';
-        resultDiv.innerHTML = `✗ 回答错误。正确答案是：${correctAnswer}`;
+        resultDiv.innerHTML = `✗ 回答错误。正确答案是：${formatTextWithPinyin(correctAnswer)}`;
         
         // 标出正确答案
         allButtons.forEach(btn => {
-            if (btn.textContent === correctAnswer) {
+            if (btn.dataset.originalText === correctAnswer) {
                 btn.classList.add('correct');
             }
         });
