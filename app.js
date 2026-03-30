@@ -852,13 +852,61 @@ function initLiuYao() {
     // 清空结果显示
     document.getElementById('lyResult').innerHTML = '';
     
+    // 清空爻象展示区域
+    document.getElementById('lyYaoDisplay').innerHTML = '';
+    
+    // 隐藏卦象结果区域
+    document.getElementById('lyFinalResult').style.display = 'none';
+    
+    // 重置按钮区域为投掷按钮
+    document.getElementById('lyButtonArea').innerHTML = `
+        <button class="option-btn" onclick="tossCoins()" id="lyTossBtn">投掷铜钱</button>
+    `;
+    
     // 重置进度显示
     document.getElementById('lyProgress').textContent = '第 1 爻';
+    
+    // 清空爻象显示区域
+    const yaoDisplay = document.getElementById('lyYaoDisplay');
+    if (yaoDisplay) {
+        yaoDisplay.innerHTML = '';
+    }
 }
 
 // 更新进度显示
 function updateLiuYaoProgress() {
     document.getElementById('lyProgress').textContent = `第 ${lyCurrentYao} 爻`;
+}
+
+// 根据六爻找出对应的卦
+function getGuaNameByYaoci(yaoci) {
+    const gua = findGuaByYaoci(yaoci);
+    if (!gua) return '';
+    
+    const upperElement = baguaElement[gua.upper];
+    const lowerElement = baguaElement[gua.lower];
+    
+    if (gua.upper === gua.lower) {
+        return `${gua.upper}为${baguaElement[gua.upper]}卦`;
+    } else {
+        return `${upperElement}${lowerElement}${gua.shortName}卦`;
+    }
+}
+
+// 渲染爻象符号（添加到爻象展示区域）
+function renderYaoSymbol(total) {
+    const isYang = (total === 7 || total === 9); // 少阳或老阳
+    const isOld = (total === 6 || total === 9);  // 老阴或老阳
+    
+    const symbol = isYang ? '⚊' : '⚋'; // 阳爻或阴爻
+    const className = isOld ? 'yao-line old' : 'yao-line normal';
+    
+    // 添加到爻象展示区域
+    const container = document.getElementById('lyYaoDisplay');
+    const yaoDiv = document.createElement('div');
+    yaoDiv.className = className;
+    yaoDiv.textContent = symbol;
+    container.appendChild(yaoDiv);
 }
 
 // 投掷铜钱
@@ -904,24 +952,8 @@ function tossCoins() {
         // 保存爻的结果
         lyYaoci.push(total);
         
-        // 显示结果 - 从下往上显示所有已摇的爻
-        let yaociDisplay = '';
-        lyYaoci.forEach((yao, index) => {
-            yaociDisplay += `<span style="margin: 0 10px;">${yao}</span>`;
-        });
-        
-        let resultText = '';
-        if (total === 6) {
-            resultText = '老阴';
-        } else if (total === 7) {
-            resultText = '少阳';
-        } else if (total === 8) {
-            resultText = '少阴';
-        } else if (total === 9) {
-            resultText = '老阳';
-        }
-        
-        document.getElementById('lyResult').innerHTML = `第${lyCurrentYao}爻：${total} (${resultText}) <br/> 已摇爻数 (从下往上): ${yaociDisplay}`;
+        // 渲染爻象符号（实时展示）
+        renderYaoSymbol(total);
         
         // 0.5 秒后准备下一爻
         setTimeout(() => {
@@ -934,22 +966,23 @@ function tossCoins() {
                 showLiuYaoResult();
             }
         }, 500);
-    }, 1500);
+    }, 800);
 }
 
-// 显示卦象结果
+// 显示卦象结果（在摇卦页面展示）
 function showLiuYaoResult() {
-    document.getElementById('lyTossArea').style.display = 'none';
-    document.getElementById('lyGuaDiv').style.display = 'block';
+    // 不隐藏 lyTossArea，改为在下方显示结果
+    const resultDiv = document.getElementById('lyFinalResult');
+    resultDiv.style.display = 'block';
     
     // 根据六爻找出对应的卦
     const gua = findGuaByYaoci(lyYaoci);
     
     if (gua) {
-        // 显示 Unicode 卦象符号
-        document.getElementById('lySymbol').textContent = gua.symbol;
+        // 保存当前卦
+        window.lyCurrentGua = gua;
         
-        // 显示卦名
+        // 显示卦名在爻象区域顶部
         const upperElement = baguaElement[gua.upper];
         const lowerElement = baguaElement[gua.lower];
         let guaNameDisplay;
@@ -960,10 +993,22 @@ function showLiuYaoResult() {
             guaNameDisplay = `${upperElement}${lowerElement}${gua.shortName}卦`;
         }
         
-        document.getElementById('lyGuaName').textContent = guaNameDisplay;
+        // 将卦名显示在进度信息位置
+        const progressDiv = document.getElementById('lyProgress');
+        progressDiv.textContent = guaNameDisplay;
+        progressDiv.style.fontSize = '1.5em';
+        progressDiv.style.fontWeight = 'bold';
+        progressDiv.style.color = '#667eea';
         
-        // 保存当前卦
-        window.lyCurrentGua = gua;
+        // 清空结果区域，不再显示卦象图、变卦信息和灰色按钮
+        resultDiv.innerHTML = '';
+        
+        // 替换投掷按钮为重新起卦和卦象详情按钮
+        const buttonArea = document.getElementById('lyButtonArea');
+        buttonArea.innerHTML = `
+            <button class="option-btn" onclick="resetLiuYao()" style="margin-right: 10px;">重新起卦</button>
+            <button class="option-btn" onclick="showLiuYaoDetail()">卦象详情</button>
+        `;
     }
 }
 
