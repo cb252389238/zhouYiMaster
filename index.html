@@ -128,6 +128,18 @@
             transition: all 0.3s;
         }
 
+        .related-gua-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .related-gua-actions .option-btn {
+            width: min(180px, 100%);
+        }
+
         .option-btn:hover {
             background: #667eea;
             color: white;
@@ -926,7 +938,7 @@
                         <div class="gua-name-display" id="cxGuaName"></div>
                         
                         <!-- 互卦、综卦、错卦 -->
-                        <div style="text-align: center; margin: 20px 0;">
+                        <div class="related-gua-actions">
                             <button class="option-btn" id="cxHuguaBtn" onclick="jumpToGua('hugua')">互卦</button>
                             <button class="option-btn" id="cxZongguaBtn" onclick="jumpToGua('zonggua')">综卦</button>
                             <button class="option-btn" id="cxCuoguaBtn" onclick="jumpToGua('cuogua')">错卦</button>
