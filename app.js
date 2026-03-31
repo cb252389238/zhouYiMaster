@@ -5265,13 +5265,21 @@ function tossCoins() {
     ];
     
     // 添加滚动动画（添加到wrapper上）
-    coins.forEach(coin => {
-        coin.parentElement.classList.add('rolling');
+    coins.forEach((coin, index) => {
+        const wrapper = coin.parentElement;
+        wrapper.classList.remove('rolling');
+        wrapper.offsetHeight;
+        wrapper.style.animationDelay = `${index * 70}ms`;
+        wrapper.classList.add('rolling');
     });
     
     // 1.5 秒后停止
     setTimeout(() => {
-        coins.forEach(coin => coin.parentElement.classList.remove('rolling'));
+        coins.forEach(coin => {
+            const wrapper = coin.parentElement;
+            wrapper.classList.remove('rolling');
+            wrapper.style.animationDelay = '';
+        });
         
         // 投掷三枚铜钱
         let total = 0;

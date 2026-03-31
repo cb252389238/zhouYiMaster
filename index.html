@@ -549,21 +549,26 @@
             justify-content: center;
             border-radius: 50%;
             overflow: hidden;
-            background: transparent;
+            background: #fff;
             box-shadow: none;
             border: none;
+            position: relative;
             perspective: 1000px; /* 3D透视效果 */
+            transform: translateZ(0);
         }
 
         .ly-coin {
-            width: 100%;
-            height: 100%;
+            width: 108%;
+            height: 108%;
+            margin: -4%;
             display: block;
             object-fit: cover;
             transition: transform 0.1s;
             border-radius: 50%;
             transform-style: preserve-3d; /* 保持3D效果 */
             backface-visibility: hidden; /* 隐藏背面 */
+            transform: translateZ(0);
+            will-change: transform;
         }
 
         .ly-coin-wrapper.rolling {
