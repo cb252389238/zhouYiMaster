@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>易师 - 易经学习工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .module-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .module-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .practice-area {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .practice-area.active {
+            display: block;
+        }
+
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 1em;
+        }
+
+        .back-btn:hover {
+            background: #5568d3;
+        }
+
+        .gua-image {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .gua-symbol {
+            font-size: 8em;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        .option-btn {
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s;
+        }
+
+        .related-gua-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .related-gua-actions .option-btn {
+            width: min(180px, 100%);
+        }
+
+        .option-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option-btn.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .option-btn.wrong {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .bagua-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        .bagua-btn {
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .bagua-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .bagua-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .result-area {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.3em;
+        }
+
+        .result-area.correct {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .result-area.wrong {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .next-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+
+        .next-btn:hover {
+            background: #45a049;
+        }
+
+        .progress-info {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        .gua-name-display {
+            text-align: center;
+            font-size: 2em;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .selected-bagua {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.5em;
+        }
+
+        .yaoci-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .yaoci-option {
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .yaoci-option:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 1.5em;
+            color: #667eea;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        /* 变爻样式 */
+        .yaoci-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .yaoci-item:hover {
+            background: #f5f5f5;
+            transform: translateX(5px);
+        }
+
+        .yaoci-item.changed {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+
+        .yaoci-item .yaoci-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .yaoci-item .yaoci-content {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .pinyin-ruby {
+            ruby-align: center;
+            ruby-position: over;
+            margin: 0 0.03em;
+        }
+
+        .pinyin-ruby rt {
+            font-size: 0.55em;
+            color: #667eea;
+            letter-spacing: 0.02em;
+            user-select: none;
+        }
+
+        .plain-char {
+            display: inline;
+        }
+
+        .cx-detail-layout {
+            display: block;
+        }
+
+
+        .cx-char-btn {
+            appearance: none;
+            border: none;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            padding: 0.08em 0.12em;
+            margin: 0 0.04em;
+            border-radius: 10px;
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+            vertical-align: baseline;
+            font: inherit;
+            line-height: inherit;
+        }
+
+        .cx-char-btn:hover {
+            background: rgba(102, 126, 234, 0.12);
+            color: #4a59c7;
+            transform: translateY(-1px);
+        }
+
+        .cx-char-btn.active {
+            background: rgba(102, 126, 234, 0.18);
+            color: #3647c1;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.18);
+            transform: scale(1.28);
+        }
+
+        .cx-char-btn-large {
+            font-size: 1.08em;
+        }
+
+        .cx-char-ruby {
+            ruby-align: center;
+            ruby-position: over;
+        }
+
+        .cx-char-panel {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: min(360px, calc(100vw - 24px));
+            background: linear-gradient(180deg, #ffffff 0%, #f6f8ff 100%);
+            border: 1px solid rgba(102, 126, 234, 0.16);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 16px 36px rgba(93, 108, 196, 0.16);
+            display: none;
+            z-index: 1000;
+        }
+
+
+        .cx-char-panel.active {
+            display: block;
+        }
+
+        .cx-char-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .cx-char-panel-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 68px;
+            height: 68px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #667eea, #8a63d2);
+            color: #fff;
+            font-size: 2.1em;
+            font-weight: bold;
+            box-shadow: 0 10px 24px rgba(102, 126, 234, 0.28);
+            flex-shrink: 0;
+        }
+
+        .cx-char-panel-title-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cx-char-panel-title {
+            font-size: 1.2em;
+            color: #27304f;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .cx-char-panel-tip {
+            color: #667085;
+            font-size: 0.92em;
+            line-height: 1.6;
+        }
+
+        .cx-char-panel-close {
+            border: none;
+            background: rgba(102, 126, 234, 0.1);
+            color: #5060c8;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1em;
+            flex-shrink: 0;
+        }
+
+        .cx-char-panel-close:hover {
+            background: rgba(102, 126, 234, 0.18);
+        }
+
+        .cx-char-panel-section {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(102, 126, 234, 0.08);
+        }
+
+        .cx-char-panel-section h4 {
+            color: #5060c8;
+            margin-bottom: 8px;
+            font-size: 0.98em;
+        }
+
+        .cx-char-panel-section p {
+            color: #3f4657;
+            line-height: 1.8;
+            font-size: 0.98em;
+        }
+
+        @keyframes cxPanelFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        #cxTuanshi,
+
+        .yaoci-title,
+        .yaoci-content {
+            word-break: break-word;
+        }
+
+
+        #cxTuanshi {
+            line-height: 2.2;
+            color: #444;
+        }
+
+        .yaoci-title {
+            line-height: 2;
+        }
+
+        .yaoci-content {
+            line-height: 2.1;
+        }
+
+        /* 卦象符号样式 - 支持变爻高亮 */
+
+        .gua-symbol-container {
+            display: inline-block;
+            text-align: center;
+            font-size: 2em;
+            line-height: 1.5;
+        }
+
+        .gua-yao {
+            display: block;
+            height: 1.5em;
+            margin: 0.2em 0;
+            transition: all 0.3s;
+        }
+
+        .gua-yao.yang {
+            color: #333;
+        }
+
+        .gua-yao.yang.changed {
+            color: #f44336;
+        }
+
+        .gua-yao.yin {
+            color: #333;
+        }
+
+        .gua-yao.yin.changed {
+            color: #f44336;
+        }
+
+        .change-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 0.9em;
+        }
+
+        .change-btn:hover {
+            background: #45a049;
+        }
+
+        /* 六爻起卦铜钱样式 */
+        .ly-coin-wrapper {
+            width: 100px;
+            height: 100px;
+            flex: 0 0 100px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: none;
+            border: none;
+            position: relative;
+            perspective: 1000px; /* 3D透视效果 */
+            transform: translateZ(0);
+        }
+
+        .ly-coin {
+            width: 108%;
+            height: 108%;
+            margin: -4%;
+            display: block;
+            object-fit: cover;
+            transition: transform 0.1s;
+            border-radius: 50%;
+            transform-style: preserve-3d; /* 保持3D效果 */
+            backface-visibility: hidden; /* 隐藏背面 */
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .ly-coin-wrapper.rolling {
+            animation: flip3d 0.8s ease-out;
+        }
+
+        @keyframes flip3d {
+            0% { 
+                transform: rotateY(0deg) rotateX(0deg) scale(1); 
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+            25% { 
+                transform: rotateY(720deg) rotateX(180deg) scale(1.1); 
+                box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            }
+            50% { 
+                transform: rotateY(1440deg) rotateX(360deg) scale(1.15); 
+                box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            }
+            75% { 
+                transform: rotateY(2160deg) rotateX(540deg) scale(1.1); 
+                box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            }
+            100% { 
+                transform: rotateY(2880deg) rotateX(720deg) scale(1); 
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+        }
+
+        /* 爻象展示区域样式 */
+        .yao-display {
+            display: flex;
+            flex-direction: column-reverse; /* 从下往上排列 */
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            min-height: 30px;
+            margin-bottom: 2px;
+            padding: 0 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        /* 卦名显示在爻象区域顶部 */
+        .gua-name-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .yao-line {
+            width: 80px;
+            height: 5px;
+            margin: 8px 0;
+            transition: all 0.3s;
+            position: relative;
+            background: transparent;
+        }
+
+        /* 阳爻 - 一条完整横线 */
+        .yao-line.yang.normal {
+            background: #333;
+            border-radius: 2px;
+        }
+
+        .yao-line.yang.old {
+            background: #f44336;
+            border-radius: 2px;
+        }
+
+        /* 阴爻 - 两条分开的短线 */
+        .yao-line.normal:before,
+        .yao-line.old:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 48%;
+            height: 100%;
+            border-radius: 2px;
+            background: #333;
+        }
+
+        .yao-line.normal:after,
+        .yao-line.old:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 48%;
+            height: 100%;
+            border-radius: 2px;
+            background: #333;
+        }
+
+        .yao-line.old:before,
+        .yao-line.old:after {
+            background: #f44336;
+        }
+
+        .yao-line.yang:before,
+        .yao-line.yang:after {
+            display: none;
+        }
+
+        /* 卦象结果展示区域 */
+        .gua-result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .gua-result-card .gua-symbol {
+            font-size: 6em;
+            text-align: center;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .gua-result-card .gua-name {
+            text-align: center;
+            font-size: 2em;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .gua-result-card .gua-ci {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .gua-result-card .yao-ci-list {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .gua-result-card .yao-ci-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 4px solid #667eea;
+            background: white;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .gua-result-card .yao-ci-item:hover {
+            background: #f5f5f5;
+            transform: translateX(5px);
+        }
+
+        .gua-result-card .yao-ci-item.changed {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+
+        .gua-result-card .bian-gua-info {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .cx-char-panel {
+                width: min(320px, calc(100vw - 20px));
+                max-height: min(70vh, 560px);
+                overflow-y: auto;
+                border-radius: 20px;
+            }
+
+            .cx-char-panel-header {
+                position: sticky;
+                top: 0;
+                background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(246,248,255,0.96) 100%);
+                padding-bottom: 8px;
+                z-index: 1;
+            }
+
+            .cx-char-panel-badge {
+                width: 56px;
+                height: 56px;
+                font-size: 1.8em;
+            }
+
+            .cx-char-btn.active {
+                transform: scale(1.18);
+            }
+
+            body {
+                padding: 10px;
+            }
+
+
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            header p {
+                font-size: 1em;
+            }
+
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .module-card {
+                padding: 20px;
+            }
+
+            .practice-area {
+                padding: 20px;
+            }
+
+            .gua-symbol {
+                font-size: 5em;
+            }
+
+            .bagua-options {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+
+            .bagua-btn {
+                padding: 15px 10px;
+                font-size: 1.2em;
+            }
+
+            .bagua-btn div:first-child {
+                font-size: 1.8em;
+            }
+
+            .bagua-btn div:last-child {
+                font-size: 0.6em;
+                margin-top: 3px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .option-btn {
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+
+            .gua-name-display {
+                font-size: 1.5em;
+            }
+
+            .result-area {
+                font-size: 1.1em;
+            }
+
+            .next-btn {
+                padding: 12px 30px;
+                font-size: 1.1em;
+            }
+
+            .back-btn {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>☯ 易师 ☯</h1>
+            <p>易经学习与练习工具</p>
+        </header>
+
+        <!-- 首页模块选择 -->
+        <div id="homeModule" class="module-grid">
+            <div class="module-card" onclick="showModule('liuyao')">
+                <h2>🪙 六爻起卦</h2>
+                <p>传统金钱起卦法，投掷六次铜钱得卦</p>
+            </div>
+            <div class="module-card" onclick="showModule('guaxiang')">
+                <h2>📊 卦象练习</h2>
+                <p>随机显示卦象图，从三个选项中选择正确的卦名</p>
+            </div>
+            <div class="module-card" onclick="showModule('guaming')">
+                <h2>📝 卦名记忆</h2>
+                <p>根据部分卦名，选择正确的八卦组成</p>
+            </div>
+            <div class="module-card" onclick="showModule('yaoci')">
+                <h2>📖 爻辞卦辞练习</h2>
+                <p>选择正确的卦辞和爻辞，深入学习经文</p>
+            </div>
+            <div class="module-card" onclick="showModule('chaxun')">
+                <h2>📚 六十四卦查询</h2>
+                <p>自由选择八卦组成六十四卦，查看卦象、卦辞、爻辞及变卦</p>
+            </div>
+        </div>
+
+        <!-- 卦象练习模块 -->
+        <div id="guaxiangModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">卦象练习</h2>
+            <div class="progress-info" id="gxProgress"></div>
+            <div class="gua-image">
+                <div class="gua-symbol" id="gxSymbol"></div>
+            </div>
+            <div class="options-grid" id="gxOptions"></div>
+            <div id="gxResult"></div>
+            <button class="next-btn" onclick="nextGuaXiang()" style="display: none;" id="gxNextBtn">下一题</button>
+        </div>
+
+        <!-- 卦名记忆模块 -->
+        <div id="guamingModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">卦名记忆</h2>
+            <div class="progress-info" id="gmProgress"></div>
+            <div class="gua-name-display" id="gmGuaName"></div>
+            <div class="selected-bagua" id="gmSelected"></div>
+            <div class="bagua-options" id="gmBaguaOptions"></div>
+            <div id="gmResult"></div>
+            <button class="next-btn" onclick="nextGuaMing()" style="display: none;" id="gmNextBtn">下一题</button>
+        </div>
+
+        <!-- 爻辞卦辞练习模块 -->
+        <div id="yaociModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">爻辞卦辞练习</h2>
+            <div class="score-display" id="ycScore"></div>
+            <div class="gua-image">
+                <div class="gua-symbol" id="ycSymbol"></div>
+            </div>
+            <div class="gua-name-display" id="ycGuaName"></div>
+            <div class="yaoci-section" id="ycQuestion"></div>
+            <div id="ycResult"></div>
+            <button class="next-btn" onclick="nextYaoCiModule()" style="display: none;" id="ycNextBtn">继续</button>
+        </div>
+
+        <!-- 六爻起卦模块 -->
+        <div id="liuyaoModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">六爻起卦</h2>
+            
+            <!-- 铜钱投掷区域 -->
+            <div id="lyTossArea">
+                <div class="progress-info" id="lyProgress">第 1 爻</div>
+                
+                <!-- 爻象展示区域 -->
+                <div id="lyYaoDisplay" class="yao-display"></div>
+                
+                <!-- 铜钱动画容器 -->
+                <div style="display: flex; justify-content: center; gap: 18px; margin: 30px 0;">
+                    <div class="ly-coin-wrapper"><img class="ly-coin" id="lyCoin1" src="image/有字面.png" alt="铜钱1"></div>
+                    <div class="ly-coin-wrapper"><img class="ly-coin" id="lyCoin2" src="image/有字面.png" alt="铜钱2"></div>
+                    <div class="ly-coin-wrapper"><img class="ly-coin" id="lyCoin3" src="image/有字面.png" alt="铜钱3"></div>
+                </div>
+                
+                <div id="lyResult" style="text-align: center; font-size: 1.5em; margin: 20px 0;"></div>
+                
+                <div id="lyButtonArea" style="text-align: center; margin-top: 20px;">
+                    <button class="option-btn" onclick="tossCoins()" id="lyTossBtn">投掷铜钱</button>
+                </div>
+                
+                <!-- 卦象结果展示区域 -->
+                <div id="lyFinalResult" style="display: none;"></div>
+            </div>
+            
+            <!-- 卦象显示区域（保留但不使用） -->
+            <div id="lyGuaDiv" style="display: none;">
+                <div class="gua-image">
+                    <div class="gua-symbol" id="lySymbol"></div>
+                </div>
+                <div class="gua-name-display" id="lyGuaName"></div>
+                <div style="text-align: center; margin: 20px 0;">
+                    <button class="next-btn" onclick="showLiuYaoDetail()">查看详情</button>
+                    <button class="next-btn" onclick="resetLiuYao()" style="margin-left: 10px;">重新起卦</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 六十四卦查询模块 -->
+        <div id="chaxunModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">六十四卦查询</h2>
+            
+            <!-- 八卦选择区域 -->
+            <div id="cxBaguaSelect">
+                <h3 style="text-align: center; margin-bottom: 15px;">选择上卦</h3>
+                <div class="bagua-options" id="cxUpperBagua"></div>
+                
+                <h3 style="text-align: center; margin: 20px 0 15px;">选择下卦</h3>
+                <div class="bagua-options" id="cxLowerBagua"></div>
+            </div>
+            
+            <!-- 卦象详情区域 -->
+            <div id="cxGuaDetail" style="display: none;">
+                <div class="cx-detail-layout">
+                    <div>
+                        <div style="margin-bottom: 15px;">
+                            <button class="back-btn" onclick="backToBaguaSelect()">← 返回上一页</button>
+                            <button class="back-btn" onclick="backToRootGua()" id="cxBackToRootBtn" style="display: none; margin-left: 10px;">← 返回本卦</button>
+                        </div>
+                        
+                        <div class="gua-image">
+                            <div class="gua-symbol" id="cxSymbol"></div>
+                        </div>
+                        <div class="gua-name-display" id="cxGuaName"></div>
+                        
+                        <!-- 变卦、互卦、综卦、错卦 -->
+                        <div class="related-gua-actions">
+                            <button class="option-btn" id="cxChangeGuaBtn" onclick="jumpToBianGua()" style="display: none;"></button>
+                            <button class="option-btn" id="cxHuguaBtn" onclick="jumpToGua('hugua')">互卦</button>
+                            <button class="option-btn" id="cxZongguaBtn" onclick="jumpToGua('zonggua')">综卦</button>
+                            <button class="option-btn" id="cxCuoguaBtn" onclick="jumpToGua('cuogua')">错卦</button>
+                        </div>
+                        
+                        <!-- 卦辞 -->
+                        <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <h3 style="color: #667eea; margin-bottom: 10px;">卦辞</h3>
+                            <p id="cxTuanshi" style="font-size: 1.2em; line-height: 1.8;"></p>
+                        </div>
+                        
+                        <!-- 爻辞 -->
+                        <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">爻辞（点击爻可标记变爻，点击汉字看字源）</h3>
+                            <div id="cxYaociList"></div>
+                        </div>
+                    </div>
+
+                    <aside id="cxCharPanel" class="cx-char-panel" aria-live="polite">
+                        <div class="cx-char-panel-header">
+                            <div class="cx-char-panel-badge cx-char-panel-glyph">字</div>
+                            <div class="cx-char-panel-title-wrap">
+                                <div class="cx-char-panel-title">点击任意汉字</div>
+                                <div class="cx-char-panel-tip">支持查看卦名、卦辞、爻辞中的单字起源、本义与意义演变。</div>
+                            </div>
+                            <button type="button" class="cx-char-panel-close" id="cxCharPanelClose" aria-label="关闭汉字释义弹窗">✕</button>
+                        </div>
+
+                        <div class="cx-char-panel-section">
+                            <h4>起源</h4>
+                            <p data-field="origin">点击左侧任意汉字后，这里会显示它在古文字或早期语境中的来源说明。</p>
+                        </div>
+                        <div class="cx-char-panel-section">
+                            <h4>最初含义</h4>
+                            <p data-field="originalMeaning">这里会展示该字较早期、更接近本义层面的解释。</p>
+                        </div>
+                        <div class="cx-char-panel-section">
+                            <h4>后续含义演变</h4>
+                            <p data-field="evolution">这里会说明该字在后世、尤其《易经》语境中的延伸含义。</p>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            
+            <div id="cxResult"></div>
+        </div>
+    </div>
+
+    <script src="yizhou-data.js"></script>
+    <script src="pinyin-data.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
