@@ -987,8 +987,9 @@
                         </div>
                         <div class="gua-name-display" id="cxGuaName"></div>
                         
-                        <!-- 互卦、综卦、错卦 -->
+                        <!-- 变卦、互卦、综卦、错卦 -->
                         <div class="related-gua-actions">
+                            <button class="option-btn" id="cxChangeGuaBtn" onclick="jumpToBianGua()" style="display: none;"></button>
                             <button class="option-btn" id="cxHuguaBtn" onclick="jumpToGua('hugua')">互卦</button>
                             <button class="option-btn" id="cxZongguaBtn" onclick="jumpToGua('zonggua')">综卦</button>
                             <button class="option-btn" id="cxCuoguaBtn" onclick="jumpToGua('cuogua')">错卦</button>
@@ -1004,11 +1005,6 @@
                         <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
                             <h3 style="color: #667eea; margin-bottom: 15px;">爻辞（点击爻可标记变爻，点击汉字看字源）</h3>
                             <div id="cxYaociList"></div>
-                        </div>
-                        
-                        <!-- 变卦按钮 -->
-                        <div id="cvChangeGuaDiv" style="text-align: center; display: none;">
-                            <button class="next-btn" onclick="jumpToBianGua()">查看变卦</button>
                         </div>
                     </div>
 

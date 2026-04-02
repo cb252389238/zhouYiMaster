@@ -4881,7 +4881,11 @@ function findGuaByBagua(upper, lower) {
 // 显示卦象详情
 function showGuaDetail(gua, isRootGua = false) {
     cxCurrentGua = gua;
-    cxChangedYaoci = [];
+    // 只有在非本卦跳转时才清空变爻状态
+    // 返回本卦时保持变爻状态不变
+    if (!isRootGua) {
+        cxChangedYaoci = [];
+    }
     closeCharacterPanel();
     initCharacterPanel();
     
@@ -4924,8 +4928,27 @@ function showGuaDetail(gua, isRootGua = false) {
     // 更新互卦、综卦、错卦按钮状态
     updateGuaButtons(gua);
     
-    // 隐藏变卦按钮
-    document.getElementById('cvChangeGuaDiv').style.display = 'none';
+    // 控制相关按钮的显示/隐藏
+    // 只有在本卦时才显示这些按钮，跳转到其他卦时隐藏
+    const relatedGuaActions = document.querySelector('.related-gua-actions');
+    if (relatedGuaActions) {
+        relatedGuaActions.style.display = isRootGua ? 'flex' : 'none';
+    }
+    
+    // 变卦按钮：返回本卦时如果有变爻则显示，否则隐藏
+    const changeGuaBtn = document.getElementById('cxChangeGuaBtn');
+    if (changeGuaBtn) {
+        if (isRootGua && cxChangedYaoci.length > 0) {
+            // 返回本卦且有变爻，显示变卦按钮并更新文字
+            const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci);
+            if (bianGua) {
+                changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`;
+                changeGuaBtn.style.display = 'inline-block';
+            }
+        } else {
+            changeGuaBtn.style.display = 'none';
+        }
+    }
     
     // 如果不是本卦，显示返回本卦按钮
     const backToRootBtn = document.getElementById('cxBackToRootBtn');
@@ -4965,6 +4988,14 @@ function renderYaociList(gua) {
         
         container.appendChild(yaoItem);
     });
+    
+    // 恢复变爻标记状态
+    cxChangedYaoci.forEach(yaoNum => {
+        const yaoItem = document.querySelector(`.yaoci-item[data-yao-num="${yaoNum}"]`);
+        if (yaoItem) {
+            yaoItem.classList.add('changed');
+        }
+    });
 }
 
 // 切换爻的变爻状态
@@ -4987,11 +5018,18 @@ function toggleYaociChange(yaoNum) {
         yaoItem.classList.add('changed');
     }
     
-    // 如果有变爻，显示变卦按钮
+    // 更新变卦按钮显示状态和文字
+    const changeGuaBtn = document.getElementById('cxChangeGuaBtn');
     if (cxChangedYaoci.length > 0) {
-        document.getElementById('cvChangeGuaDiv').style.display = 'block';
+        // 计算变卦并显示按钮
+        const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci);
+        if (bianGua) {
+            changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`;
+            changeGuaBtn.style.display = 'inline-block';
+        }
     } else {
-        document.getElementById('cvChangeGuaDiv').style.display = 'none';
+        // 没有变爻，隐藏按钮
+        changeGuaBtn.style.display = 'none';
     }
 }
 
@@ -5121,6 +5159,9 @@ function getBianGua(gua, changedYaoci) {
 function jumpToGua(type) {
     let targetGuaName = '';
     
+    // 保存变爻状态，以便返回本卦时恢复
+    const savedChangedYaoci = [...cxChangedYaoci];
+    
     if (type === 'hugua') {
         const hugua = getHuGua(cxCurrentGua);
         targetGuaName = hugua.name;
@@ -5136,6 +5177,8 @@ function jumpToGua(type) {
         const targetGua = liushisiGua.find(g => g.name === targetGuaName);
         if (targetGua) {
             showGuaDetail(targetGua, false); // 不是本卦
+            // 恢复变爻状态
+            cxChangedYaoci = savedChangedYaoci;
         }
     }
 }
@@ -5144,10 +5187,15 @@ function jumpToGua(type) {
 function jumpToBianGua() {
     if (cxChangedYaoci.length === 0) return;
     
+    // 保存变爻状态，以便返回本卦时恢复
+    const savedChangedYaoci = [...cxChangedYaoci];
+    
     // 根据变爻计算变卦
     const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci);
     if (bianGua) {
         showGuaDetail(bianGua, false); // 不是本卦
+        // 恢复变爻状态
+        cxChangedYaoci = savedChangedYaoci;
     }
 }
 
