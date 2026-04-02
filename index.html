@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: 'Microsoft YaHei', 'PingFang SC', 'SimHei', 'STHeiti', 'Hiragino Sans GB', Arial, sans-serif;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -105,14 +105,9 @@
         }
 
         .gua-symbol {
-            font-size: 1em;
+            font-size: 8em;
             color: #333;
-            margin: 10px 0;
-        }
-
-.gua-symbol svg {
-            width: 60px;
-            height: auto;
+            margin: 20px 0;
         }
 
         .options-grid {
@@ -183,8 +178,10 @@
         }
 
         .bagua-btn svg {
+            display: block;
             width: 40px;
             height: 40px;
+            margin: 0 auto;
         }
 
         .bagua-btn:hover {
@@ -504,15 +501,64 @@
         /* 卦象符号样式 - 支持变爻高亮 */
 
         .gua-symbol-container {
-            display: inline-block;
+            display: inline-flex;
+            flex-direction: column-reverse;
             text-align: center;
             font-size: 1em;
             line-height: 1.5;
         }
-
-        .gua-symbol-container svg {
+        
+        .gua-symbol-container .yao-line {
             width: 80px;
-            height: 160px;
+            height: 5px;
+            margin: 8px 0;
+            transition: all 0.3s;
+            position: relative;
+            background: transparent;
+        }
+
+        .gua-symbol-container .yao-line.yang.normal {
+            background: #333;
+            border-radius: 2px;
+        }
+
+        .gua-symbol-container .yao-line.yang.old {
+            background: #f44336;
+            border-radius: 2px;
+        }
+
+        .gua-symbol-container .yao-line.normal:before,
+        .gua-symbol-container .yao-line.old:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 48%;
+            height: 100%;
+            border-radius: 2px;
+            background: #333;
+        }
+
+        .gua-symbol-container .yao-line.normal:after,
+        .gua-symbol-container .yao-line.old:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 48%;
+            height: 100%;
+            border-radius: 2px;
+            background: #333;
+        }
+
+        .gua-symbol-container .yao-line.old:before,
+        .gua-symbol-container .yao-line.old:after {
+            background: #f44336;
+        }
+
+        .gua-symbol-container .yao-line.yang:before,
+        .gua-symbol-container .yao-line.yang:after {
+            display: none;
         }
 
         .gua-yao {
@@ -701,15 +747,10 @@
         }
 
         .gua-result-card .gua-symbol {
-            font-size: 1em;
+            font-size: 6em;
             text-align: center;
             color: #333;
-            margin: 10px 0;
-        }
-
-        .gua-result-card .gua-symbol svg {
-            width: 80px;
-            height: auto;
+            margin: 20px 0;
         }
 
         .gua-result-card .gua-name {
@@ -829,15 +870,9 @@
                 font-size: 1.2em;
             }
 
-            .gua-symbol svg, .bagua-btn svg {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
-
-        .bagua-btn div:first-child {
-            font-size: 1.8em;
-        }
+            .bagua-btn div:first-child {
+                font-size: 1.8em;
+            }
 
             .bagua-btn div:last-child {
                 font-size: 0.6em;

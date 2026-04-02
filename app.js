@@ -4435,7 +4435,9 @@ function nextGuaXiang() {
     gxCorrectAnswer = currentGua.name;
     
     // 显示卦象符号
-    document.getElementById('gxSymbol').textContent = currentGua.symbol;
+    const gxSymbolEl = document.getElementById('gxSymbol');
+    gxSymbolEl.innerHTML = '';
+    gxSymbolEl.appendChild(createGuaElement(currentGua.upper, currentGua.lower, []));
     
     // 生成选项（1 个正确 + 2 个错误）
     const options = generateOptions(gxCorrectAnswer, 3);
@@ -4514,7 +4516,19 @@ function nextGuaMing() {
     baguaOrder.forEach(key => {
         const btn = document.createElement('div');
         btn.className = 'bagua-btn';
-        btn.innerHTML = `<div>${baguaData[key].symbol}</div><div style="font-size:0.7em;margin-top:5px;">${key}</div>`;
+        const yaoYinYang = baguaYaoYinYang[key];
+        let svgHtml = '<svg class="bagua-svg" viewBox="0 0 60 60" width="40" height="40">';
+        for (let i = 2; i >= 0; i--) {
+            const isYang = yaoYinYang[i] === 1;
+            const y = 10 + (2 - i) * 20;
+            if (isYang) {
+                svgHtml += `<line x1="5" y1="${y}" x2="55" y2="${y}" stroke="#333" stroke-width="4"/>`;
+            } else {
+                svgHtml += `<line x1="5" y1="${y}" x2="22" y2="${y}" stroke="#333" stroke-width="4"/><line x1="38" y1="${y}" x2="55" y2="${y}" stroke="#333" stroke-width="4"/>`;
+            }
+        }
+        svgHtml += '</svg>';
+        btn.innerHTML = `<div>${svgHtml}</div><div style="font-size:0.7em;margin-top:5px;">${key}</div>`;
         btn.onclick = () => selectBagua(key, btn);
         baguaContainer.appendChild(btn);
     });
@@ -4547,7 +4561,7 @@ function selectBagua(baguaName, btnElement) {
 }
 
 function updateSelectedBaguaDisplay() {
-    const display = gmSelectedBagua.map(name => `${name}(${baguaData[name].symbol})`).join(' + ');
+    const display = gmSelectedBagua.map(name => `${name}`).join(' + ');
     document.getElementById('gmSelected').innerHTML = gmSelectedBagua.length > 0 ? 
         `已选：${display}` : '';
 }
@@ -4604,7 +4618,9 @@ function initYaoCi() {
     currentGua = liushisiGua[randomIndex];
     
     // 显示卦象和卦名
-    document.getElementById('ycSymbol').textContent = currentGua.symbol;
+    const ycSymbolEl = document.getElementById('ycSymbol');
+    ycSymbolEl.innerHTML = '';
+    ycSymbolEl.appendChild(createGuaElement(currentGua.upper, currentGua.lower, []));
     document.getElementById('ycGuaName').textContent = currentGua.name;
     
     // 显示分数
@@ -4626,7 +4642,9 @@ function nextYaoCi() {
     currentGua = liushisiGua[randomIndex];
     
     // 显示卦象和卦名
-    document.getElementById('ycSymbol').textContent = currentGua.symbol;
+    const ycSymbolEl = document.getElementById('ycSymbol');
+    ycSymbolEl.innerHTML = '';
+    ycSymbolEl.appendChild(createGuaElement(currentGua.upper, currentGua.lower, []));
     document.getElementById('ycGuaName').textContent = currentGua.name;
     
     // 显示分数
@@ -4835,7 +4853,19 @@ function renderBaguaSelect(containerId, position) {
     baguaOrder.forEach(key => {
         const btn = document.createElement('div');
         btn.className = 'bagua-btn';
-        btn.innerHTML = `<div>${baguaData[key].symbol}</div><div style="font-size:0.7em;margin-top:5px;">${key}</div>`;
+        const yaoYinYang = baguaYaoYinYang[key];
+        let svgHtml = '<svg class="bagua-svg" viewBox="0 0 60 60" width="40" height="40">';
+        for (let i = 2; i >= 0; i--) {
+            const isYang = yaoYinYang[i] === 1;
+            const y = 10 + (2 - i) * 20;
+            if (isYang) {
+                svgHtml += `<line x1="5" y1="${y}" x2="55" y2="${y}" stroke="#333" stroke-width="4"/>`;
+            } else {
+                svgHtml += `<line x1="5" y1="${y}" x2="22" y2="${y}" stroke="#333" stroke-width="4"/><line x1="38" y1="${y}" x2="55" y2="${y}" stroke="#333" stroke-width="4"/>`;
+            }
+        }
+        svgHtml += '</svg>';
+        btn.innerHTML = `<div>${svgHtml}</div><div style="font-size:0.7em;margin-top:5px;">${key}</div>`;
         btn.onclick = () => selectBaguaForChaXun(key, position);
         container.appendChild(btn);
     });
@@ -4899,7 +4929,9 @@ function showGuaDetail(gua, isRootGua = false) {
     document.getElementById('cxGuaDetail').style.display = 'block';
     
     // 显示卦象符号和名称
-    document.getElementById('cxSymbol').textContent = gua.symbol;
+    const cxSymbolEl = document.getElementById('cxSymbol');
+    cxSymbolEl.innerHTML = '';
+    cxSymbolEl.appendChild(createGuaElement(gua.upper, gua.lower, cxChangedYaoci || []));
     
     // 使用自然元素显示卦名
     const upperElement = baguaElement[gua.upper];
@@ -5031,6 +5063,11 @@ function toggleYaociChange(yaoNum) {
         // 没有变爻，隐藏按钮
         changeGuaBtn.style.display = 'none';
     }
+    
+    // 重新渲染卦象符号（更新变爻高亮）
+    const cxSymbolEl = document.getElementById('cxSymbol');
+    cxSymbolEl.innerHTML = '';
+    cxSymbolEl.appendChild(createGuaElement(cxCurrentGua.upper, cxCurrentGua.lower, cxChangedYaoci));
 }
 
 
@@ -5461,5 +5498,50 @@ window.onload = function() {
     console.log('八卦数据:', Object.keys(baguaData).length, '卦');
     initCharacterPanel();
 };
+
+// 创建单个爻元素
+function createYaoElement(isYang, isOld = false) {
+    const div = document.createElement('div');
+    let className = 'yao-line';
+    if (isYang) {
+        className += isOld ? ' old yang' : ' normal yang';
+    } else {
+        className += isOld ? ' old' : ' normal';
+    }
+    div.className = className;
+    return div;
+}
+
+// 创建完整六爻卦象元素
+// changedIndices: 变爻位置数组，如 [1, 3] 表示第1爻和第3爻是变爻
+function createGuaElement(upper, lower, changedIndices = []) {
+    const container = document.createElement('div');
+    container.className = 'gua-symbol-container';
+    
+    // 获取上下卦的爻线
+    const upperYao = baguaYaoYinYang[upper];
+    const lowerYao = baguaYaoYinYang[lower];
+    
+    if (!upperYao || !lowerYao) return container;
+    
+    // 添加顺序：从下往上（初、二、三、四、五、六）
+    // 下卦（初、二、三爻）- 从下往上
+    for (let i = 0; i <= 2; i++) {
+        const isYang = lowerYao[i] === 1;
+        const yaoNum = i + 1; // 1, 2, 3
+        const isOld = changedIndices.includes(yaoNum);
+        container.appendChild(createYaoElement(isYang, isOld));
+    }
+    
+    // 上卦（四、五、六爻）- 从下往上
+    for (let i = 0; i <= 2; i++) {
+        const isYang = upperYao[i] === 1;
+        const yaoNum = 4 + i; // 4, 5, 6
+        const isOld = changedIndices.includes(yaoNum);
+        container.appendChild(createYaoElement(isYang, isOld));
+    }
+    
+    return container;
+}
 
 
