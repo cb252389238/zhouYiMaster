@@ -5236,14 +5236,17 @@ function renderYaoSymbol(total) {
     const isYang = (total === 7 || total === 9); // 少阳或老阳
     const isOld = (total === 6 || total === 9);  // 老阴或老阳
     
-    const symbol = isYang ? '⚊' : '⚋'; // 阳爻或阴爻
-    const className = isOld ? 'yao-line old' : 'yao-line normal';
+    let className = 'yao-line';
+    if (isYang) {
+        className += isOld ? ' old yang' : ' normal yang';
+    } else {
+        className += isOld ? ' old' : ' normal';
+    }
     
     // 添加到爻象展示区域
     const container = document.getElementById('lyYaoDisplay');
     const yaoDiv = document.createElement('div');
     yaoDiv.className = className;
-    yaoDiv.textContent = symbol;
     container.appendChild(yaoDiv);
 }
 
