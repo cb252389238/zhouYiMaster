@@ -1,1 +1,3 @@
 node_modules/
+android/release-keystore.jks
+android/keystore.properties
