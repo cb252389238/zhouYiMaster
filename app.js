@@ -6163,8 +6163,9 @@ function showYiceDetail() {
     
     const detailHtml = `
         <div class="yc-detail-section">
-            <div class="yc-detail-value" style="text-align: center;">
-                <div style="font-size: 1.8em; line-height: 1.2;">${guaName}</div><div style="font-size: 5em; margin-top: -10px;">${guaSymbol.outerHTML}</div>
+            <div class="yc-detail-value" style="text-align: center; padding-bottom: 0;">
+                <div style="font-size: 1.5em; margin-bottom: -5px;">${guaName}</div>
+                <div style="font-size: 3.5em; line-height: 1.2;">${guaSymbol.outerHTML}</div>
             </div>
         </div>
         
