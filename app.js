@@ -4444,7 +4444,16 @@ function showModule(moduleName) {
         }
     } else if (moduleName === 'liuyao') {
         document.getElementById('liuyaoModule').classList.add('active');
-        initLiuYao();
+        // 如果是从易策返回的，保留当前卦象；否则初始化
+        if (!window.returningFromYice) {
+            initLiuYao();
+        } else {
+            window.returningFromYice = false;
+            // 恢复卦象显示
+            if (window.lyCurrentGua && lyYaoci.length === 6) {
+                showLiuYaoResult();
+            }
+        }
     } else if (moduleName === 'yice') {
         document.getElementById('yiceModule').classList.add('active');
         initYice();
@@ -5496,9 +5505,74 @@ function showLiuYaoResult() {
         // 替换投掷按钮为重新起卦和卦象详情按钮
         const buttonArea = document.getElementById('lyButtonArea');
         buttonArea.innerHTML = `
-            <button class="option-btn" onclick="resetLiuYao()" style="margin-right: 10px;">重新起卦</button>
-            <button class="option-btn" onclick="showLiuYaoDetail()">卦象详情</button>
+            <button class="option-btn" onclick="resetLiuYao()" style="display: block; width: 100%; margin-bottom: 10px;">重新起卦</button>
+            <button class="option-btn" onclick="showLiuYaoDetail()" style="display: block; width: 100%; margin-bottom: 10px;">卦象详情</button>
+            <button class="option-btn" onclick="addToYiceFromLiuYao()" style="display: block; width: 100%; background: #34c759;">添加到易策</button>
         `;
+    }
+}
+
+// 从六爻起卦添加到易策
+function addToYiceFromLiuYao() {
+    if (!window.lyCurrentGua) {
+        alert('请先起卦');
+        return;
+    }
+    
+    const gua = window.lyCurrentGua;
+    
+    // 计算变爻（6或9为变爻）
+    const dongyao = [];
+    lyYaoci.forEach((value, index) => {
+        if (value === 6 || value === 9) {
+            dongyao.push(index + 1);
+        }
+    });
+    
+    // 保存数据到全局变量，供新增页面使用
+    window.yiceFromLiuYao = {
+        upper: gua.upper,
+        lower: gua.lower,
+        guaName: gua.name,
+        dongyao: dongyao
+    };
+    
+    // 跳转到易策新增页面
+    showAddYicePreFill();
+}
+
+// 预填充从六爻跳转过来的数据
+function showAddYicePreFill() {
+    const fromData = window.yiceFromLiuYao;
+    
+    // 使用keepData=true来保留数据
+    showAddYice(true);
+    
+    // 如果有预填充数据
+    if (fromData) {
+        // 延迟执行，确保DOM已加载
+        setTimeout(() => {
+            // 设置卦象
+            ycSelectedUpper = fromData.upper;
+            ycSelectedLower = fromData.lower;
+            ycSelectedDongyao = [...fromData.dongyao];
+            
+            // 显示已选卦象
+            const guaName = getGuaNameBy上下(ycSelectedUpper, ycSelectedLower);
+            const guaSymbol = createGuaElement(ycSelectedUpper, ycSelectedLower, ycSelectedDongyao);
+            
+            document.getElementById('ycSelectedGuaText').style.display = 'none';
+            const display = document.getElementById('ycSelectedGuaDisplay');
+            display.style.display = 'block';
+            display.innerHTML = `
+                <div style="font-size: 1.5em; margin-bottom: 10px;">${guaName}</div>
+                <div style="font-size: 4em;">${guaSymbol.outerHTML}</div>
+            `;
+            
+            // 显示动爻选择
+            document.getElementById('ycDongyaoSelect').style.display = 'block';
+            renderDongyaoButtons('ycDongyaoButtons', 'ycAdd');
+        }, 100);
     }
 }
 
@@ -5839,18 +5913,24 @@ function toggleYcActions() {
 }
 
 // 显示新增卦象记录页面
-function showAddYice() {
+function showAddYice(keepData = false) {
     document.getElementById('ycActionMenu').style.display = 'none';
     document.getElementById('ycFloatingBtn').style.transform = 'rotate(0)';
     
-    // 重置表单
-    document.getElementById('ycAddCategory').value = '';
-    document.getElementById('ycAddContent').value = '';
-    document.getElementById('ycAddPerson').value = '';
-    document.getElementById('ycAddAnalysis').value = '';
-    document.getElementById('ycSelectedGuaText').style.display = 'block';
-    document.getElementById('ycSelectedGuaDisplay').style.display = 'none';
-    document.getElementById('ycDongyaoSelect').style.display = 'none';
+    // 如果不是保留数据模式，则重置表单
+    if (!keepData) {
+        document.getElementById('ycAddCategory').value = '';
+        document.getElementById('ycAddContent').value = '';
+        document.getElementById('ycAddPerson').value = '';
+        document.getElementById('ycAddAnalysis').value = '';
+        document.getElementById('ycSelectedGuaText').style.display = 'block';
+        document.getElementById('ycSelectedGuaDisplay').style.display = 'none';
+        document.getElementById('ycDongyaoSelect').style.display = 'none';
+        
+        ycSelectedUpper = null;
+        ycSelectedLower = null;
+        ycSelectedDongyao = [];
+    }
     
     // 初始化时间为当前时间
     const now = new Date();
@@ -5861,13 +5941,25 @@ function showAddYice() {
     const minute = String(now.getMinutes()).padStart(2, '0');
     document.getElementById('ycAddCreateTime').value = `${year}-${month}-${day}T${hour}:${minute}`;
     
-    ycSelectedUpper = null;
-    ycSelectedLower = null;
-    ycSelectedDongyao = [];
-    
     // 加载分类
     loadCategoriesToSelect('ycAddCategory');
     
+    // 根据来源更新返回按钮
+    const backBtn = document.getElementById('yiceAddBackBtn');
+    if (window.yiceFromLiuYao) {
+        backBtn.textContent = '← 返回六爻起卦';
+        backBtn.onclick = function() {
+            window.yiceFromLiuYao = null;
+            window.returningFromYice = true;
+            showModule('liuyao');
+        };
+    } else {
+        backBtn.textContent = '← 返回列表';
+        backBtn.onclick = showYiceList;
+    }
+    
+    // 隐藏六爻模块，显示易策新增模块
+    document.getElementById('liuyaoModule').classList.remove('active');
     document.getElementById('yiceModule').classList.remove('active');
     document.getElementById('yiceAddModule').classList.add('active');
 }
@@ -6077,7 +6169,15 @@ function saveYiceRecord() {
     saveYiceData();
     
     alert('保存成功');
-    showYiceList();
+    
+    // 根据来源决定返回位置
+    if (window.yiceFromLiuYao) {
+        window.yiceFromLiuYao = null;
+        window.returningFromYice = true;
+        showModule('liuyao');
+    } else {
+        showYiceList();
+    }
 }
 
 // 折叠/展开查询面板
