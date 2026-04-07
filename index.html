@@ -1479,29 +1479,34 @@
         <!-- 易策模块 -->
         <div id="yiceModule" class="practice-area">
             <button class="back-btn" onclick="showHome()">← 返回首页</button>
-            <h2 style="text-align: center; margin-bottom: 20px;">易策 - 占卜记录</h2>
             
-            <!-- 搜索区域 -->
-            <div id="ycSearchArea" style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <input type="text" id="ycSearchInput" placeholder="搜索关键词、卦象、测算人、分类..." 
-                           style="flex: 1; min-width: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
-                    <select id="ycSearchCategory" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                        <option value="">全部分类</option>
-                    </select>
+            <!-- 搜索栏（可折叠） -->
+            <details id="yiceSearchDetails" style="background: #f9f9f9; border-radius: 10px; margin-bottom: 20px; overflow: hidden;">
+                <summary style="padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #e8e8e8; list-style: none;">
+                    <span style="font-weight: bold; color: #667eea;">🔍 查询条件</span>
+                    <span>▼</span>
+                </summary>
+                <div style="padding: 20px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <input type="text" id="ycSearchInput" placeholder="搜索关键词、卦象、测算人、分类..." 
+                               style="flex: 1; min-width: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                        <select id="ycSearchCategory" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            <option value="">全部分类</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px;">
+                        <span style="color: #666;">时间范围：</span>
+                        <input type="date" id="ycSearchStartDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <span style="color: #666;">至</span>
+                        <input type="date" id="ycSearchEndDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <button class="option-btn" onclick="searchYice()">搜索</button>
+                        <button class="option-btn" onclick="clearYiceSearch()">清空</button>
+                        <button class="option-btn" onclick="exportYiceData()" style="background: #2196F3;">导出</button>
+                        <button class="option-btn" onclick="importYiceData()" style="background: #4CAF50;">导入</button>
+                        <input type="file" id="ycImportFileInput" accept=".json" style="display: none;" onchange="handleYiceImport(event)">
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px;">
-                    <span style="color: #666;">时间范围：</span>
-                    <input type="date" id="ycSearchStartDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <span style="color: #666;">至</span>
-                    <input type="date" id="ycSearchEndDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <button class="option-btn" onclick="searchYice()">搜索</button>
-                    <button class="option-btn" onclick="clearYiceSearch()">清空</button>
-                    <button class="option-btn" onclick="exportYiceData()" style="background: #2196F3;">导出</button>
-                    <button class="option-btn" onclick="importYiceData()" style="background: #4CAF50;">导入</button>
-                    <input type="file" id="ycImportFileInput" accept=".json" style="display: none;" onchange="handleYiceImport(event)">
-                </div>
-            </div>
+            </details>
             
             <!-- 占卜列表 -->
             <div id="ycListArea" style="max-height: 60vh; overflow-y: auto;"></div>
@@ -1695,48 +1700,7 @@
         </div>
     </div>
 
-    <!-- ==================== 易策模块 ==================== -->
-    <div id="yiceModule" class="practice-area" style="display: none;">
-        <!-- 列表页 -->
-        <div id="yiceListPage">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
-            <h2 style="text-align: center; margin-bottom: 20px;">🎯 易策 - 占卜记录</h2>
-            
-            <!-- 搜索栏 -->
-            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <input type="text" id="yiceSearchKeyword" placeholder="关键词搜索" style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="text" id="yiceSearchGua" placeholder="卦象" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="text" id="yiceSearchPerson" placeholder="测算人" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <select id="yiceSearchCategory" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                        <option value="">全部分类</option>
-                    </select>
-                    <button class="option-btn" onclick="searchYiceRecords()">搜索</button>
-                    <button class="option-btn" onclick="clearYiceSearch()" style="background: #999;">清空</button>
-                    <button class="option-btn" onclick="importYiceData()" style="background: #4CAF50;">导入</button>
-                    <button class="option-btn" onclick="exportYiceData()" style="background: #2196F3;">导出</button>
-                </div>
-            </div>
-            
-            <!-- 记录列表 -->
-            <div id="yiceRecordList"></div>
-            
-            <!-- 加载更多 -->
-            <div id="yiceLoadMore" style="text-align: center; margin: 20px 0; display: none;">
-                <button class="option-btn" onclick="loadMoreYiceRecords()">加载更多</button>
-            </div>
-            
-            <!-- 悬浮按钮 -->
-            <div id="yiceFloatingBtn" style="position: fixed; right: 20px; bottom: 20px; z-index: 100;">
-                <button onclick="toggleYiceMenu()" style="width: 60px; height: 60px; border-radius: 50%; background: #667eea; color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); opacity: 0.8;">☰</button>
-                <div id="yiceMenu" style="display: none; position: absolute; bottom: 70px; right: 0; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); overflow: hidden;">
-                    <button onclick="showYiceAdd()" style="display: block; width: 100%; padding: 15px 25px; border: none; background: white; cursor: pointer; font-size: 16px; text-align: left;">➕ 新增记录</button>
-                    <button onclick="showYiceCategory()" style="display: block; width: 100%; padding: 15px 25px; border: none; background: white; cursor: pointer; font-size: 16px; text-align: left;">📁 分类管理</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 新增/编辑页 -->
+    <!-- 新增/编辑页 -->
         <div id="yiceAddPage" style="display: none;">
             <button class="back-btn" onclick="showYiceList()">← 返回列表</button>
             <h2 id="yiceAddTitle" style="text-align: center; margin-bottom: 20px;">新增占卜记录</h2>

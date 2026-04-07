@@ -5650,10 +5650,10 @@ function renderYiceList(isLoadMore = false) {
     loadYiceData();
     let records = [...ycRecords];
     
-    const searchKeyword = document.getElementById('ycSearchInput')?.value || '';
-    const searchCategory = document.getElementById('ycSearchCategory')?.value || '';
-    const startDate = document.getElementById('ycSearchStartDate')?.value || '';
-    const endDate = document.getElementById('ycSearchEndDate')?.value || '';
+    const searchKeyword = document.getElementById('yiceSearchKeyword')?.value || '';
+    const searchCategory = document.getElementById('yiceSearchCategory')?.value || '';
+    const startDate = document.getElementById('yiceSearchStartDate')?.value || '';
+    const endDate = document.getElementById('yiceSearchEndDate')?.value || '';
     
     // 搜索过滤 - 关键词
     if (searchKeyword) {
@@ -5774,11 +5774,13 @@ function searchYice() {
 
 // 清空搜索
 function clearYiceSearch() {
-    document.getElementById('ycSearchInput').value = '';
-    const searchCat = document.getElementById('ycSearchCategory');
+    document.getElementById('yiceSearchKeyword').value = '';
+    document.getElementById('yiceSearchGua').value = '';
+    document.getElementById('yiceSearchPerson').value = '';
+    const searchCat = document.getElementById('yiceSearchCategory');
     if (searchCat) searchCat.value = '';
-    const startDate = document.getElementById('ycSearchStartDate');
-    const endDate = document.getElementById('ycSearchEndDate');
+    const startDate = document.getElementById('yiceSearchStartDate');
+    const endDate = document.getElementById('yiceSearchEndDate');
     if (startDate) startDate.value = '';
     if (endDate) endDate.value = '';
     ycSearchKeyword = '';
@@ -6027,6 +6029,24 @@ function saveYiceRecord() {
     showYiceList();
 }
 
+// 折叠/展开查询面板
+function toggleYiceSearch() {
+    const content = document.getElementById('yiceSearchContent');
+    const toggle = document.getElementById('yiceSearchToggle');
+    
+    if (!content) return;
+    
+    if (content.classList.contains('yice-search-collapsed')) {
+        content.classList.remove('yice-search-collapsed');
+        content.classList.add('yice-search-expanded');
+        toggle.textContent = '▼';
+    } else {
+        content.classList.remove('yice-search-expanded');
+        content.classList.add('yice-search-collapsed');
+        toggle.textContent = '▶';
+    }
+}
+
 // 显示易策列表
 function showYiceList() {
     document.getElementById('yiceAddModule').classList.remove('active');
@@ -6034,6 +6054,13 @@ function showYiceList() {
     document.getElementById('yiceDetailModule').classList.remove('active');
     document.getElementById('yiceEditModule').classList.remove('active');
     document.getElementById('yiceModule').classList.add('active');
+    
+    // 强制折叠搜索面板
+    const details = document.getElementById('yiceSearchDetails');
+    if (details) {
+        details.removeAttribute('open');
+    }
+    
     renderYiceList();
 }
 
