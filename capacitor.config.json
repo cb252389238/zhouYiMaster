@@ -1,5 +1,6 @@
 {
   "appId": "com.yishi.master",
   "appName": "易师",
-  "webDir": "www"
+  "webDir": "www",
+  "version": "1.0.0.2"
 }
