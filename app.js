@@ -6563,12 +6563,20 @@ function saveReplay() {
     showYiceDetail();
 }
 
-// 导出数据
-function exportYiceData() {
+// 备份数据
+function backupYiceData() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    const fileName = `易师${year}${month}${day}${hour}${minute}.json`;
+    
     const data = {
         records: ycRecords,
         categories: ycCategories,
-        exportTime: new Date().toLocaleString('zh-CN')
+        backupTime: new Date().toLocaleString('zh-CN')
     };
     
     const json = JSON.stringify(data, null, 2);
@@ -6577,7 +6585,7 @@ function exportYiceData() {
     
     const a = document.createElement('a');
     a.href = url;
-    a.download = `易策数据_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = fileName;
     a.click();
     
     URL.revokeObjectURL(url);
@@ -6598,24 +6606,78 @@ function handleYiceImport(event) {
         try {
             const data = JSON.parse(e.target.result);
             
-            if (data.categories && Array.isArray(data.categories)) {
-                ycCategories = data.categories;
+            if (!data.records || !Array.isArray(data.records)) {
+                alert('导入文件格式不正确');
+                return;
             }
             
-            if (data.records && Array.isArray(data.records)) {
-                ycRecords = data.records;
-            }
-            
-            saveYiceData();
-            alert('导入成功！');
-            renderYiceList();
-            loadCategoriesToSelect('ycAddCategory');
+            // 显示导入选项弹框
+            showImportOptionsModal(data);
         } catch (err) {
             alert('导入失败：' + err.message);
         }
     };
     reader.readAsText(file);
     event.target.value = '';
+}
+
+// 显示导入选项弹框
+function showImportOptionsModal(data) {
+    const modal = document.createElement('div');
+    modal.id = 'ycImportModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 350px; width: 90%; text-align: center;">
+            <h3 style="margin-bottom: 20px; color: #333;">导入数据</h3>
+            <p style="margin-bottom: 20px; color: #666;">文件包含 ${data.records.length} 条记录</p>
+            <button id="ycImportAppend" style="display: block; width: 100%; padding: 12px; margin-bottom: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">追加数据</button>
+            <button id="ycImportCover" style="display: block; width: 100%; padding: 12px; margin-bottom: 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">覆盖数据</button>
+            <button id="ycImportCancel" style="display: block; width: 100%; padding: 12px; background: #999; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">取消</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // 追加数据
+    document.getElementById('ycImportAppend').onclick = function() {
+        const newRecords = data.records.map(r => ({
+            ...r,
+            id: Date.now() + Math.random().toString(36).substr(2, 9)
+        }));
+        ycRecords = [...ycRecords, ...newRecords];
+        
+        if (data.categories && Array.isArray(data.categories)) {
+            data.categories.forEach(cat => {
+                if (!ycCategories.includes(cat)) {
+                    ycCategories.push(cat);
+                }
+            });
+        }
+        
+        saveYiceData();
+        renderYiceList();
+        loadCategoriesToSelect('ycAddCategory');
+        document.body.removeChild(modal);
+        alert('追加成功！共导入 ' + newRecords.length + ' 条记录');
+    };
+    
+    // 覆盖数据
+    document.getElementById('ycImportCover').onclick = function() {
+        ycRecords = data.records;
+        if (data.categories && Array.isArray(data.categories)) {
+            ycCategories = data.categories;
+        }
+        
+        saveYiceData();
+        renderYiceList();
+        loadCategoriesToSelect('ycAddCategory');
+        document.body.removeChild(modal);
+        alert('覆盖成功！共导入 ' + ycRecords.length + ' 条记录');
+    };
+    
+    // 取消
+    document.getElementById('ycImportCancel').onclick = function() {
+        document.body.removeChild(modal);
+    };
 }
 
 // 设置易策列表滚动监听

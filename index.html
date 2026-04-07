@@ -1497,9 +1497,6 @@
                         <input type="date" id="ycSearchEndDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
                         <button class="option-btn" onclick="searchYice()">搜索</button>
                         <button class="option-btn" onclick="clearYiceSearch()">清空</button>
-                        <button class="option-btn" onclick="exportYiceData()" style="background: #2196F3;">导出</button>
-                        <button class="option-btn" onclick="importYiceData()" style="background: #4CAF50;">导入</button>
-                        <input type="file" id="ycImportFileInput" accept=".json" style="display: none;" onchange="handleYiceImport(event)">
                     </div>
                 </div>
             </details>
@@ -1514,6 +1511,9 @@
             <div id="ycActionMenu" class="yc-action-menu" style="display: none;">
                 <button class="yc-action-item" onclick="showAddYice()">新增卦象记录</button>
                 <button class="yc-action-item" onclick="showCategoryManage()">分类管理</button>
+                <button class="yc-action-item" onclick="document.getElementById('ycImportFileInput').click()">导入数据</button>
+                <button class="yc-action-item" onclick="backupYiceData()">备份数据</button>
+                <input type="file" id="ycImportFileInput" accept=".json" style="display: none;" onchange="handleYiceImport(event)">
             </div>
         </div>
 
