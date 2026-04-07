@@ -4702,7 +4702,16 @@ function showModule(moduleName) {
         }
     } else if (moduleName === 'yice') {
         document.getElementById('yiceModule').classList.add('active');
-        initYice();
+        // 使用 Promise 处理
+        initYiceDB().then(() => {
+            return loadYiceData();
+        }).then(() => {
+            loadCategoriesToSelect('ycAddCategory');
+            renderYiceList();
+            setupYiceScrollListener();
+        }).catch(err => {
+            console.error('初始化易策失败:', err);
+        });
     }
 }
 
@@ -5939,23 +5948,122 @@ let ycPageSize = 10;
 let ycFilteredRecords = [];
 let ycIsLoadingMore = false;
 
-// 从localStorage加载数据
-function loadYiceData() {
-    const savedRecords = localStorage.getItem('yiceRecords');
-    const savedCategories = localStorage.getItem('yiceCategories');
-    ycRecords = savedRecords ? JSON.parse(savedRecords) : [];
-    ycCategories = savedCategories ? JSON.parse(savedCategories) : ['事业', '感情', '财运', '学业', '健康', '其他'];
+// ==================== IndexedDB 数据库 ====================
+const DB_NAME = 'YiShiDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'yiceData';
+
+// 初始化 IndexedDB
+function initYiceDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        
+        request.onsuccess = () => {
+            yiceDB = request.result;
+            resolve(yiceDB);
+        };
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
 }
 
-// 保存数据到localStorage
-function saveYiceData() {
-    localStorage.setItem('yiceRecords', JSON.stringify(ycRecords));
-    localStorage.setItem('yiceCategories', JSON.stringify(ycCategories));
+// 从 IndexedDB 读取数据
+async function loadYiceDataFromDB() {
+    if (!yiceDB) {
+        await initYiceDB();
+    }
+    
+    return new Promise((resolve, reject) => {
+        const transaction = yiceDB.transaction(STORE_NAME, 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        
+        // 分别读取 records 和 categories
+        const recordsRequest = store.get('records');
+        const categoriesRequest = store.get('categories');
+        
+        transaction.oncomplete = () => {
+            const records = recordsRequest.result ? recordsRequest.result.value : null;
+            const categories = categoriesRequest.result ? categoriesRequest.result.value : null;
+            resolve({
+                records: records,
+                categories: categories
+            });
+        };
+        
+        transaction.onerror = () => reject(transaction.error);
+    });
+}
+
+// 保存数据到 IndexedDB
+async function saveYiceDataToDB() {
+    if (!yiceDB) {
+        await initYiceDB();
+    }
+    
+    return new Promise((resolve, reject) => {
+        const transaction = yiceDB.transaction(STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        
+        // 保存记录
+        store.put({ id: 'records', value: ycRecords });
+        // 保存分类
+        store.put({ id: 'categories', value: ycCategories });
+        
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+    });
+}
+
+// 从 IndexedDB 加载数据
+async function loadYiceData() {
+    try {
+        const data = await loadYiceDataFromDB();
+        
+        if (data && data.records) {
+            ycRecords = data.records || [];
+            ycCategories = data.categories || ['事业', '感情', '财运', '学业', '健康', '其他'];
+        } else {
+            ycRecords = [];
+            ycCategories = ['事业', '感情', '财运', '学业', '健康', '其他'];
+        }
+        
+        // 兼容旧版 localStorage 数据（一次性迁移）
+        const oldRecords = localStorage.getItem('yiceRecords');
+        const oldCategories = localStorage.getItem('yiceCategories');
+        if (oldRecords || oldCategories) {
+            if (oldRecords) ycRecords = JSON.parse(oldRecords);
+            if (oldCategories) ycCategories = JSON.parse(oldCategories);
+            await saveYiceDataToDB();
+            localStorage.removeItem('yiceRecords');
+            localStorage.removeItem('yiceCategories');
+        }
+    } catch (e) {
+        console.error('加载数据失败:', e);
+        ycRecords = [];
+        ycCategories = ['事业', '感情', '财运', '学业', '健康', '其他'];
+    }
+}
+
+// 保存数据到 IndexedDB
+async function saveYiceData() {
+    try {
+        await saveYiceDataToDB();
+    } catch (e) {
+        console.error('保存数据失败:', e);
+    }
 }
 
 // 初始化易策模块
-function initYice() {
-    loadYiceData();
+async function initYice() {
+    await initYiceDB();
+    await loadYiceData();
     loadCategoriesToSelect('ycAddCategory');
     renderYiceList();
     setupYiceScrollListener();
