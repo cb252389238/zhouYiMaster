@@ -4424,8 +4424,24 @@ function showModule(moduleName) {
         document.getElementById('yaociModule').classList.add('active');
         initYaoCi();
     } else if (moduleName === 'chaxun') {
+        // 获取跳转状态（在initChaXun之前）
+        const fromYice = window.fromYiceDetail === true;
+        
         document.getElementById('chaxunModule').classList.add('active');
+        
+        // 始终调用initChaXun重置查询模块
         initChaXun();
+        
+        // 如果是从易策跳转过来的，需要重新显示详情
+        if (fromYice) {
+            // 保持当前状态（卦象详情已显示）
+            document.getElementById('cxBaguaSelect').style.display = 'none';
+            document.getElementById('cxGuaDetail').style.display = 'block';
+            // 不重置fromYiceDetail，让showGuaDetail使用
+        } else {
+            // 正常重置
+            window.fromYiceDetail = false;
+        }
     } else if (moduleName === 'liuyao') {
         document.getElementById('liuyaoModule').classList.add('active');
         initLiuYao();
@@ -4927,6 +4943,11 @@ function findGuaByBagua(upper, lower) {
 // 显示卦象详情
 function showGuaDetail(gua, isRootGua = false) {
     cxCurrentGua = gua;
+    
+    // 保存跳转状态（因为showModule会重置window.fromYiceDetail）
+    const fromYice = window.fromYiceDetail;
+    const yiceDongyao = window.yiceDongyao ? [...window.yiceDongyao] : [];
+    
     // 只有在非本卦跳转时才清空变爻状态
     // 返回本卦时保持变爻状态不变
     if (!isRootGua) {
@@ -4940,12 +4961,31 @@ function showGuaDetail(gua, isRootGua = false) {
         cxRootGua = gua;
     }
     
+    // 处理从易策详情跳转过来的情况 - 设置动爻
+    if (fromYice && isRootGua && yiceDongyao.length > 0) {
+        cxChangedYaoci = yiceDongyao;
+    }
+    
+    // 显示返回按钮
+    const backToYiceBtn = document.getElementById('cxBackToYiceBtn');
+    if (fromYice && isRootGua) {
+        if (backToYiceBtn) {
+            backToYiceBtn.style.display = 'inline-block';
+        }
+    } else {
+        if (backToYiceBtn) {
+            backToYiceBtn.style.display = 'none';
+        }
+    }
+    
     // 隐藏选择区域，显示详情区域
     document.getElementById('cxBaguaSelect').style.display = 'none';
     document.getElementById('cxGuaDetail').style.display = 'block';
     
-    // 显示卦象符号和名称
+    // 显示卦象符号和名称 - 使用正确的变爻
     const cxSymbolEl = document.getElementById('cxSymbol');
+    cxSymbolEl.innerHTML = '';
+    cxSymbolEl.appendChild(createGuaElement(gua.upper, gua.lower, cxChangedYaoci || []));
     cxSymbolEl.innerHTML = '';
     cxSymbolEl.appendChild(createGuaElement(gua.upper, gua.lower, cxChangedYaoci || []));
     
@@ -6188,7 +6228,126 @@ function showYiceDetail() {
     
     const detailHtml = `
         <div class="yc-detail-section">
-            <div class="yc-detail-value" style="text-align: center; padding-bottom: 0;">
+            <div class="yc-detail-value" style="text-align: center; padding-bottom: 0; cursor: pointer;" onclick="jumpToGuaDetailFromYice()">
+                <div style="font-size: 1.5em; margin-bottom: -5px;">${guaName}</div>
+                <div style="font-size: 3.5em; line-height: 1.2;">${guaSymbol.outerHTML}</div>
+            </div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算时间</div>
+            <div class="yc-detail-value">${createTime}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">分类</div>
+            <div class="yc-detail-value">${ycCurrentRecord.category || '未分类'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算内容</div>
+            <div class="yc-detail-value">${ycCurrentRecord.content || '无'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算人</div>
+            <div class="yc-detail-value">${ycCurrentRecord.person || '未知'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">解卦思路</div>
+            <div class="yc-detail-value">${ycCurrentRecord.analysis || '无'}</div>
+        </div>
+        
+        ${replaysHtml}
+    `;
+    
+    document.getElementById('ycDetailContent').innerHTML = detailHtml;
+}
+
+// 从易策详情跳转到六十四卦查询详情
+function jumpToGuaDetailFromYice() {
+    if (!ycCurrentRecord) return;
+    
+    const gua = liushisiGua.find(g => g.upper === ycCurrentRecord.upper && g.lower === ycCurrentRecord.lower);
+    if (!gua) return;
+    
+    // 保存来源和动爻信息
+    window.fromYiceDetail = true;
+    window.yiceDongyao = ycCurrentRecord.dongyao || [];
+    window.yiceRecordId = ycCurrentRecord.id;
+    
+    showModule('chaxun');
+    showGuaDetail(gua, true);
+}
+
+// 返回易策详情
+function backToYiceDetail() {
+    // 隐藏返回按钮
+    const backToYiceBtn = document.getElementById('cxBackToYiceBtn');
+    if (backToYiceBtn) {
+        backToYiceBtn.style.display = 'none';
+    }
+    
+    // 隐藏查询模块，显示易策详情模块
+    document.getElementById('chaxunModule').classList.remove('active');
+    
+    // 重新加载数据
+    loadYiceData();
+    if (window.yiceRecordId) {
+        const record = ycRecords.find(r => r.id === window.yiceRecordId);
+        if (record) {
+            ycCurrentRecord = record;
+            // 显示易策详情
+            document.getElementById('yiceEditModule').classList.remove('active');
+            document.getElementById('yiceModule').classList.remove('active');
+            document.getElementById('yiceDetailModule').classList.add('active');
+            // 重新渲染详情
+            renderYiceDetailHtml();
+        }
+    }
+}
+
+// 渲染易策详情HTML（从showYiceDetail中提取）
+function renderYiceDetailHtml() {
+    if (!ycCurrentRecord) return;
+    
+    const guaName = getGuaNameBy上下(ycCurrentRecord.upper, ycCurrentRecord.lower);
+    const guaSymbol = createGuaElement(ycCurrentRecord.upper, ycCurrentRecord.lower, ycCurrentRecord.dongyao || []);
+    const createTime = new Date(ycCurrentRecord.createTime).toLocaleString('zh-CN');
+    
+    let dongyaoHtml = '';
+    if (ycCurrentRecord.dongyao && ycCurrentRecord.dongyao.length > 0) {
+        dongyaoHtml = '<div style="margin-top: 10px;">';
+        for (let i = 1; i <= 6; i++) {
+            if (ycCurrentRecord.dongyao.includes(i)) {
+                dongyaoHtml += `<span class="yc-dongyao-red">第${i}爻 </span>`;
+            }
+        }
+        dongyaoHtml += '</div>';
+    }
+    
+    let replaysHtml = '';
+    if (ycCurrentRecord.replays && ycCurrentRecord.replays.length > 0) {
+        const sortedReplays = [...ycCurrentRecord.replays].sort((a, b) => new Date(a.time) - new Date(b.time));
+        
+        replaysHtml = '<div style="margin-top: 30px;"><h3 style="color: #667eea; margin-bottom: 15px;">复盘记录</h3>';
+        sortedReplays.forEach(replay => {
+            const replayTime = new Date(replay.time).toLocaleString('zh-CN');
+            replaysHtml += `
+                <div class="yc-replay-item">
+                    <div class="yc-replay-time">${replayTime}</div>
+                    <div style="margin-bottom: 10px;"><strong>事情进展：</strong>${replay.content}</div>
+                    <div><strong>与预测差异：</strong>${replay.diff}</div>
+                </div>
+            `;
+        });
+        replaysHtml += '</div>';
+    }
+    
+    const detailHtml = `
+        <div class="yc-detail-section">
+            <div class="yc-detail-value" style="text-align: center; padding-bottom: 0; cursor: pointer;" onclick="jumpToGuaDetailFromYice()">
                 <div style="font-size: 1.5em; margin-bottom: -5px;">${guaName}</div>
                 <div style="font-size: 3.5em; line-height: 1.2;">${guaSymbol.outerHTML}</div>
             </div>
