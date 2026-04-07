@@ -4,6 +4,252 @@ let currentGua = null;
 let score = 0;
 let questionCount = 0;
 
+// ==================== 版本更新检测 ====================
+const REMOTE_VERSION_URL = 'https://raw.githubusercontent.com/cb252389238/zhouYiMaster/main/version.json';
+
+// 启动时检查更新
+function initAppUpdateCheck() {
+    // 页面加载完成后检查更新
+    if (document.readyState === 'complete') {
+        setTimeout(checkForUpdates, 1000);
+    } else {
+        window.addEventListener('load', () => {
+            setTimeout(checkForUpdates, 1000);
+        });
+    }
+}
+
+// 检查更新
+async function checkForUpdates() {
+    try {
+        // 获取当前本地版本
+        const currentVersion = await getLocalVersion();
+        if (!currentVersion) {
+            console.log('本地版本文件不存在');
+            return;
+        }
+        
+        // 获取远程版本
+        const remoteVersion = await getRemoteVersion();
+        if (!remoteVersion) {
+            console.log('无法获取远程版本');
+            return;
+        }
+        
+        // 比较版本
+        if (compareVersions(currentVersion, remoteVersion.version)) {
+            // 有新版本，显示更新提示
+            showUpdateDialog(remoteVersion);
+        }
+    } catch (error) {
+        console.log('检查更新失败:', error.message);
+    }
+}
+
+// 获取本地版本（从 version.json）
+async function getLocalVersion() {
+    try {
+        const response = await fetch('version.json');
+        const data = await response.json();
+        return data.version || '1.0.0.1';
+    } catch (e) {
+        return '1.0.0.1';
+    }
+}
+
+// 获取远程版本
+async function getRemoteVersion() {
+    try {
+        const response = await fetch(REMOTE_VERSION_URL, {
+            cache: 'no-cache'
+        });
+        if (!response.ok) throw new Error('网络请求失败');
+        return await response.json();
+    } catch (e) {
+        console.log('获取远程版本失败:', e.message);
+        return null;
+    }
+}
+
+// 比较版本号
+function compareVersions(current, latest) {
+    const curParts = current.split('.').map(Number);
+    const latParts = latest.split('.').map(Number);
+    
+    const maxLen = Math.max(curParts.length, latParts.length);
+    
+    for (let i = 0; i < maxLen; i++) {
+        const cur = curParts[i] || 0;
+        const lat = latParts[i] || 0;
+        
+        if (lat > cur) return true;
+        if (lat < cur) return false;
+    }
+    return false;
+}
+
+// 显示更新对话框
+function showUpdateDialog(remoteVersion) {
+    // 移除已存在的弹窗
+    const existing = document.getElementById('updateDialog');
+    if (existing) existing.remove();
+    
+    const dialog = document.createElement('div');
+    dialog.id = 'updateDialog';
+    dialog.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    `;
+    
+    dialog.innerHTML = `
+        <div style="background: white; border-radius: 16px; padding: 24px; max-width: 320px; width: 85%; text-align: center;">
+            <h3 style="margin: 0 0 16px; font-size: 18px; color: #1a1a1a;">发现新版本</h3>
+            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                最新版本：${remoteVersion.version}
+            </p>
+            <button id="updateNowBtn" style="
+                display: block;
+                width: 100%;
+                padding: 14px;
+                background: #007aff;
+                color: white;
+                border: none;
+                border-radius: 10px;
+                font-size: 16px;
+                margin-bottom: 10px;
+                cursor: pointer;
+            ">立即更新</button>
+            <button id="updateLaterBtn" style="
+                display: block;
+                width: 100%;
+                padding: 14px;
+                background: #f0f0f0;
+                color: #666;
+                border: none;
+                border-radius: 10px;
+                font-size: 16px;
+                cursor: pointer;
+            ">稍后</button>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // 立即更新
+    document.getElementById('updateNowBtn').onclick = () => {
+        dialog.remove();
+        downloadAndInstall(remoteVersion.url);
+    };
+    
+    // 稍后
+    document.getElementById('updateLaterBtn').onclick = () => {
+        dialog.remove();
+    };
+}
+
+// 下载并安装
+function downloadAndInstall(url) {
+    // 创建下载链接
+    const downloadUrl = url;
+    
+    // 使用系统浏览器打开下载链接
+    // 在移动设备上会调起系统下载器
+    window.open(downloadUrl, '_system');
+    
+    // 同时也可以尝试在应用内下载
+    showDownloadProgress(url);
+}
+
+// 显示下载进度（备用方案）
+function showDownloadProgress(url) {
+    const progressDialog = document.createElement('div');
+    progressDialog.id = 'downloadProgress';
+    progressDialog.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    `;
+    
+    progressDialog.innerHTML = `
+        <div style="background: white; border-radius: 16px; padding: 24px; max-width: 300px; width: 85%; text-align: center;">
+            <h3 style="margin: 0 0 16px; font-size: 16px;">正在下载更新...</h3>
+            <div style="background: #e5e5ea; border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 12px;">
+                <div id="progressBar" style="background: #007aff; height: 100%; width: 0%; transition: width 0.3s;"></div>
+            </div>
+            <p id="progressText" style="color: #666; font-size: 14px;">0%</p>
+        </div>
+    `;
+    
+    document.body.appendChild(progressDialog);
+    
+    // 创建下载任务
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'blob';
+    
+    xhr.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').textContent = percent + '%';
+        }
+    };
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            document.getElementById('progressText').textContent = '下载完成，正在安装...';
+            
+            // 保存到本地并安装
+            const blob = xhr.response;
+            const blobUrl = URL.createObjectURL(blob);
+            
+            // 创建隐藏的下载链接并点击
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = '易师更新.apk';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => {
+                progressDialog.remove();
+                alert('下载完成，请在通知栏找到安装包进行安装');
+            }, 1500);
+        } else {
+            progressDialog.remove();
+            alert('下载失败，请点击右上角浏览器图标手动下载');
+        }
+    };
+    
+    xhr.onerror = function() {
+        progressDialog.remove();
+        alert('下载失败，请点击右上角浏览器图标手动下载');
+    };
+    
+    xhr.send();
+}
+
+// 初始化更新检测
+initAppUpdateCheck();
+
+// ==================== 应用逻辑 ====================
+
 // 卦象练习模块变量
 let gxCorrectAnswer = null;
 let gxAnswered = false;
@@ -22,6 +268,19 @@ let cxCurrentGua = null;
 let cxChangedYaoci = []; // 存储变爻位置 (1-6)
 let cxRootGua = null; // 保存本卦（原始卦）
 let cxActiveCharacter = null; // 当前选中的汉字
+
+// 易策模块变量
+let yiceDB = null;
+let yiceCurrentPage = 1;
+let yicePageSize = 10;
+let yiceTotalCount = 0;
+let yiceRecords = [];
+let yiceCategories = [];
+let yiceEditingId = null;
+let yiceCurrentRecord = null;
+let yiceSelectedGua = { upper: null, lower: null, name: null, changeYao: 0 };
+let yiceUpperBagua = null;
+let yiceLowerBagua = null;
 
 const cxCharacterOriginMap = {
     '乾': {
@@ -4411,11 +4670,39 @@ function showModule(moduleName) {
         document.getElementById('yaociModule').classList.add('active');
         initYaoCi();
     } else if (moduleName === 'chaxun') {
+        // 获取跳转状态（在initChaXun之前）
+        const fromYice = window.fromYiceDetail === true;
+        
         document.getElementById('chaxunModule').classList.add('active');
+        
+        // 始终调用initChaXun重置查询模块
         initChaXun();
+        
+        // 如果是从易策跳转过来的，需要重新显示详情
+        if (fromYice) {
+            // 保持当前状态（卦象详情已显示）
+            document.getElementById('cxBaguaSelect').style.display = 'none';
+            document.getElementById('cxGuaDetail').style.display = 'block';
+            // 不重置fromYiceDetail，让showGuaDetail使用
+        } else {
+            // 正常重置
+            window.fromYiceDetail = false;
+        }
     } else if (moduleName === 'liuyao') {
         document.getElementById('liuyaoModule').classList.add('active');
-        initLiuYao();
+        // 如果是从易策返回的，保留当前卦象；否则初始化
+        if (!window.returningFromYice) {
+            initLiuYao();
+        } else {
+            window.returningFromYice = false;
+            // 恢复卦象显示
+            if (window.lyCurrentGua && lyYaoci.length === 6) {
+                showLiuYaoResult();
+            }
+        }
+    } else if (moduleName === 'yice') {
+        document.getElementById('yiceModule').classList.add('active');
+        initYice();
     }
 }
 
@@ -4911,6 +5198,11 @@ function findGuaByBagua(upper, lower) {
 // 显示卦象详情
 function showGuaDetail(gua, isRootGua = false) {
     cxCurrentGua = gua;
+    
+    // 保存跳转状态（因为showModule会重置window.fromYiceDetail）
+    const fromYice = window.fromYiceDetail;
+    const yiceDongyao = window.yiceDongyao ? [...window.yiceDongyao] : [];
+    
     // 只有在非本卦跳转时才清空变爻状态
     // 返回本卦时保持变爻状态不变
     if (!isRootGua) {
@@ -4924,12 +5216,31 @@ function showGuaDetail(gua, isRootGua = false) {
         cxRootGua = gua;
     }
     
+    // 处理从易策详情跳转过来的情况 - 设置动爻
+    if (fromYice && isRootGua && yiceDongyao.length > 0) {
+        cxChangedYaoci = yiceDongyao;
+    }
+    
+    // 显示返回按钮
+    const backToYiceBtn = document.getElementById('cxBackToYiceBtn');
+    if (fromYice && isRootGua) {
+        if (backToYiceBtn) {
+            backToYiceBtn.style.display = 'inline-block';
+        }
+    } else {
+        if (backToYiceBtn) {
+            backToYiceBtn.style.display = 'none';
+        }
+    }
+    
     // 隐藏选择区域，显示详情区域
     document.getElementById('cxBaguaSelect').style.display = 'none';
     document.getElementById('cxGuaDetail').style.display = 'block';
     
-    // 显示卦象符号和名称
+    // 显示卦象符号和名称 - 使用正确的变爻
     const cxSymbolEl = document.getElementById('cxSymbol');
+    cxSymbolEl.innerHTML = '';
+    cxSymbolEl.appendChild(createGuaElement(gua.upper, gua.lower, cxChangedYaoci || []));
     cxSymbolEl.innerHTML = '';
     cxSymbolEl.appendChild(createGuaElement(gua.upper, gua.lower, cxChangedYaoci || []));
     
@@ -5440,9 +5751,74 @@ function showLiuYaoResult() {
         // 替换投掷按钮为重新起卦和卦象详情按钮
         const buttonArea = document.getElementById('lyButtonArea');
         buttonArea.innerHTML = `
-            <button class="option-btn" onclick="resetLiuYao()" style="margin-right: 10px;">重新起卦</button>
-            <button class="option-btn" onclick="showLiuYaoDetail()">卦象详情</button>
+            <button class="option-btn" onclick="resetLiuYao()" style="display: block; width: 100%; margin-bottom: 10px;">重新起卦</button>
+            <button class="option-btn" onclick="showLiuYaoDetail()" style="display: block; width: 100%; margin-bottom: 10px;">卦象详情</button>
+            <button class="option-btn" onclick="addToYiceFromLiuYao()" style="display: block; width: 100%; background: #34c759;">添加到易策</button>
         `;
+    }
+}
+
+// 从六爻起卦添加到易策
+function addToYiceFromLiuYao() {
+    if (!window.lyCurrentGua) {
+        alert('请先起卦');
+        return;
+    }
+    
+    const gua = window.lyCurrentGua;
+    
+    // 计算变爻（6或9为变爻）
+    const dongyao = [];
+    lyYaoci.forEach((value, index) => {
+        if (value === 6 || value === 9) {
+            dongyao.push(index + 1);
+        }
+    });
+    
+    // 保存数据到全局变量，供新增页面使用
+    window.yiceFromLiuYao = {
+        upper: gua.upper,
+        lower: gua.lower,
+        guaName: gua.name,
+        dongyao: dongyao
+    };
+    
+    // 跳转到易策新增页面
+    showAddYicePreFill();
+}
+
+// 预填充从六爻跳转过来的数据
+function showAddYicePreFill() {
+    const fromData = window.yiceFromLiuYao;
+    
+    // 使用keepData=true来保留数据
+    showAddYice(true);
+    
+    // 如果有预填充数据
+    if (fromData) {
+        // 延迟执行，确保DOM已加载
+        setTimeout(() => {
+            // 设置卦象
+            ycSelectedUpper = fromData.upper;
+            ycSelectedLower = fromData.lower;
+            ycSelectedDongyao = [...fromData.dongyao];
+            
+            // 显示已选卦象
+            const guaName = getGuaNameBy上下(ycSelectedUpper, ycSelectedLower);
+            const guaSymbol = createGuaElement(ycSelectedUpper, ycSelectedLower, ycSelectedDongyao);
+            
+            document.getElementById('ycSelectedGuaText').style.display = 'none';
+            const display = document.getElementById('ycSelectedGuaDisplay');
+            display.style.display = 'block';
+            display.innerHTML = `
+                <div style="font-size: 1.5em; margin-bottom: 10px;">${guaName}</div>
+                <div style="font-size: 4em;">${guaSymbol.outerHTML}</div>
+            `;
+            
+            // 显示动爻选择
+            document.getElementById('ycDongyaoSelect').style.display = 'block';
+            renderDongyaoButtons('ycDongyaoButtons', 'ycAdd');
+        }, 100);
     }
 }
 
@@ -5542,6 +5918,1149 @@ function createGuaElement(upper, lower, changedIndices = []) {
     }
     
     return container;
+}
+
+// ==================== 易策模块 ====================
+// 易策全局变量
+let ycRecords = [];
+let ycCategories = ['事业', '感情', '财运', '学业', '健康', '其他'];
+let ycCurrentRecord = null;
+let ycSelectedUpper = null;
+let ycSelectedLower = null;
+let ycSelectedDongyao = [];
+let ycEditUpper = null;
+let ycEditLower = null;
+let ycEditDongyao = [];
+let ycSearchKeyword = '';
+
+// 分页相关变量
+let ycCurrentPage = 1;
+let ycPageSize = 10;
+let ycFilteredRecords = [];
+let ycIsLoadingMore = false;
+
+// 从localStorage加载数据
+function loadYiceData() {
+    const savedRecords = localStorage.getItem('yiceRecords');
+    const savedCategories = localStorage.getItem('yiceCategories');
+    ycRecords = savedRecords ? JSON.parse(savedRecords) : [];
+    ycCategories = savedCategories ? JSON.parse(savedCategories) : ['事业', '感情', '财运', '学业', '健康', '其他'];
+}
+
+// 保存数据到localStorage
+function saveYiceData() {
+    localStorage.setItem('yiceRecords', JSON.stringify(ycRecords));
+    localStorage.setItem('yiceCategories', JSON.stringify(ycCategories));
+}
+
+// 初始化易策模块
+function initYice() {
+    loadYiceData();
+    loadCategoriesToSelect('ycAddCategory');
+    renderYiceList();
+    setupYiceScrollListener();
+}
+
+// 生成六爻卦象SVG HTML
+function getGuaSymbolHtml(upper, lower, size = 35, dongyao = []) {
+    const upperYao = baguaYaoYinYang[upper];
+    const lowerYao = baguaYaoYinYang[lower];
+    if (!upperYao || !lowerYao) return '';
+    
+    const lineHeight = 11;
+    const totalHeight = lineHeight * 6;
+    const startY = lineHeight * 0.5;
+    
+    let svgHtml = `<svg class="gua-symbol-svg" viewBox="0 0 ${size} ${totalHeight}" width="${size}" height="${totalHeight}">`;
+    
+    // 下卦（三爻）- 从下往上绘制（初、二、三爻）
+    for (let i = 0; i <= 2; i++) {
+        const isYang = lowerYao[i] === 1;
+        const yaoNum = i + 1;
+        const isDong = dongyao.includes(yaoNum);
+        const strokeColor = isDong ? '#e74c3c' : '#333';
+        const y = startY + i * lineHeight;
+        if (isYang) {
+            svgHtml += `<line x1="2" y1="${y}" x2="${size - 2}" y2="${y}" stroke="${strokeColor}" stroke-width="2"/>`;
+        } else {
+            svgHtml += `<line x1="2" y1="${y}" x2="${size * 0.35}" y2="${y}" stroke="${strokeColor}" stroke-width="2"/><line x1="${size * 0.65}" y1="${y}" x2="${size - 2}" y2="${y}" stroke="${strokeColor}" stroke-width="2"/>`;
+        }
+    }
+    
+    // 上卦（三爻）- 从下往上绘制（四、五、六爻）
+    for (let i = 0; i <= 2; i++) {
+        const isYang = upperYao[i] === 1;
+        const yaoNum = 4 + i;
+        const isDong = dongyao.includes(yaoNum);
+        const strokeColor = isDong ? '#e74c3c' : '#333';
+        const y = startY + (3 + i) * lineHeight;
+        if (isYang) {
+            svgHtml += `<line x1="2" y1="${y}" x2="${size - 2}" y2="${y}" stroke="${strokeColor}" stroke-width="2"/>`;
+        } else {
+            svgHtml += `<line x1="2" y1="${y}" x2="${size * 0.35}" y2="${y}" stroke="${strokeColor}" stroke-width="2"/><line x1="${size * 0.65}" y1="${y}" x2="${size - 2}" y2="${y}" stroke="${strokeColor}" stroke-width="2"/>`;
+        }
+    }
+    
+    svgHtml += '</svg>';
+    return svgHtml;
+}
+
+// 渲染易策列表
+function renderYiceList(isLoadMore = false) {
+    loadYiceData();
+    let records = [...ycRecords];
+    
+    const searchKeyword = document.getElementById('ycSearchInput')?.value || '';
+    const searchCategory = document.getElementById('ycSearchCategory')?.value || '';
+    const startDate = document.getElementById('ycSearchStartDate')?.value || '';
+    const endDate = document.getElementById('ycSearchEndDate')?.value || '';
+    
+    // 搜索过滤 - 关键词
+    if (searchKeyword) {
+        const keyword = searchKeyword.toLowerCase();
+        records = records.filter(r => {
+            const guaName = getGuaNameBy上下(r.upper, r.lower);
+            return (r.category && r.category.toLowerCase().includes(keyword)) ||
+                   (r.content && r.content.toLowerCase().includes(keyword)) ||
+                   (r.person && r.person.toLowerCase().includes(keyword)) ||
+                   (guaName && guaName.toLowerCase().includes(keyword));
+        });
+    }
+    
+    // 搜索过滤 - 分类
+    if (searchCategory) {
+        records = records.filter(r => r.category === searchCategory);
+    }
+    
+    // 搜索过滤 - 时间范围
+    if (startDate || endDate) {
+        records = records.filter(r => {
+            const recordDate = new Date(r.createTime);
+            if (startDate && recordDate < new Date(startDate)) return false;
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59);
+                if (recordDate > end) return false;
+            }
+            return true;
+        });
+    }
+    
+    // 按时间倒序排列
+    records.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
+    
+    // 保存过滤后的所有记录
+    ycFilteredRecords = records;
+    
+    // 如果不是加载更多，重置页码
+    if (!isLoadMore) {
+        ycCurrentPage = 1;
+    }
+    
+    // 分页获取记录
+    const displayRecords = records.slice(0, ycCurrentPage * ycPageSize);
+    
+    const listArea = document.getElementById('ycListArea');
+    
+    if (!isLoadMore && displayRecords.length === 0) {
+        listArea.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">暂无占卜记录，点击下方按钮添加</div>';
+        return;
+    }
+    
+    let html = '';
+    displayRecords.forEach(record => {
+        const guaName = getGuaNameBy上下(record.upper, record.lower);
+        const time = new Date(record.createTime).toLocaleDateString('zh-CN');
+        const dongyaoArray = record.dongyao || [];
+        const guaSymbolHtml = getGuaSymbolHtml(record.upper, record.lower, 36, dongyaoArray);
+        
+        html += `
+            <div class="yc-record-card" onclick="showYiceDetailById('${record.id}')">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    ${guaSymbolHtml}
+                    <span style="font-size: 1.2em; font-weight: bold; margin-left: 10px;">${guaName}</span>
+                </div>
+                <div class="yc-record-header">
+                    <span class="yc-record-time">${time}</span>
+                    <span class="yc-record-category">${record.category || '未分类'}</span>
+                </div>
+                <div class="yc-record-content">${record.content || '无测算内容'}</div>
+            </div>
+        `;
+    });
+    
+    // 如果是加载更多，追加内容
+    if (isLoadMore) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        while (tempDiv.firstChild) {
+            listArea.appendChild(tempDiv.firstChild);
+        }
+    } else {
+        listArea.innerHTML = html;
+    }
+    
+    // 检查是否还有更多数据
+    const hasMore = records.length > ycCurrentPage * ycPageSize;
+    
+    // 显示/隐藏加载提示
+    let loadMoreTip = document.getElementById('ycLoadMoreTip');
+    if (!loadMoreTip) {
+        loadMoreTip = document.createElement('div');
+        loadMoreTip.id = 'ycLoadMoreTip';
+        loadMoreTip.style.cssText = 'text-align: center; padding: 20px; color: #999;';
+        listArea.parentNode.appendChild(loadMoreTip);
+    }
+    
+    if (hasMore) {
+        loadMoreTip.textContent = '上滑加载更多...';
+    } else if (records.length > 0) {
+        loadMoreTip.textContent = '已加载全部 ' + records.length + ' 条记录';
+    } else {
+        loadMoreTip.textContent = '';
+    }
+}
+
+// 根据上下卦查找卦名
+function getGuaNameBy上下(upper, lower) {
+    const gua = liushisiGua.find(g => g.upper === upper && g.lower === lower);
+    return gua ? gua.name : upper + lower;
+}
+
+// 搜索易策记录
+function searchYice() {
+    renderYiceList();
+}
+
+// 清空搜索
+function clearYiceSearch() {
+    document.getElementById('ycSearchInput').value = '';
+    const searchCat = document.getElementById('ycSearchCategory');
+    if (searchCat) searchCat.value = '';
+    const startDate = document.getElementById('ycSearchStartDate');
+    const endDate = document.getElementById('ycSearchEndDate');
+    if (startDate) startDate.value = '';
+    if (endDate) endDate.value = '';
+    ycSearchKeyword = '';
+    renderYiceList();
+}
+
+// 切换悬浮按钮菜单
+function toggleYcActions() {
+    const menu = document.getElementById('ycActionMenu');
+    const btn = document.getElementById('ycFloatingBtn');
+    if (menu.style.display === 'none') {
+        menu.style.display = 'block';
+        btn.style.transform = 'rotate(45deg)';
+    } else {
+        menu.style.display = 'none';
+        btn.style.transform = 'rotate(0)';
+    }
+}
+
+// 显示新增卦象记录页面
+function showAddYice(keepData = false) {
+    document.getElementById('ycActionMenu').style.display = 'none';
+    document.getElementById('ycFloatingBtn').style.transform = 'rotate(0)';
+    
+    // 如果不是保留数据模式，则重置表单
+    if (!keepData) {
+        document.getElementById('ycAddCategory').value = '';
+        document.getElementById('ycAddContent').value = '';
+        document.getElementById('ycAddPerson').value = '';
+        document.getElementById('ycAddAnalysis').value = '';
+        document.getElementById('ycSelectedGuaText').style.display = 'block';
+        document.getElementById('ycSelectedGuaDisplay').style.display = 'none';
+        document.getElementById('ycDongyaoSelect').style.display = 'none';
+        
+        ycSelectedUpper = null;
+        ycSelectedLower = null;
+        ycSelectedDongyao = [];
+    }
+    
+    // 初始化时间为当前时间
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('ycAddCreateTime').value = `${year}-${month}-${day}T${hour}:${minute}`;
+    
+    // 加载分类
+    loadCategoriesToSelect('ycAddCategory');
+    
+    // 根据来源更新返回按钮
+    const backBtn = document.getElementById('yiceAddBackBtn');
+    if (window.yiceFromLiuYao) {
+        backBtn.textContent = '← 返回六爻起卦';
+        backBtn.onclick = function() {
+            window.yiceFromLiuYao = null;
+            window.returningFromYice = true;
+            showModule('liuyao');
+        };
+    } else {
+        backBtn.textContent = '← 返回列表';
+        backBtn.onclick = showYiceList;
+    }
+    
+    // 隐藏六爻模块，显示易策新增模块
+    document.getElementById('liuyaoModule').classList.remove('active');
+    document.getElementById('yiceModule').classList.remove('active');
+    document.getElementById('yiceAddModule').classList.add('active');
+}
+
+// 加载分类到下拉框
+function loadCategoriesToSelect(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">请选择分类</option>';
+    ycCategories.forEach(cat => {
+        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+    
+    // 同时更新搜索下拉框
+    const searchSelect = document.getElementById('ycSearchCategory');
+    if (searchSelect && searchSelect !== select) {
+        searchSelect.innerHTML = '<option value="">全部分类</option>';
+        ycCategories.forEach(cat => {
+            searchSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+    }
+}
+
+// 显示卦象选择弹框
+function showGuaSelectModal() {
+    document.getElementById('ycGuaModal').style.display = 'block';
+    renderBaguaSelectForYice('ycUpperBagua', 'upper');
+    renderBaguaSelectForYice('ycLowerBagua', 'lower');
+}
+
+// 渲染卦象选择按钮
+function renderBaguaSelectForYice(containerId, position) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    
+    const baguaOrder = ['乾', '兑', '离', '震', '巽', '坎', '艮', '坤'];
+    
+    baguaOrder.forEach(key => {
+        const btn = document.createElement('div');
+        btn.className = 'bagua-btn';
+        const yaoYinYang = baguaYaoYinYang[key];
+        let svgHtml = '<svg class="bagua-svg" viewBox="0 0 60 60" width="40" height="40">';
+        for (let i = 2; i >= 0; i--) {
+            const isYang = yaoYinYang[i] === 1;
+            const y = 10 + (2 - i) * 20;
+            if (isYang) {
+                svgHtml += `<line x1="5" y1="${y}" x2="55" y2="${y}" stroke="#333" stroke-width="4"/>`;
+            } else {
+                svgHtml += `<line x1="5" y1="${y}" x2="22" y2="${y}" stroke="#333" stroke-width="4"/><line x1="38" y1="${y}" x2="55" y2="${y}" stroke="#333" stroke-width="4"/>`;
+            }
+        }
+        svgHtml += '</svg>';
+        btn.innerHTML = `<div>${svgHtml}</div><div style="font-size:0.7em;margin-top:5px;">${key}</div>`;
+        btn.onclick = () => selectBaguaForYice(key, position);
+        container.appendChild(btn);
+    });
+}
+
+// 选择八卦
+function selectBaguaForYice(baguaName, position) {
+    if (position === 'upper') {
+        ycSelectedUpper = baguaName;
+        const buttons = document.querySelectorAll('#ycUpperBagua .bagua-btn');
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        event.currentTarget.classList.add('selected');
+    } else {
+        ycSelectedLower = baguaName;
+        const buttons = document.querySelectorAll('#ycLowerBagua .bagua-btn');
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        event.currentTarget.classList.add('selected');
+    }
+    
+    // 显示结果
+    if (ycSelectedUpper && ycSelectedLower) {
+        const guaName = getGuaNameBy上下(ycSelectedUpper, ycSelectedLower);
+        const guaSymbol = createGuaElement(ycSelectedUpper, ycSelectedLower, []);
+        document.getElementById('ycGuaResult').innerHTML = `
+            <div class="gua-symbol" style="font-size: 4em;">${guaName}</div>
+            <div style="margin-top: 10px;">${guaSymbol.outerHTML}</div>
+        `;
+        document.getElementById('ycConfirmGuaBtn').style.display = 'inline-block';
+    }
+}
+
+// 确认卦象选择
+function confirmGuaSelection() {
+    const guaName = getGuaNameBy上下(ycSelectedUpper, ycSelectedLower);
+    const guaSymbol = createGuaElement(ycSelectedUpper, ycSelectedLower, []);
+    
+    document.getElementById('ycSelectedGuaText').style.display = 'none';
+    const display = document.getElementById('ycSelectedGuaDisplay');
+    display.style.display = 'block';
+    display.innerHTML = `
+        <div style="font-size: 2em; margin-bottom: 10px;">${guaName}</div>
+        <div style="font-size: 5em;">${guaSymbol.outerHTML}</div>
+    `;
+    
+    // 显示动爻选择
+    document.getElementById('ycDongyaoSelect').style.display = 'block';
+    renderDongyaoButtons('ycDongyaoButtons', 'ycAdd');
+    
+    closeGuaModal();
+}
+
+// 渲染动爻按钮
+function renderDongyaoButtons(containerId, prefix) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    
+    for (let i = 1; i <= 6; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = '第' + i + '爻';
+        btn.onclick = () => toggleDongyao(i, prefix);
+        
+        let dongyaoArray = prefix === 'ycAdd' ? ycSelectedDongyao : ycEditDongyao;
+        if (dongyaoArray.includes(i)) {
+            btn.classList.add('selected');
+        }
+        
+        container.appendChild(btn);
+    }
+}
+
+// 切换动爻选择
+function toggleDongyao(yaoNum, prefix) {
+    if (prefix === 'ycAdd') {
+        const index = ycSelectedDongyao.indexOf(yaoNum);
+        if (index > -1) {
+            ycSelectedDongyao.splice(index, 1);
+        } else {
+            ycSelectedDongyao.push(yaoNum);
+        }
+        renderDongyaoButtons('ycDongyaoButtons', 'ycAdd');
+        updateGuaDisplayWithDongyao('ycAdd');
+    } else {
+        const index = ycEditDongyao.indexOf(yaoNum);
+        if (index > -1) {
+            ycEditDongyao.splice(index, 1);
+        } else {
+            ycEditDongyao.push(yaoNum);
+        }
+        renderDongyaoButtons('ycEditDongyaoButtons', 'ycEdit');
+        updateGuaDisplayWithDongyao('ycEdit');
+    }
+}
+
+// 更新卦象显示（带动爻高亮）
+function updateGuaDisplayWithDongyao(prefix) {
+    const upper = prefix === 'ycAdd' ? ycSelectedUpper : ycEditUpper;
+    const lower = prefix === 'ycAdd' ? ycSelectedLower : ycEditLower;
+    const dongyaoArray = prefix === 'ycAdd' ? ycSelectedDongyao : ycEditDongyao;
+    
+    if (!upper || !lower) return;
+    
+    const guaName = getGuaNameBy上下(upper, lower);
+    const guaSymbol = createGuaElement(upper, lower, dongyaoArray);
+    
+    const display = document.getElementById(prefix === 'ycAdd' ? 'ycSelectedGuaDisplay' : 'ycEditGuaDisplay');
+    if (display) {
+        display.innerHTML = `
+            <div style="font-size: 2em; margin-bottom: 10px;">${guaName}</div>
+            <div style="font-size: 5em;">${guaSymbol.outerHTML}</div>
+        `;
+    }
+}
+
+// 关闭卦象弹框
+function closeGuaModal() {
+    document.getElementById('ycGuaModal').style.display = 'none';
+    document.getElementById('ycGuaResult').innerHTML = '';
+    document.getElementById('ycConfirmGuaBtn').style.display = 'none';
+}
+
+// 保存易策记录
+function saveYiceRecord() {
+    const category = document.getElementById('ycAddCategory').value;
+    const content = document.getElementById('ycAddContent').value;
+    const person = document.getElementById('ycAddPerson').value;
+    const analysis = document.getElementById('ycAddAnalysis').value;
+    const createTimeInput = document.getElementById('ycAddCreateTime').value;
+    
+    if (!ycSelectedUpper || !ycSelectedLower) {
+        alert('请选择卦象');
+        return;
+    }
+    
+    // 使用用户选择的时间，如果没有选择则使用当前时间
+    const createTime = createTimeInput ? new Date(createTimeInput).toISOString() : new Date().toISOString();
+    
+    const record = {
+        id: Date.now().toString(),
+        category,
+        content,
+        person,
+        upper: ycSelectedUpper,
+        lower: ycSelectedLower,
+        dongyao: [...ycSelectedDongyao],
+        analysis,
+        createTime: createTime,
+        updateTime: new Date().toISOString(),
+        replays: []
+    };
+    
+    ycRecords.push(record);
+    saveYiceData();
+    
+    alert('保存成功');
+    
+    // 根据来源决定返回位置
+    if (window.yiceFromLiuYao) {
+        window.yiceFromLiuYao = null;
+        window.returningFromYice = true;
+        showModule('liuyao');
+    } else {
+        showYiceList();
+    }
+}
+
+// 折叠/展开查询面板
+function toggleYiceSearch() {
+    const content = document.getElementById('yiceSearchContent');
+    const toggle = document.getElementById('yiceSearchToggle');
+    
+    if (!content) return;
+    
+    if (content.classList.contains('yice-search-collapsed')) {
+        content.classList.remove('yice-search-collapsed');
+        content.classList.add('yice-search-expanded');
+        toggle.textContent = '▼';
+    } else {
+        content.classList.remove('yice-search-expanded');
+        content.classList.add('yice-search-collapsed');
+        toggle.textContent = '▶';
+    }
+}
+
+// 显示易策列表
+function showYiceList() {
+    document.getElementById('yiceAddModule').classList.remove('active');
+    document.getElementById('yiceCategoryModule').classList.remove('active');
+    document.getElementById('yiceDetailModule').classList.remove('active');
+    document.getElementById('yiceEditModule').classList.remove('active');
+    document.getElementById('yiceModule').classList.add('active');
+    
+    // 强制折叠搜索面板
+    const details = document.getElementById('yiceSearchDetails');
+    if (details) {
+        details.removeAttribute('open');
+    }
+    
+    renderYiceList();
+}
+
+// 显示分类管理
+function showCategoryManage() {
+    document.getElementById('ycActionMenu').style.display = 'none';
+    document.getElementById('ycFloatingBtn').style.transform = 'rotate(0)';
+    
+    renderCategoryList();
+    
+    document.getElementById('yiceModule').classList.remove('active');
+    document.getElementById('yiceCategoryModule').classList.add('active');
+}
+
+// 渲染分类列表
+function renderCategoryList() {
+    const list = document.getElementById('ycCategoryList');
+    
+    if (ycCategories.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">暂无分类</div>';
+        return;
+    }
+    
+    let html = '';
+    ycCategories.forEach((cat, index) => {
+        html += `
+            <div class="yc-category-item">
+                <span class="yc-category-name">${cat}</span>
+                <div class="yc-category-actions">
+                    <button class="yc-category-btn edit" onclick="editCategory(${index})">编辑</button>
+                    <button class="yc-category-btn delete" onclick="deleteCategory(${index})">删除</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    list.innerHTML = html;
+}
+
+// 添加分类
+function addCategory() {
+    const name = document.getElementById('ycNewCategory').value.trim();
+    if (!name) {
+        alert('请输入分类名称');
+        return;
+    }
+    
+    if (ycCategories.includes(name)) {
+        alert('分类已存在');
+        return;
+    }
+    
+    ycCategories.push(name);
+    saveYiceData();
+    document.getElementById('ycNewCategory').value = '';
+    renderCategoryList();
+}
+
+// 编辑分类
+function editCategory(index) {
+    const newName = prompt('请输入新的分类名称', ycCategories[index]);
+    if (newName && newName.trim() && newName !== ycCategories[index]) {
+        ycCategories[index] = newName.trim();
+        saveYiceData();
+        renderCategoryList();
+    }
+}
+
+// 删除分类
+function deleteCategory(index) {
+    if (confirm('确定要删除分类 "' + ycCategories[index] + '" 吗？')) {
+        ycCategories.splice(index, 1);
+        saveYiceData();
+        renderCategoryList();
+    }
+}
+
+// 根据ID显示卦象详情
+function showYiceDetailById(id) {
+    ycCurrentRecord = ycRecords.find(r => r.id === id);
+    if (!ycCurrentRecord) return;
+    
+    showYiceDetail();
+}
+
+// 显示卦象详情
+function showYiceDetail() {
+    if (!ycCurrentRecord) return;
+    
+    document.getElementById('yiceEditModule').classList.remove('active');
+    document.getElementById('yiceModule').classList.remove('active');
+    document.getElementById('yiceDetailModule').classList.add('active');
+    
+    const guaName = getGuaNameBy上下(ycCurrentRecord.upper, ycCurrentRecord.lower);
+    const guaSymbol = createGuaElement(ycCurrentRecord.upper, ycCurrentRecord.lower, ycCurrentRecord.dongyao || []);
+    const createTime = new Date(ycCurrentRecord.createTime).toLocaleString('zh-CN');
+    
+    let dongyaoHtml = '';
+    if (ycCurrentRecord.dongyao && ycCurrentRecord.dongyao.length > 0) {
+        dongyaoHtml = '<div style="margin-top: 10px;">';
+        for (let i = 1; i <= 6; i++) {
+            if (ycCurrentRecord.dongyao.includes(i)) {
+                dongyaoHtml += `<span class="yc-dongyao-red">第${i}爻 </span>`;
+            }
+        }
+        dongyaoHtml += '</div>';
+    }
+    
+    let replaysHtml = '';
+    if (ycCurrentRecord.replays && ycCurrentRecord.replays.length > 0) {
+        // 按时间正序排列
+        const sortedReplays = [...ycCurrentRecord.replays].sort((a, b) => new Date(a.time) - new Date(b.time));
+        
+        replaysHtml = '<div style="margin-top: 30px;"><h3 style="color: #667eea; margin-bottom: 15px;">复盘记录</h3>';
+        sortedReplays.forEach(replay => {
+            const replayTime = new Date(replay.time).toLocaleString('zh-CN');
+            replaysHtml += `
+                <div class="yc-replay-item">
+                    <div class="yc-replay-time">${replayTime}</div>
+                    <div style="margin-bottom: 10px;"><strong>事情进展：</strong>${replay.content}</div>
+                    <div><strong>与预测差异：</strong>${replay.diff}</div>
+                </div>
+            `;
+        });
+        replaysHtml += '</div>';
+    }
+    
+    const detailHtml = `
+        <div class="yc-detail-section">
+            <div class="yc-detail-value" style="text-align: center; padding-bottom: 0; cursor: pointer;" onclick="jumpToGuaDetailFromYice()">
+                <div style="font-size: 1.5em; margin-bottom: -5px;">${guaName}</div>
+                <div style="font-size: 3.5em; line-height: 1.2;">${guaSymbol.outerHTML}</div>
+            </div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算时间</div>
+            <div class="yc-detail-value">${createTime}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">分类</div>
+            <div class="yc-detail-value">${ycCurrentRecord.category || '未分类'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算内容</div>
+            <div class="yc-detail-value">${ycCurrentRecord.content || '无'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算人</div>
+            <div class="yc-detail-value">${ycCurrentRecord.person || '未知'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">解卦思路</div>
+            <div class="yc-detail-value">${ycCurrentRecord.analysis || '无'}</div>
+        </div>
+        
+        ${replaysHtml}
+    `;
+    
+    document.getElementById('ycDetailContent').innerHTML = detailHtml;
+}
+
+// 从易策详情跳转到六十四卦查询详情
+function jumpToGuaDetailFromYice() {
+    if (!ycCurrentRecord) return;
+    
+    const gua = liushisiGua.find(g => g.upper === ycCurrentRecord.upper && g.lower === ycCurrentRecord.lower);
+    if (!gua) return;
+    
+    // 保存来源和动爻信息
+    window.fromYiceDetail = true;
+    window.yiceDongyao = ycCurrentRecord.dongyao || [];
+    window.yiceRecordId = ycCurrentRecord.id;
+    
+    showModule('chaxun');
+    showGuaDetail(gua, true);
+}
+
+// 返回易策详情
+function backToYiceDetail() {
+    // 隐藏返回按钮
+    const backToYiceBtn = document.getElementById('cxBackToYiceBtn');
+    if (backToYiceBtn) {
+        backToYiceBtn.style.display = 'none';
+    }
+    
+    // 隐藏查询模块，显示易策详情模块
+    document.getElementById('chaxunModule').classList.remove('active');
+    
+    // 重新加载数据
+    loadYiceData();
+    if (window.yiceRecordId) {
+        const record = ycRecords.find(r => r.id === window.yiceRecordId);
+        if (record) {
+            ycCurrentRecord = record;
+            // 显示易策详情
+            document.getElementById('yiceEditModule').classList.remove('active');
+            document.getElementById('yiceModule').classList.remove('active');
+            document.getElementById('yiceDetailModule').classList.add('active');
+            // 重新渲染详情
+            renderYiceDetailHtml();
+        }
+    }
+}
+
+// 渲染易策详情HTML（从showYiceDetail中提取）
+function renderYiceDetailHtml() {
+    if (!ycCurrentRecord) return;
+    
+    const guaName = getGuaNameBy上下(ycCurrentRecord.upper, ycCurrentRecord.lower);
+    const guaSymbol = createGuaElement(ycCurrentRecord.upper, ycCurrentRecord.lower, ycCurrentRecord.dongyao || []);
+    const createTime = new Date(ycCurrentRecord.createTime).toLocaleString('zh-CN');
+    
+    let dongyaoHtml = '';
+    if (ycCurrentRecord.dongyao && ycCurrentRecord.dongyao.length > 0) {
+        dongyaoHtml = '<div style="margin-top: 10px;">';
+        for (let i = 1; i <= 6; i++) {
+            if (ycCurrentRecord.dongyao.includes(i)) {
+                dongyaoHtml += `<span class="yc-dongyao-red">第${i}爻 </span>`;
+            }
+        }
+        dongyaoHtml += '</div>';
+    }
+    
+    let replaysHtml = '';
+    if (ycCurrentRecord.replays && ycCurrentRecord.replays.length > 0) {
+        const sortedReplays = [...ycCurrentRecord.replays].sort((a, b) => new Date(a.time) - new Date(b.time));
+        
+        replaysHtml = '<div style="margin-top: 30px;"><h3 style="color: #667eea; margin-bottom: 15px;">复盘记录</h3>';
+        sortedReplays.forEach(replay => {
+            const replayTime = new Date(replay.time).toLocaleString('zh-CN');
+            replaysHtml += `
+                <div class="yc-replay-item">
+                    <div class="yc-replay-time">${replayTime}</div>
+                    <div style="margin-bottom: 10px;"><strong>事情进展：</strong>${replay.content}</div>
+                    <div><strong>与预测差异：</strong>${replay.diff}</div>
+                </div>
+            `;
+        });
+        replaysHtml += '</div>';
+    }
+    
+    const detailHtml = `
+        <div class="yc-detail-section">
+            <div class="yc-detail-value" style="text-align: center; padding-bottom: 0; cursor: pointer;" onclick="jumpToGuaDetailFromYice()">
+                <div style="font-size: 1.5em; margin-bottom: -5px;">${guaName}</div>
+                <div style="font-size: 3.5em; line-height: 1.2;">${guaSymbol.outerHTML}</div>
+            </div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算时间</div>
+            <div class="yc-detail-value">${createTime}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">分类</div>
+            <div class="yc-detail-value">${ycCurrentRecord.category || '未分类'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算内容</div>
+            <div class="yc-detail-value">${ycCurrentRecord.content || '无'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">测算人</div>
+            <div class="yc-detail-value">${ycCurrentRecord.person || '未知'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">解卦思路</div>
+            <div class="yc-detail-value">${ycCurrentRecord.analysis || '无'}</div>
+        </div>
+        
+        ${replaysHtml}
+    `;
+    
+    document.getElementById('ycDetailContent').innerHTML = detailHtml;
+}
+
+// 切换详情悬浮按钮菜单
+function toggleYcDetailActions() {
+    const menu = document.getElementById('ycDetailActionMenu');
+    const btn = document.getElementById('ycDetailFloatingBtn');
+    if (menu.style.display === 'none') {
+        menu.style.display = 'block';
+        btn.style.transform = 'rotate(45deg)';
+    } else {
+        menu.style.display = 'none';
+        btn.style.transform = 'rotate(0)';
+    }
+}
+
+// 编辑卦象记录
+function editYiceRecord() {
+    if (!ycCurrentRecord) return;
+    
+    document.getElementById('ycDetailActionMenu').style.display = 'none';
+    document.getElementById('ycDetailFloatingBtn').style.transform = 'rotate(0)';
+    
+    // 加载数据到表单
+    loadCategoriesToSelect('ycEditCategory');
+    document.getElementById('ycEditCategory').value = ycCurrentRecord.category || '';
+    document.getElementById('ycEditContent').value = ycCurrentRecord.content || '';
+    document.getElementById('ycEditPerson').value = ycCurrentRecord.person || '';
+    document.getElementById('ycEditAnalysis').value = ycCurrentRecord.analysis || '';
+    
+    ycEditUpper = ycCurrentRecord.upper;
+    ycEditLower = ycCurrentRecord.lower;
+    ycEditDongyao = [...(ycCurrentRecord.dongyao || [])];
+    
+    // 显示已选卦象
+    const guaName = getGuaNameBy上下(ycEditUpper, ycEditLower);
+    const guaSymbol = createGuaElement(ycEditUpper, ycEditLower, ycEditDongyao);
+    
+    document.getElementById('ycEditGuaText').style.display = 'none';
+    const display = document.getElementById('ycEditGuaDisplay');
+    display.style.display = 'block';
+    display.innerHTML = `
+        <div style="font-size: 2em; margin-bottom: 10px;">${guaName}</div>
+        <div style="font-size: 5em;">${guaSymbol.outerHTML}</div>
+    `;
+    
+    // 显示动爻选择
+    document.getElementById('ycEditDongyaoSelect').style.display = 'block';
+    renderDongyaoButtons('ycEditDongyaoButtons', 'ycEdit');
+    
+    document.getElementById('yiceDetailModule').classList.remove('active');
+    document.getElementById('yiceEditModule').classList.add('active');
+}
+
+// 显示编辑卦象选择弹框
+function showEditGuaSelectModal() {
+    document.getElementById('ycGuaModal').style.display = 'block';
+    renderBaguaSelectForYice('ycUpperBagua', 'upper');
+    renderBaguaSelectForYice('ycLowerBagua', 'lower');
+    
+    // 预选已有的选择
+    if (ycSelectedUpper) {
+        const upperBtns = document.querySelectorAll('#ycUpperBagua .bagua-btn');
+        upperBtns.forEach(btn => {
+            if (btn.textContent.includes(ycSelectedUpper)) {
+                btn.classList.add('selected');
+            }
+        });
+    }
+    if (ycSelectedLower) {
+        const lowerBtns = document.querySelectorAll('#ycLowerBagua .bagua-btn');
+        lowerBtns.forEach(btn => {
+            if (btn.textContent.includes(ycSelectedLower)) {
+                btn.classList.add('selected');
+            }
+        });
+    }
+    
+    // 显示当前卦象
+    if (ycSelectedUpper && ycSelectedLower) {
+        const guaName = getGuaNameBy上下(ycSelectedUpper, ycSelectedLower);
+        const guaSymbol = createGuaElement(ycSelectedUpper, ycSelectedLower, ycEditDongyao);
+        document.getElementById('ycGuaResult').innerHTML = `
+            <div class="gua-symbol" style="font-size: 4em;">${guaName}</div>
+            <div style="margin-top: 10px;">${guaSymbol.outerHTML}</div>
+        `;
+        document.getElementById('ycConfirmGuaBtn').style.display = 'inline-block';
+    }
+    
+    // 覆盖确认按钮的事件
+    document.getElementById('ycConfirmGuaBtn').onclick = function() {
+        confirmEditGuaSelection();
+    };
+}
+
+// 确认编辑卦象选择
+function confirmEditGuaSelection() {
+    const guaName = getGuaNameBy上下(ycSelectedUpper, ycSelectedLower);
+    const guaSymbol = createGuaElement(ycSelectedUpper, ycSelectedLower, ycEditDongyao);
+    
+    document.getElementById('ycEditGuaText').style.display = 'none';
+    const display = document.getElementById('ycEditGuaDisplay');
+    display.style.display = 'block';
+    display.innerHTML = `
+        <div style="font-size: 2em; margin-bottom: 10px;">${guaName}</div>
+        <div style="font-size: 5em;">${guaSymbol.outerHTML}</div>
+    `;
+    
+    renderDongyaoButtons('ycEditDongyaoButtons', 'ycEdit');
+    
+    closeGuaModal();
+    document.getElementById('ycConfirmGuaBtn').onclick = function() {
+        confirmGuaSelection();
+    };
+}
+
+// 更新易策记录
+function updateYiceRecord() {
+    if (!ycCurrentRecord) return;
+    
+    ycCurrentRecord.category = document.getElementById('ycEditCategory').value;
+    ycCurrentRecord.content = document.getElementById('ycEditContent').value;
+    ycCurrentRecord.person = document.getElementById('ycEditPerson').value;
+    ycCurrentRecord.analysis = document.getElementById('ycEditAnalysis').value;
+    ycCurrentRecord.upper = ycSelectedUpper;
+    ycCurrentRecord.lower = ycSelectedLower;
+    ycCurrentRecord.dongyao = [...ycEditDongyao];
+    ycCurrentRecord.updateTime = new Date().toISOString();
+    
+    saveYiceData();
+    
+    alert('保存成功');
+    showYiceDetail();
+}
+
+// 显示复盘表单
+function showReplayForm() {
+    document.getElementById('ycDetailActionMenu').style.display = 'none';
+    document.getElementById('ycDetailFloatingBtn').style.transform = 'rotate(0)';
+    
+    document.getElementById('ycReplayContent').value = '';
+    document.getElementById('ycReplayDiff').value = '';
+    
+    document.getElementById('ycReplayModal').style.display = 'block';
+}
+
+// 关闭复盘弹框
+function closeReplayModal() {
+    document.getElementById('ycReplayModal').style.display = 'none';
+}
+
+// 保存复盘记录
+function saveReplay() {
+    if (!ycCurrentRecord) return;
+    
+    const content = document.getElementById('ycReplayContent').value;
+    const diff = document.getElementById('ycReplayDiff').value;
+    
+    if (!content.trim()) {
+        alert('请输入事情进展');
+        return;
+    }
+    
+    const replay = {
+        id: Date.now().toString(),
+        content,
+        diff: diff || '',
+        time: new Date().toISOString()
+    };
+    
+    if (!ycCurrentRecord.replays) {
+        ycCurrentRecord.replays = [];
+    }
+    ycCurrentRecord.replays.push(replay);
+    
+    saveYiceData();
+    
+    alert('复盘记录保存成功');
+    closeReplayModal();
+    showYiceDetail();
+}
+
+// 备份数据
+function backupYiceData() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    const fileName = `易师${year}${month}${day}${hour}${minute}.json`;
+    
+    const data = {
+        records: ycRecords,
+        categories: ycCategories,
+        backupTime: new Date().toLocaleString('zh-CN')
+    };
+    
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+}
+
+// 导入数据 - 触发文件选择
+function importYiceData() {
+    document.getElementById('ycImportFileInput').click();
+}
+
+// 处理导入
+function handleYiceImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (!data.records || !Array.isArray(data.records)) {
+                alert('导入文件格式不正确');
+                return;
+            }
+            
+            // 显示导入选项弹框
+            showImportOptionsModal(data);
+        } catch (err) {
+            alert('导入失败：' + err.message);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// 显示导入选项弹框
+function showImportOptionsModal(data) {
+    const modal = document.createElement('div');
+    modal.id = 'ycImportModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 350px; width: 90%; text-align: center;">
+            <h3 style="margin-bottom: 20px; color: #333;">导入数据</h3>
+            <p style="margin-bottom: 20px; color: #666;">文件包含 ${data.records.length} 条记录</p>
+            <button id="ycImportAppend" style="display: block; width: 100%; padding: 12px; margin-bottom: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">追加数据</button>
+            <button id="ycImportCover" style="display: block; width: 100%; padding: 12px; margin-bottom: 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">覆盖数据</button>
+            <button id="ycImportCancel" style="display: block; width: 100%; padding: 12px; background: #999; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">取消</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // 追加数据
+    document.getElementById('ycImportAppend').onclick = function() {
+        const newRecords = data.records.map(r => ({
+            ...r,
+            id: Date.now() + Math.random().toString(36).substr(2, 9)
+        }));
+        ycRecords = [...ycRecords, ...newRecords];
+        
+        if (data.categories && Array.isArray(data.categories)) {
+            data.categories.forEach(cat => {
+                if (!ycCategories.includes(cat)) {
+                    ycCategories.push(cat);
+                }
+            });
+        }
+        
+        saveYiceData();
+        renderYiceList();
+        loadCategoriesToSelect('ycAddCategory');
+        document.body.removeChild(modal);
+        alert('追加成功！共导入 ' + newRecords.length + ' 条记录');
+    };
+    
+    // 覆盖数据
+    document.getElementById('ycImportCover').onclick = function() {
+        ycRecords = data.records;
+        if (data.categories && Array.isArray(data.categories)) {
+            ycCategories = data.categories;
+        }
+        
+        saveYiceData();
+        renderYiceList();
+        loadCategoriesToSelect('ycAddCategory');
+        document.body.removeChild(modal);
+        alert('覆盖成功！共导入 ' + ycRecords.length + ' 条记录');
+    };
+    
+    // 取消
+    document.getElementById('ycImportCancel').onclick = function() {
+        document.body.removeChild(modal);
+    };
+}
+
+// 设置易策列表滚动监听
+function setupYiceScrollListener() {
+    const listArea = document.getElementById('ycListArea');
+    if (!listArea) return;
+    
+    listArea.addEventListener('scroll', function() {
+        const hasMore = ycFilteredRecords.length > ycCurrentPage * ycPageSize;
+        if (!hasMore || ycIsLoadingMore) return;
+        
+        const { scrollTop, scrollHeight, clientHeight } = this;
+        // 距离底部50px时触发加载
+        if (scrollTop + clientHeight >= scrollHeight - 50) {
+            ycIsLoadingMore = true;
+            ycCurrentPage++;
+            renderYiceList(true);
+            
+            // 延迟重置加载状态，防止快速滚动触发多次
+            setTimeout(() => {
+                ycIsLoadingMore = false;
+            }, 300);
+        }
+    });
 }
 
 

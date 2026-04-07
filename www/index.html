@@ -99,15 +99,191 @@
             background: #5568d3;
         }
 
+        /* ==================== 易策模块样式 ==================== */
+        #yiceModule {
+            padding: 20px;
+        }
+
+        #yiceModule .back-btn {
+            display: inline-block;
+        }
+
+        .yice-record-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .yice-record-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .yice-record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .yice-record-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .yice-record-category {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+
+        .yice-record-gua {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .yice-record-symbol {
+            width: 60px;
+            height: 100px;
+        }
+
+        .yice-record-gua-info {
+            flex: 1;
+        }
+
+        .yice-record-gua-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .yice-record-person {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .yice-record-content {
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .yice-change-yao {
+            color: #e53935;
+            font-weight: bold;
+        }
+
+        .yice-review-item {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .yice-review-time {
+            color: #667eea;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .yice-category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .yice-category-item input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .yice-category-actions button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .yice-category-edit {
+            background: #2196F3;
+            color: white;
+        }
+
+        .yice-category-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .yice-bagua-btn {
+            width: 50px;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .yice-bagua-btn:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+
+        .yice-bagua-btn.selected {
+            border-color: #667eea;
+            background: #e8e8ff;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .yice-floating-btn:hover {
+            opacity: 1 !important;
+        }
+
+        .yice-menu button:hover {
+            background: #f5f5f5 !important;
+        }
+
+        #yiceMenu, #yiceDetailMenu {
+            min-width: 150px;
+        }
+
+        #yiceMenu button, #yiceDetailMenu button {
+            white-space: nowrap;
+        }
+
         .gua-image {
             text-align: center;
             margin: 30px 0;
         }
 
         .gua-symbol {
-            font-size: 8em;
+            font-size: 5em;
             color: #333;
-            margin: 20px 0;
+            margin: 0;
         }
 
         .options-grid {
@@ -126,6 +302,12 @@
             cursor: pointer;
             font-size: 1.2em;
             transition: all 0.3s;
+        }
+
+        .option-btn.selected {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
         }
 
         .related-gua-actions {
@@ -505,13 +687,13 @@
             flex-direction: column-reverse;
             text-align: center;
             font-size: 1em;
-            line-height: 1.5;
+            line-height: 0.8;
         }
         
         .gua-symbol-container .yao-line {
             width: 80px;
             height: 5px;
-            margin: 8px 0;
+            margin: 10px 0;
             transition: all 0.3s;
             position: relative;
             background: transparent;
@@ -685,7 +867,7 @@
         .yao-line {
             width: 80px;
             height: 5px;
-            margin: 8px 0;
+            margin: 12px 0;
             transition: all 0.3s;
             position: relative;
             background: transparent;
@@ -834,6 +1016,197 @@
                 padding: 10px;
             }
 
+            /* 易策模块样式 */
+            .yc-floating-btn {
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                width: 60px;
+                height: 60px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                z-index: 100;
+                color: white;
+                font-size: 2em;
+                transition: transform 0.3s;
+            }
+
+            .yc-floating-btn:hover {
+                transform: scale(1.1);
+            }
+
+            .yc-action-menu {
+                position: fixed;
+                bottom: 100px;
+                right: 30px;
+                z-index: 99;
+            }
+
+            .yc-action-item {
+                display: block;
+                width: 150px;
+                padding: 15px 20px;
+                background: white;
+                border: none;
+                border-radius: 10px;
+                margin-bottom: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                font-size: 1em;
+                color: #333;
+                text-align: left;
+                transition: all 0.3s;
+            }
+
+            .yc-action-item:hover {
+                background: #667eea;
+                color: white;
+            }
+
+            .yc-record-card {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 15px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .yc-record-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            }
+
+            .yc-record-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .yc-record-time {
+                color: #666;
+                font-size: 0.9em;
+            }
+
+            .yc-record-category {
+                background: #667eea;
+                color: white;
+                padding: 3px 10px;
+                border-radius: 15px;
+                font-size: 0.85em;
+            }
+
+            .yc-record-content {
+                margin-bottom: 10px;
+                line-height: 1.6;
+            }
+
+            .yc-record-person {
+                color: #666;
+                font-size: 0.9em;
+            }
+
+            .yc-record-gua {
+                margin-top: 10px;
+                font-size: 1.5em;
+            }
+
+            .gua-symbol-svg {
+                vertical-align: middle;
+            }
+
+            .yc-dongyao-red {
+                color: #e74c3c;
+                font-weight: bold;
+            }
+
+            .yc-detail-section {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+
+            .yc-detail-label {
+                color: #667eea;
+                font-weight: bold;
+                margin-bottom: 10px;
+                font-size: 1.1em;
+            }
+
+            .yc-detail-value {
+                line-height: 1.8;
+                color: #333;
+            }
+
+            .yc-replay-item {
+                background: #f9f9f9;
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 15px;
+                border-left: 4px solid #667eea;
+            }
+
+            .yc-replay-time {
+                color: #999;
+                font-size: 0.85em;
+                margin-bottom: 10px;
+            }
+
+            .yc-category-item {
+                background: white;
+                border-radius: 10px;
+                padding: 15px 20px;
+                margin-bottom: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .yc-category-name {
+                font-size: 1.1em;
+            }
+
+            .yc-category-actions {
+                display: flex;
+                gap: 10px;
+            }
+
+            .yc-category-btn {
+                padding: 5px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 0.9em;
+            }
+
+            .yc-category-btn.edit {
+                background: #4CAF50;
+                color: white;
+            }
+
+            .yc-category-btn.delete {
+                background: #f44336;
+                color: white;
+            }
+
+            .yc-edit-input {
+                padding: 5px 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 1em;
+                width: 200px;
+            }
+
 
 
             header h1 {
@@ -857,7 +1230,7 @@
             }
 
             .gua-symbol {
-                font-size: 5em;
+                font-size: 2rem;
             }
 
             .bagua-options {
@@ -937,12 +1310,15 @@
                 <h2>📚 六十四卦查询</h2>
                 <p>自由选择八卦组成六十四卦，查看卦象、卦辞、爻辞及变卦</p>
             </div>
+            <div class="module-card" onclick="showModule('yice')">
+                <h2>🎯 易策</h2>
+                <p>记录占卜卦象，追踪预测结果，记录复盘总结</p>
+            </div>
         </div>
 
         <!-- 卦象练习模块 -->
         <div id="guaxiangModule" class="practice-area">
             <button class="back-btn" onclick="showHome()">← 返回首页</button>
-            <h2 style="text-align: center; margin-bottom: 20px;">卦象练习</h2>
             <div class="progress-info" id="gxProgress"></div>
             <div class="gua-image">
                 <div class="gua-symbol" id="gxSymbol"></div>
@@ -955,7 +1331,6 @@
         <!-- 卦名记忆模块 -->
         <div id="guamingModule" class="practice-area">
             <button class="back-btn" onclick="showHome()">← 返回首页</button>
-            <h2 style="text-align: center; margin-bottom: 20px;">卦名记忆</h2>
             <div class="progress-info" id="gmProgress"></div>
             <div class="gua-name-display" id="gmGuaName"></div>
             <div class="selected-bagua" id="gmSelected"></div>
@@ -967,7 +1342,6 @@
         <!-- 爻辞卦辞练习模块 -->
         <div id="yaociModule" class="practice-area">
             <button class="back-btn" onclick="showHome()">← 返回首页</button>
-            <h2 style="text-align: center; margin-bottom: 20px;">爻辞卦辞练习</h2>
             <div class="score-display" id="ycScore"></div>
             <div class="gua-image">
                 <div class="gua-symbol" id="ycSymbol"></div>
@@ -981,7 +1355,6 @@
         <!-- 六爻起卦模块 -->
         <div id="liuyaoModule" class="practice-area">
             <button class="back-btn" onclick="showHome()">← 返回首页</button>
-            <h2 style="text-align: center; margin-bottom: 20px;">六爻起卦</h2>
             
             <!-- 铜钱投掷区域 -->
             <div id="lyTossArea">
@@ -1023,7 +1396,6 @@
         <!-- 六十四卦查询模块 -->
         <div id="chaxunModule" class="practice-area">
             <button class="back-btn" onclick="showHome()">← 返回首页</button>
-            <h2 style="text-align: center; margin-bottom: 20px;">六十四卦查询</h2>
             
             <!-- 八卦选择区域 -->
             <div id="cxBaguaSelect">
@@ -1041,6 +1413,7 @@
                         <div style="margin-bottom: 15px;">
                             <button class="back-btn" onclick="backToBaguaSelect()">← 返回上一页</button>
                             <button class="back-btn" onclick="backToRootGua()" id="cxBackToRootBtn" style="display: none; margin-left: 10px;">← 返回本卦</button>
+                            <button class="back-btn" onclick="backToYiceDetail()" id="cxBackToYiceBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回易策详情</button>
                         </div>
                         
                         <div class="gua-image">
@@ -1097,6 +1470,419 @@
 
             
             <div id="cxResult"></div>
+        </div>
+
+        <!-- 易策模块 -->
+        <div id="yiceModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            
+            <!-- 搜索栏（可折叠） -->
+            <details id="yiceSearchDetails" style="background: #f9f9f9; border-radius: 10px; margin-bottom: 20px; overflow: hidden;">
+                <summary style="padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #e8e8e8; list-style: none;">
+                    <span style="font-weight: bold; color: #667eea;">🔍 查询条件</span>
+                    <span>▼</span>
+                </summary>
+                <div style="padding: 20px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <input type="text" id="ycSearchInput" placeholder="搜索关键词、卦象、测算人、分类..." 
+                               style="flex: 1; min-width: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                        <select id="ycSearchCategory" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            <option value="">全部分类</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px;">
+                        <span style="color: #666;">时间范围：</span>
+                        <input type="date" id="ycSearchStartDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <span style="color: #666;">至</span>
+                        <input type="date" id="ycSearchEndDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <button class="option-btn" onclick="searchYice()">搜索</button>
+                        <button class="option-btn" onclick="clearYiceSearch()">清空</button>
+                    </div>
+                </div>
+            </details>
+            
+            <!-- 占卜列表 -->
+            <div id="ycListArea" style="max-height: 60vh; overflow-y: auto;"></div>
+            
+            <!-- 悬浮操作按钮 -->
+            <div id="ycFloatingBtn" class="yc-floating-btn" onclick="toggleYcActions()">
+                <span>+</span>
+            </div>
+            <div id="ycActionMenu" class="yc-action-menu" style="display: none;">
+                <button class="yc-action-item" onclick="showAddYice()">新增卦象记录</button>
+                <button class="yc-action-item" onclick="showCategoryManage()">分类管理</button>
+                <button class="yc-action-item" onclick="document.getElementById('ycImportFileInput').click()">导入数据</button>
+                <button class="yc-action-item" onclick="backupYiceData()">备份数据</button>
+                <input type="file" id="ycImportFileInput" accept=".json" style="display: none;" onchange="handleYiceImport(event)">
+            </div>
+        </div>
+
+        <!-- 新增卦象记录页面 -->
+        <div id="yiceAddModule" class="practice-area">
+            <button id="yiceAddBackBtn" class="back-btn" onclick="showYiceList()">← 返回列表</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">新增卦象记录</h2>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <!-- 测算时间 -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">测算时间：</label>
+                    <input type="datetime-local" id="ycAddCreateTime" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                </div>
+                
+                <!-- 分类选择 -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">分类：</label>
+                    <select id="ycAddCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                        <option value="">请选择分类</option>
+                    </select>
+                </div>
+                
+                <!-- 测算内容 -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">测算内容：</label>
+                    <textarea id="ycAddContent" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请输入测算内容..."></textarea>
+                </div>
+                
+                <!-- 测算人 -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">测算人：</label>
+                    <input type="text" id="ycAddPerson" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请输入测算人姓名">
+                </div>
+                
+                <!-- 卦象选择 -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">卦象：</label>
+                    <div id="ycAddGuaSelect" style="background: #f9f9f9; padding: 20px; border-radius: 10px; cursor: pointer; text-align: center;" onclick="showGuaSelectModal()">
+                        <span id="ycSelectedGuaText" style="font-size: 1.2em; color: #666;">点击选择卦象</span>
+                        <div id="ycSelectedGuaDisplay" style="display: none; margin-top: 15px;"></div>
+                    </div>
+                </div>
+                
+                <!-- 动爻选择 -->
+                <div id="ycDongyaoSelect" style="margin-bottom: 20px; display: none;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">动爻（变爻）：</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="ycDongyaoButtons"></div>
+                </div>
+                
+                <!-- 解卦 -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">解卦（您的分析思路）：</label>
+                    <textarea id="ycAddAnalysis" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请输入解卦思路..."></textarea>
+                </div>
+                
+                <!-- 保存按钮 -->
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="option-btn" onclick="saveYiceRecord()">保存记录</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卦象选择弹框 -->
+        <div id="ycGuaModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="background: white; max-width: 600px; margin: 50px auto; padding: 30px; border-radius: 15px; max-height: 80vh; overflow-y: auto;">
+                <h3 style="text-align: center; margin-bottom: 20px;">选择卦象</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">上卦：</h4>
+                    <div class="bagua-options" id="ycUpperBagua"></div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">下卦：</h4>
+                    <div class="bagua-options" id="ycLowerBagua"></div>
+                </div>
+
+                <div id="ycGuaResult" style="text-align: center; margin: 20px 0;"></div>
+                
+                <div style="text-align: center;">
+                    <button class="option-btn" onclick="closeGuaModal()">取消</button>
+                    <button class="option-btn" id="ycConfirmGuaBtn" onclick="confirmGuaSelection()" style="display: none;">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分类管理页面 -->
+        <div id="yiceCategoryModule" class="practice-area">
+            <button class="back-btn" onclick="showYiceList()">← 返回列表</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">分类管理</h2>
+            
+            <!-- 新增分类 -->
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="ycNewCategory" placeholder="新分类名称" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                    <button class="option-btn" onclick="addCategory()">添加</button>
+                </div>
+            </div>
+            
+            <!-- 分类列表 -->
+            <div id="ycCategoryList"></div>
+        </div>
+
+        <!-- 卦象详情页面 -->
+        <div id="yiceDetailModule" class="practice-area">
+            <button class="back-btn" onclick="showYiceList()">← 返回列表</button>
+            
+            <div id="ycDetailContent" style="max-width: 800px; margin: 0 auto;"></div>
+            
+            <!-- 详情悬浮按钮 -->
+            <div id="ycDetailFloatingBtn" class="yc-floating-btn" onclick="toggleYcDetailActions()">
+                <span>✎</span>
+            </div>
+            <div id="ycDetailActionMenu" class="yc-action-menu" style="display: none;">
+                <button class="yc-action-item" onclick="editYiceRecord()">编辑</button>
+                <button class="yc-action-item" onclick="showReplayForm()">复盘</button>
+            </div>
+        </div>
+
+        <!-- 编辑卦象记录页面 -->
+        <div id="yiceEditModule" class="practice-area">
+            <button class="back-btn" onclick="showYiceDetail()">← 返回详情</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">编辑卦象记录</h2>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">分类：</label>
+                    <select id="ycEditCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;"></select>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">测算内容：</label>
+                    <textarea id="ycEditContent" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;"></textarea>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">测算人：</label>
+                    <input type="text" id="ycEditPerson" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">卦象：</label>
+                    <div id="ycEditGuaSelect" style="background: #f9f9f9; padding: 20px; border-radius: 10px; cursor: pointer; text-align: center;" onclick="showEditGuaSelectModal()">
+                        <span id="ycEditGuaText" style="font-size: 1.2em; color: #666;"></span>
+                        <div id="ycEditGuaDisplay" style="display: none; margin-top: 15px;"></div>
+                    </div>
+                </div>
+                
+                <div id="ycEditDongyaoSelect" style="margin-bottom: 20px; display: none;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">动爻（变爻）：</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="ycEditDongyaoButtons"></div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">解卦（您的分析思路）：</label>
+                    <textarea id="ycEditAnalysis" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;"></textarea>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="option-btn" onclick="updateYiceRecord()">保存修改</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 复盘弹框 -->
+        <div id="ycReplayModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="background: white; max-width: 600px; margin: 50px auto; padding: 30px; border-radius: 15px;">
+                <h3 style="text-align: center; margin-bottom: 20px;">添加复盘记录</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">事情进展：</label>
+                    <textarea id="ycReplayContent" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请记录事情的实际发展情况..."></textarea>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">与预测的差异：</label>
+                    <textarea id="ycReplayDiff" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请记录实际情况与当初预测的差异..."></textarea>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button class="option-btn" onclick="closeReplayModal()">取消</button>
+                    <button class="option-btn" onclick="saveReplay()">保存复盘</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑页 -->
+        <div id="yiceAddPage" style="display: none;">
+            <button class="back-btn" onclick="showYiceList()">← 返回列表</button>
+            <h2 id="yiceAddTitle" style="text-align: center; margin-bottom: 20px;">新增占卜记录</h2>
+            
+            <div style="background: #f9f9f9; padding: 25px; border-radius: 10px;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">分类 *</label>
+                    <select id="yiceCategory" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                        <option value="">请选择分类</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">测算内容 *</label>
+                    <input type="text" id="yiceContent" placeholder="如：求财问卦" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">测算人 *</label>
+                    <input type="text" id="yicePerson" placeholder="如：张三" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">卦象 *</label>
+                    <button onclick="showGuaSelectPopup()" style="padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em;">选择卦象</button>
+                    <div id="yiceSelectedGua" style="margin-top: 10px; padding: 15px; background: white; border-radius: 8px; display: none;">
+                        <div id="yiceGuaSymbol" style="text-align: center; margin-bottom: 10px;"></div>
+                        <div id="yiceGuaName" style="text-align: center; font-size: 1.5em; font-weight: bold;"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">解卦思路</label>
+                    <textarea id="yiceInterpretation" rows="6" placeholder="请输入您的解卦思路..." style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em; resize: vertical;"></textarea>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button onclick="saveYiceRecord()" class="option-btn" style="padding: 15px 40px; font-size: 1.1em;">保存记录</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详情页 -->
+        <div id="yiceDetailPage" style="display: none;">
+            <button class="back-btn" onclick="showYiceList()">← 返回列表</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">占卜详情</h2>
+            
+            <div style="background: #f9f9f9; padding: 25px; border-radius: 10px;">
+                <!-- 卦象展示 -->
+                <div id="yiceDetailGua" style="text-align: center; padding: 20px; background: white; border-radius: 10px; margin-bottom: 20px;">
+                    <div id="yiceDetailSymbol" style="margin-bottom: 15px;"></div>
+                    <div id="yiceDetailGuaName" style="font-size: 1.8em; font-weight: bold;"></div>
+                </div>
+                
+                <!-- 测算信息 -->
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 15px;"><strong>测算时间：</strong><span id="yiceDetailTime"></span></div>
+                    <div style="margin-bottom: 15px;"><strong>分类：</strong><span id="yiceDetailCategory"></span></div>
+                    <div style="margin-bottom: 15px;"><strong>测算人：</strong><span id="yiceDetailPerson"></span></div>
+                    <div style="margin-bottom: 15px;"><strong>测算内容：</strong><span id="yiceDetailContent"></span></div>
+                </div>
+                
+                <!-- 解卦思路 -->
+                <div id="yiceDetailInterpretationDiv" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="font-weight: bold; margin-bottom: 10px;">解卦思路：</div>
+                    <div id="yiceDetailInterpretation" style="line-height: 1.8; white-space: pre-wrap;"></div>
+                </div>
+                
+                <!-- 复盘记录 -->
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <div style="font-weight: bold; margin-bottom: 15px;">复盘记录：</div>
+                    <div id="yiceDetailReviews"></div>
+                </div>
+            </div>
+            
+            <!-- 悬浮按钮 -->
+            <div id="yiceDetailFloatingBtn" style="position: fixed; right: 20px; bottom: 20px; z-index: 100;">
+                <button onclick="toggleYiceDetailMenu()" style="width: 60px; height: 60px; border-radius: 50%; background: #667eea; color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); opacity: 0.8;">☰</button>
+                <div id="yiceDetailMenu" style="display: none; position: absolute; bottom: 70px; right: 0; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); overflow: hidden;">
+                    <button onclick="editYiceRecord()" style="display: block; width: 100%; padding: 15px 25px; border: none; background: white; cursor: pointer; font-size: 16px; text-align: left;">✏️ 编辑</button>
+                    <button onclick="showReviewModal()" style="display: block; width: 100%; padding: 15px 25px; border: none; background: white; cursor: pointer; font-size: 16px; text-align: left;">📝 复盘</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分类管理页 -->
+        <div id="yiceCategoryPage" style="display: none;">
+            <button class="back-btn" onclick="showYiceList()">← 返回列表</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">📁 分类管理</h2>
+            
+            <!-- 新增分类 -->
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="yiceNewCategory" placeholder="新分类名称" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                    <button onclick="addYiceCategory()" class="option-btn">添加</button>
+                </div>
+            </div>
+            
+            <!-- 分类列表 -->
+            <div id="yiceCategoryList"></div>
+        </div>
+    </div>
+
+    <!-- 卦象选择弹框 -->
+    <div id="yiceGuaPopup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="background: white; max-width: 700px; margin: 30px auto; padding: 25px; border-radius: 15px; max-height: 90vh; overflow-y: auto;">
+            <h3 style="text-align: center; margin-bottom: 20px;">选择卦象</h3>
+            
+            <!-- 上卦选择 -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-weight: bold; margin-bottom: 10px;">上卦（外卦）</div>
+                <div id="yiceUpperBagua" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+            </div>
+            
+            <!-- 下卦选择 -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-weight: bold; margin-bottom: 10px;">下卦（内卦）</div>
+                <div id="yiceLowerBagua" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+            </div>
+            
+            <!-- 已选卦象展示 -->
+            <div id="yiceSelectedGuaPopup" style="text-align: center; padding: 20px; background: #f5f5f5; border-radius: 10px; margin-bottom: 20px; display: none;">
+                <div id="yicePopupSymbol" style="margin-bottom: 10px;"></div>
+                <div id="yicePopupGuaName" style="font-size: 1.5em; font-weight: bold;"></div>
+            </div>
+            
+            <!-- 动爻选择 -->
+            <div id="yiceChangeYaoDiv" style="margin-bottom: 20px; display: none;">
+                <div style="font-weight: bold; margin-bottom: 10px;">动爻（可选）</div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="selectChangeYao(0)" class="option-btn" id="yiceYao0" style="padding: 10px 15px;">无</button>
+                    <button onclick="selectChangeYao(1)" class="option-btn" id="yiceYao1" style="padding: 10px 15px;">一</button>
+                    <button onclick="selectChangeYao(2)" class="option-btn" id="yiceYao2" style="padding: 10px 15px;">二</button>
+                    <button onclick="selectChangeYao(3)" class="option-btn" id="yiceYao3" style="padding: 10px 15px;">三</button>
+                    <button onclick="selectChangeYao(4)" class="option-btn" id="yiceYao4" style="padding: 10px 15px;">四</button>
+                    <button onclick="selectChangeYao(5)" class="option-btn" id="yiceYao5" style="padding: 10px 15px;">五</button>
+                    <button onclick="selectChangeYao(6)" class="option-btn" id="yiceYao6" style="padding: 10px 15px;">六</button>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button onclick="closeGuaPopup()" class="option-btn" style="background: #999;">取消</button>
+                <button onclick="confirmGuaSelection()" class="option-btn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 复盘弹框 -->
+    <div id="yiceReviewPopup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="background: white; max-width: 600px; margin: 50px auto; padding: 30px; border-radius: 15px;">
+            <h3 style="text-align: center; margin-bottom: 20px;">添加复盘记录</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">事情进展：</label>
+                <textarea id="yiceReviewContent" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请记录事情的实际发展情况..."></textarea>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">与预测的差异：</label>
+                <textarea id="yiceReviewDiff" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请记录实际情况与当初预测的差异..."></textarea>
+            </div>
+            
+            <div style="text-align: center;">
+                <button onclick="closeReviewPopup()" class="option-btn" style="background: #999;">取消</button>
+                <button onclick="saveYiceReview()" class="option-btn">保存复盘</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入弹框 -->
+    <div id="yiceImportPopup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="background: white; max-width: 500px; margin: 50px auto; padding: 30px; border-radius: 15px;">
+            <h3 style="text-align: center; margin-bottom: 20px;">导入数据</h3>
+            <div style="margin-bottom: 20px;">
+                <input type="file" id="yiceImportFile" accept=".json" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div style="text-align: center;">
+                <button onclick="closeImportPopup()" class="option-btn" style="background: #999;">取消</button>
+                <button onclick="confirmImportData()" class="option-btn">导入</button>
+            </div>
         </div>
     </div>
 
