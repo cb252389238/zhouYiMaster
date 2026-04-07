@@ -4,6 +4,252 @@ let currentGua = null;
 let score = 0;
 let questionCount = 0;
 
+// ==================== 版本更新检测 ====================
+const REMOTE_VERSION_URL = 'https://raw.githubusercontent.com/cb252389238/zhouYiMaster/main/version.json';
+
+// 启动时检查更新
+function initAppUpdateCheck() {
+    // 页面加载完成后检查更新
+    if (document.readyState === 'complete') {
+        setTimeout(checkForUpdates, 1000);
+    } else {
+        window.addEventListener('load', () => {
+            setTimeout(checkForUpdates, 1000);
+        });
+    }
+}
+
+// 检查更新
+async function checkForUpdates() {
+    try {
+        // 获取当前本地版本
+        const currentVersion = await getLocalVersion();
+        if (!currentVersion) {
+            console.log('本地版本文件不存在');
+            return;
+        }
+        
+        // 获取远程版本
+        const remoteVersion = await getRemoteVersion();
+        if (!remoteVersion) {
+            console.log('无法获取远程版本');
+            return;
+        }
+        
+        // 比较版本
+        if (compareVersions(currentVersion, remoteVersion.version)) {
+            // 有新版本，显示更新提示
+            showUpdateDialog(remoteVersion);
+        }
+    } catch (error) {
+        console.log('检查更新失败:', error.message);
+    }
+}
+
+// 获取本地版本（从 version.json）
+async function getLocalVersion() {
+    try {
+        const response = await fetch('version.json');
+        const data = await response.json();
+        return data.version || '1.0.0.1';
+    } catch (e) {
+        return '1.0.0.1';
+    }
+}
+
+// 获取远程版本
+async function getRemoteVersion() {
+    try {
+        const response = await fetch(REMOTE_VERSION_URL, {
+            cache: 'no-cache'
+        });
+        if (!response.ok) throw new Error('网络请求失败');
+        return await response.json();
+    } catch (e) {
+        console.log('获取远程版本失败:', e.message);
+        return null;
+    }
+}
+
+// 比较版本号
+function compareVersions(current, latest) {
+    const curParts = current.split('.').map(Number);
+    const latParts = latest.split('.').map(Number);
+    
+    const maxLen = Math.max(curParts.length, latParts.length);
+    
+    for (let i = 0; i < maxLen; i++) {
+        const cur = curParts[i] || 0;
+        const lat = latParts[i] || 0;
+        
+        if (lat > cur) return true;
+        if (lat < cur) return false;
+    }
+    return false;
+}
+
+// 显示更新对话框
+function showUpdateDialog(remoteVersion) {
+    // 移除已存在的弹窗
+    const existing = document.getElementById('updateDialog');
+    if (existing) existing.remove();
+    
+    const dialog = document.createElement('div');
+    dialog.id = 'updateDialog';
+    dialog.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    `;
+    
+    dialog.innerHTML = `
+        <div style="background: white; border-radius: 16px; padding: 24px; max-width: 320px; width: 85%; text-align: center;">
+            <h3 style="margin: 0 0 16px; font-size: 18px; color: #1a1a1a;">发现新版本</h3>
+            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                最新版本：${remoteVersion.version}
+            </p>
+            <button id="updateNowBtn" style="
+                display: block;
+                width: 100%;
+                padding: 14px;
+                background: #007aff;
+                color: white;
+                border: none;
+                border-radius: 10px;
+                font-size: 16px;
+                margin-bottom: 10px;
+                cursor: pointer;
+            ">立即更新</button>
+            <button id="updateLaterBtn" style="
+                display: block;
+                width: 100%;
+                padding: 14px;
+                background: #f0f0f0;
+                color: #666;
+                border: none;
+                border-radius: 10px;
+                font-size: 16px;
+                cursor: pointer;
+            ">稍后</button>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // 立即更新
+    document.getElementById('updateNowBtn').onclick = () => {
+        dialog.remove();
+        downloadAndInstall(remoteVersion.url);
+    };
+    
+    // 稍后
+    document.getElementById('updateLaterBtn').onclick = () => {
+        dialog.remove();
+    };
+}
+
+// 下载并安装
+function downloadAndInstall(url) {
+    // 创建下载链接
+    const downloadUrl = url;
+    
+    // 使用系统浏览器打开下载链接
+    // 在移动设备上会调起系统下载器
+    window.open(downloadUrl, '_system');
+    
+    // 同时也可以尝试在应用内下载
+    showDownloadProgress(url);
+}
+
+// 显示下载进度（备用方案）
+function showDownloadProgress(url) {
+    const progressDialog = document.createElement('div');
+    progressDialog.id = 'downloadProgress';
+    progressDialog.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    `;
+    
+    progressDialog.innerHTML = `
+        <div style="background: white; border-radius: 16px; padding: 24px; max-width: 300px; width: 85%; text-align: center;">
+            <h3 style="margin: 0 0 16px; font-size: 16px;">正在下载更新...</h3>
+            <div style="background: #e5e5ea; border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 12px;">
+                <div id="progressBar" style="background: #007aff; height: 100%; width: 0%; transition: width 0.3s;"></div>
+            </div>
+            <p id="progressText" style="color: #666; font-size: 14px;">0%</p>
+        </div>
+    `;
+    
+    document.body.appendChild(progressDialog);
+    
+    // 创建下载任务
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'blob';
+    
+    xhr.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').textContent = percent + '%';
+        }
+    };
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            document.getElementById('progressText').textContent = '下载完成，正在安装...';
+            
+            // 保存到本地并安装
+            const blob = xhr.response;
+            const blobUrl = URL.createObjectURL(blob);
+            
+            // 创建隐藏的下载链接并点击
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = '易师更新.apk';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => {
+                progressDialog.remove();
+                alert('下载完成，请在通知栏找到安装包进行安装');
+            }, 1500);
+        } else {
+            progressDialog.remove();
+            alert('下载失败，请点击右上角浏览器图标手动下载');
+        }
+    };
+    
+    xhr.onerror = function() {
+        progressDialog.remove();
+        alert('下载失败，请点击右上角浏览器图标手动下载');
+    };
+    
+    xhr.send();
+}
+
+// 初始化更新检测
+initAppUpdateCheck();
+
+// ==================== 应用逻辑 ====================
+
 // 卦象练习模块变量
 let gxCorrectAnswer = null;
 let gxAnswered = false;
