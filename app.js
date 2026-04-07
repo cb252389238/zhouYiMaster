@@ -5650,10 +5650,10 @@ function renderYiceList(isLoadMore = false) {
     loadYiceData();
     let records = [...ycRecords];
     
-    const searchKeyword = document.getElementById('yiceSearchKeyword')?.value || '';
-    const searchCategory = document.getElementById('yiceSearchCategory')?.value || '';
-    const startDate = document.getElementById('yiceSearchStartDate')?.value || '';
-    const endDate = document.getElementById('yiceSearchEndDate')?.value || '';
+    const searchKeyword = document.getElementById('ycSearchInput')?.value || '';
+    const searchCategory = document.getElementById('ycSearchCategory')?.value || '';
+    const startDate = document.getElementById('ycSearchStartDate')?.value || '';
+    const endDate = document.getElementById('ycSearchEndDate')?.value || '';
     
     // 搜索过滤 - 关键词
     if (searchKeyword) {
@@ -5774,13 +5774,11 @@ function searchYice() {
 
 // 清空搜索
 function clearYiceSearch() {
-    document.getElementById('yiceSearchKeyword').value = '';
-    document.getElementById('yiceSearchGua').value = '';
-    document.getElementById('yiceSearchPerson').value = '';
-    const searchCat = document.getElementById('yiceSearchCategory');
+    document.getElementById('ycSearchInput').value = '';
+    const searchCat = document.getElementById('ycSearchCategory');
     if (searchCat) searchCat.value = '';
-    const startDate = document.getElementById('yiceSearchStartDate');
-    const endDate = document.getElementById('yiceSearchEndDate');
+    const startDate = document.getElementById('ycSearchStartDate');
+    const endDate = document.getElementById('ycSearchEndDate');
     if (startDate) startDate.value = '';
     if (endDate) endDate.value = '';
     ycSearchKeyword = '';
