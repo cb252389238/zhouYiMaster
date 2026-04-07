@@ -1523,6 +1523,12 @@
             <h2 style="text-align: center; margin-bottom: 20px;">新增卦象记录</h2>
             
             <div style="max-width: 800px; margin: 0 auto;">
+                <!-- 测算时间 -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">测算时间：</label>
+                    <input type="datetime-local" id="ycAddCreateTime" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                </div>
+                
                 <!-- 分类选择 -->
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">分类：</label>
@@ -1585,7 +1591,7 @@
                     <h4 style="margin-bottom: 10px;">下卦：</h4>
                     <div class="bagua-options" id="ycLowerBagua"></div>
                 </div>
-                
+
                 <div id="ycGuaResult" style="text-align: center; margin: 20px 0;"></div>
                 
                 <div style="text-align: center;">

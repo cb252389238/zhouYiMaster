@@ -5852,6 +5852,15 @@ function showAddYice() {
     document.getElementById('ycSelectedGuaDisplay').style.display = 'none';
     document.getElementById('ycDongyaoSelect').style.display = 'none';
     
+    // 初始化时间为当前时间
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('ycAddCreateTime').value = `${year}-${month}-${day}T${hour}:${minute}`;
+    
     ycSelectedUpper = null;
     ycSelectedLower = null;
     ycSelectedDongyao = [];
@@ -6040,11 +6049,15 @@ function saveYiceRecord() {
     const content = document.getElementById('ycAddContent').value;
     const person = document.getElementById('ycAddPerson').value;
     const analysis = document.getElementById('ycAddAnalysis').value;
+    const createTimeInput = document.getElementById('ycAddCreateTime').value;
     
     if (!ycSelectedUpper || !ycSelectedLower) {
         alert('请选择卦象');
         return;
     }
+    
+    // 使用用户选择的时间，如果没有选择则使用当前时间
+    const createTime = createTimeInput ? new Date(createTimeInput).toISOString() : new Date().toISOString();
     
     const record = {
         id: Date.now().toString(),
@@ -6055,7 +6068,7 @@ function saveYiceRecord() {
         lower: ycSelectedLower,
         dongyao: [...ycSelectedDongyao],
         analysis,
-        createTime: new Date().toISOString(),
+        createTime: createTime,
         updateTime: new Date().toISOString(),
         replays: []
     };
