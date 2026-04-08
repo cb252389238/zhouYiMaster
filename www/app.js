@@ -6148,13 +6148,13 @@ function getGuaSymbolHtml(upper, lower, size = 35, dongyao = []) {
     
     let svgHtml = `<svg class="gua-symbol-svg" viewBox="0 0 ${size} ${totalHeight}" width="${size}" height="${totalHeight}">`;
     
-    // 下卦（三爻）- 从下往上绘制（初、二、三爻）
+    // 下卦（第1、2、3爻）- 从上往下绘制，第1爻在最下面
     for (let i = 0; i <= 2; i++) {
         const isYang = lowerYao[i] === 1;
         const yaoNum = i + 1;
         const isDong = dongyao.includes(yaoNum);
         const strokeColor = isDong ? '#e74c3c' : '#333';
-        const y = startY + i * lineHeight;
+        const y = startY + (5 - i) * lineHeight;
         if (isYang) {
             svgHtml += `<line x1="2" y1="${y}" x2="${size - 2}" y2="${y}" stroke="${strokeColor}" stroke-width="2"/>`;
         } else {
@@ -6162,13 +6162,13 @@ function getGuaSymbolHtml(upper, lower, size = 35, dongyao = []) {
         }
     }
     
-    // 上卦（三爻）- 从下往上绘制（四、五、六爻）
+    // 上卦（第4、5、6爻）- 第4、5、6爻继续从上往下排列
     for (let i = 0; i <= 2; i++) {
         const isYang = upperYao[i] === 1;
         const yaoNum = 4 + i;
         const isDong = dongyao.includes(yaoNum);
         const strokeColor = isDong ? '#e74c3c' : '#333';
-        const y = startY + (3 + i) * lineHeight;
+        const y = startY + (2 - i) * lineHeight;
         if (isYang) {
             svgHtml += `<line x1="2" y1="${y}" x2="${size - 2}" y2="${y}" stroke="${strokeColor}" stroke-width="2"/>`;
         } else {
