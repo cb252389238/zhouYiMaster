@@ -1892,3 +1892,66 @@
 
 </body>
 </html>
+
+<!-- App Style Toast 提示框 -->
+<div id="appToast" class="app-toast" style="display: none;">
+    <div class="app-toast-content" id="appToastContent"></div>
+</div>
+
+<style>
+.app-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    max-width: 280px;
+    padding: 20px;
+    text-align: center;
+    animation: toastFadeIn 0.3s ease;
+}
+
+@keyframes toastFadeIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.app-toast-content {
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+}
+
+.app-toast .toast-btn {
+    margin-top: 15px;
+    padding: 10px 30px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+}
+</style>
+
+<script>
+function showAppToast(message, callback) {
+    const toast = document.getElementById('appToast');
+    const content = document.getElementById('appToastContent');
+    content.innerHTML = message + '<br><button class="toast-btn" onclick="closeAppToast()">确定</button>';
+    toast.style.display = 'block';
+    window._toastCallback = callback;
+}
+
+function closeAppToast() {
+    const toast = document.getElementById('appToast');
+    toast.style.display = 'none';
+    if (window._toastCallback) {
+        window._toastCallback();
+        window._toastCallback = null;
+    }
+}
+</script>

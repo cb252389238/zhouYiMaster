@@ -4,6 +4,73 @@ let currentGua = null;
 let score = 0;
 let questionCount = 0;
 
+// ==================== App Style Toast 提示框 ====================
+function showAppToast(message, callback) {
+    const toast = document.getElementById('appToast');
+    const content = document.getElementById('appToastContent');
+    content.innerHTML = message + '<br><button class="toast-btn" onclick="closeAppToast()">确定</button>';
+    toast.style.display = 'block';
+    window._toastCallback = callback;
+}
+
+function closeAppToast() {
+    const toast = document.getElementById('appToast');
+    toast.style.display = 'none';
+    if (window._toastCallback) {
+        window._toastCallback();
+        window._toastCallback = null;
+    }
+}
+
+function showAppConfirm(message, onConfirm, onCancel) {
+    const toast = document.getElementById('appToast');
+    const content = document.getElementById('appToastContent');
+    content.innerHTML = message + '<br>' +
+        '<div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">' +
+        '<button class="toast-btn" style="background: #999;" onclick="closeAppConfirm(false)">取消</button>' +
+        '<button class="toast-btn" onclick="closeAppConfirm(true)">确定</button></div>';
+    toast.style.display = 'block';
+    window._confirmCallbacks = { onConfirm: onConfirm, onCancel: onCancel };
+}
+
+function closeAppConfirm(confirmed) {
+    const toast = document.getElementById('appToast');
+    toast.style.display = 'none';
+    if (window._confirmCallbacks) {
+        if (confirmed && window._confirmCallbacks.onConfirm) {
+            window._confirmCallbacks.onConfirm();
+        } else if (!confirmed && window._confirmCallbacks.onCancel) {
+            window._confirmCallbacks.onCancel();
+        }
+        window._confirmCallbacks = null;
+    }
+}
+
+function showAppPrompt(message, defaultValue, onConfirm) {
+    const toast = document.getElementById('appToast');
+    const content = document.getElementById('appToastContent');
+    content.innerHTML = message + '<br>' +
+        '<input type="text" id="appPromptInput" value="' + defaultValue + '" ' +
+        'style="margin-top: 15px; padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">' +
+        '<div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">' +
+        '<button class="toast-btn" style="background: #999;" onclick="closeAppPrompt()">取消</button>' +
+        '<button class="toast-btn" onclick="closeAppPrompt(true)">确定</button></div>';
+    toast.style.display = 'block';
+    window._promptCallback = onConfirm;
+}
+
+function closeAppPrompt(confirmed) {
+    const toast = document.getElementById('appToast');
+    toast.style.display = 'none';
+    if (window._promptCallback) {
+        if (confirmed) {
+            const input = document.getElementById('appPromptInput');
+            window._promptCallback(input.value);
+        }
+        window._promptCallback = null;
+    }
+}
+
 // ==================== 版本更新检测 ====================
 const REMOTE_VERSION_URL = 'https://raw.githubusercontent.com/cb252389238/zhouYiMaster/main/version.json';
 
@@ -229,17 +296,17 @@ function showDownloadProgress(url) {
             
             setTimeout(() => {
                 progressDialog.remove();
-                alert('下载完成，请在通知栏找到安装包进行安装');
+                showAppToast('下载完成，请在通知栏找到安装包进行安装');
             }, 1500);
         } else {
             progressDialog.remove();
-            alert('下载失败，请点击右上角浏览器图标手动下载');
+            showAppToast('下载失败，请点击右上角浏览器图标手动下载');
         }
     };
     
     xhr.onerror = function() {
         progressDialog.remove();
-        alert('下载失败，请点击右上角浏览器图标手动下载');
+        showAppToast('下载失败，请点击右上角浏览器图标手动下载');
     };
     
     xhr.send();
@@ -5770,7 +5837,7 @@ function showLiuYaoResult() {
 // 从六爻起卦添加到易策
 function addToYiceFromLiuYao() {
     if (!window.lyCurrentGua) {
-        alert('请先起卦');
+        showAppToast('请先起卦');
         return;
     }
     
@@ -6498,7 +6565,7 @@ function saveYiceRecord() {
     const createTimeInput = document.getElementById('ycAddCreateTime').value;
     
     if (!ycSelectedUpper || !ycSelectedLower) {
-        alert('请选择卦象');
+        showAppToast('请选择卦象');
         return;
     }
     
@@ -6522,7 +6589,7 @@ function saveYiceRecord() {
     ycRecords.push(record);
     saveYiceData();
     
-    alert('保存成功');
+    showAppToast('保存成功');
     
     // 根据来源决定返回位置
     if (window.yiceFromLiuYao) {
@@ -6609,12 +6676,12 @@ function renderCategoryList() {
 function addCategory() {
     const name = document.getElementById('ycNewCategory').value.trim();
     if (!name) {
-        alert('请输入分类名称');
+        showAppToast('请输入分类名称');
         return;
     }
     
     if (ycCategories.includes(name)) {
-        alert('分类已存在');
+        showAppToast('分类已存在');
         return;
     }
     
@@ -6626,21 +6693,22 @@ function addCategory() {
 
 // 编辑分类
 function editCategory(index) {
-    const newName = prompt('请输入新的分类名称', ycCategories[index]);
-    if (newName && newName.trim() && newName !== ycCategories[index]) {
-        ycCategories[index] = newName.trim();
-        saveYiceData();
-        renderCategoryList();
-    }
+    showAppPrompt('请输入新的分类名称', ycCategories[index], function(newName) {
+        if (newName && newName.trim() && newName !== ycCategories[index]) {
+            ycCategories[index] = newName.trim();
+            saveYiceData();
+            renderCategoryList();
+        }
+    });
 }
 
 // 删除分类
 function deleteCategory(index) {
-    if (confirm('确定要删除分类 "' + ycCategories[index] + '" 吗？')) {
+    showAppConfirm('确定要删除分类 "' + ycCategories[index] + '" 吗？', function() {
         ycCategories.splice(index, 1);
         saveYiceData();
         renderCategoryList();
-    }
+    });
 }
 
 // 根据ID显示卦象详情
@@ -6979,7 +7047,7 @@ function updateYiceRecord() {
     
     saveYiceData();
     
-    alert('保存成功');
+    showAppToast('保存成功');
     showYiceDetail();
 }
 
@@ -7007,7 +7075,7 @@ function saveReplay() {
     const diff = document.getElementById('ycReplayDiff').value;
     
     if (!content.trim()) {
-        alert('请输入事情进展');
+        showAppToast('请输入事情进展');
         return;
     }
     
@@ -7025,16 +7093,14 @@ function saveReplay() {
     
     saveYiceData();
     
-    alert('复盘记录保存成功');
+    showAppToast('复盘记录保存成功');
     closeReplayModal();
     showYiceDetail();
 }
 
-// 备份数据
+// 备份数据 - 保存到手机 Download 目录
 async function backupYiceData() {
     try {
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -7051,48 +7117,39 @@ async function backupYiceData() {
         
         const json = JSON.stringify(data, null, 2);
         
-        // 写入到下载目录
-        const result = await Filesystem.writeFile({
-            path: fileName,
-            data: json,
-            directory: Directory.Downloads,
-            encoding: 'utf8'
-        });
-        
-        alert('备份成功！文件已保存到: Download/' + fileName);
+        // 使用原生 Android 接口保存到 Download 目录
+        if (window.AndroidFileSaver) {
+            console.log('使用 AndroidFileSaver 保存文件...');
+            const result = window.AndroidFileSaver.saveToDownloads(fileName, json);
+            console.log('保存结果:', result);
+            
+            if (result && result.startsWith('success:')) {
+                const filePath = result.substring(8);
+                showAppToast('备份成功！<br><span style="font-size: 12px; color: #666;">' + filePath + '</span>');
+            } else {
+                showAppToast('备份失败<br><span style="font-size: 12px; color: #666;">' + result + '</span>');
+            }
+        } else {
+            console.warn('AndroidFileSaver 不可用，尝试浏览器下载...');
+            doBrowserDownload(fileName, json);
+        }
     } catch (error) {
         console.error('备份失败:', error);
-        // 如果插件方式失败，使用传统方式
-        backupYiceDataLegacy();
+        showAppToast('备份失败<br><span style="font-size: 12px; color: #666;">' + error + '</span>');
     }
 }
 
-// 传统备份方式（备用）
-function backupYiceDataLegacy() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hour = String(now.getHours()).padStart(2, '0');
-    const minute = String(now.getMinutes()).padStart(2, '0');
-    const fileName = `易师${year}${month}${day}${hour}${minute}.json`;
-    
-    const data = {
-        records: ycRecords,
-        categories: ycCategories,
-        backupTime: new Date().toLocaleString('zh-CN')
-    };
-    
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
+function doBrowserDownload(fileName, json) {
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
+    document.body.appendChild(a);
     a.click();
-    
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showAppToast('备份成功！文件已下载: ' + fileName);
 }
 
 // 导入数据 - 触发文件选择
@@ -7111,14 +7168,14 @@ function handleYiceImport(event) {
             const data = JSON.parse(e.target.result);
             
             if (!data.records || !Array.isArray(data.records)) {
-                alert('导入文件格式不正确');
+                showAppToast('导入文件格式不正确');
                 return;
             }
             
             // 显示导入选项弹框
             showImportOptionsModal(data);
         } catch (err) {
-            alert('导入失败：' + err.message);
+            showAppToast('导入失败：' + err.message);
         }
     };
     reader.readAsText(file);
@@ -7161,7 +7218,7 @@ function showImportOptionsModal(data) {
         renderYiceList();
         loadCategoriesToSelect('ycAddCategory');
         document.body.removeChild(modal);
-        alert('追加成功！共导入 ' + newRecords.length + ' 条记录');
+        showAppToast('追加成功！共导入 ' + newRecords.length + ' 条记录');
     };
     
     // 覆盖数据
@@ -7175,7 +7232,7 @@ function showImportOptionsModal(data) {
         renderYiceList();
         loadCategoriesToSelect('ycAddCategory');
         document.body.removeChild(modal);
-        alert('覆盖成功！共导入 ' + ycRecords.length + ' 条记录');
+        showAppToast('覆盖成功！共导入 ' + ycRecords.length + ' 条记录');
     };
     
     // 取消
