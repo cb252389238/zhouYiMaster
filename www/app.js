@@ -7031,7 +7031,44 @@ function saveReplay() {
 }
 
 // 备份数据
-function backupYiceData() {
+async function backupYiceData() {
+    try {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hour = String(now.getHours()).padStart(2, '0');
+        const minute = String(now.getMinutes()).padStart(2, '0');
+        const fileName = `易师${year}${month}${day}${hour}${minute}.json`;
+        
+        const data = {
+            records: ycRecords,
+            categories: ycCategories,
+            backupTime: new Date().toLocaleString('zh-CN')
+        };
+        
+        const json = JSON.stringify(data, null, 2);
+        
+        // 写入到下载目录
+        const result = await Filesystem.writeFile({
+            path: fileName,
+            data: json,
+            directory: Directory.Downloads,
+            encoding: 'utf8'
+        });
+        
+        alert('备份成功！文件已保存到: Download/' + fileName);
+    } catch (error) {
+        console.error('备份失败:', error);
+        // 如果插件方式失败，使用传统方式
+        backupYiceDataLegacy();
+    }
+}
+
+// 传统备份方式（备用）
+function backupYiceDataLegacy() {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
