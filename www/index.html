@@ -1537,6 +1537,14 @@
                     </select>
                 </div>
                 
+                <!-- 准确度选择 -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">准确度：<span id="ycAddAccuracyValue" style="color: #3498db; font-weight: bold;">70%</span></label>
+                    <input type="range" id="ycAddAccuracy" min="0" max="100" step="5" value="70" 
+                           oninput="document.getElementById('ycAddAccuracyValue').textContent = this.value + '%'; 
+                                   this.style.background = this.value <= 30 ? '#e74c3c' : (this.value <= 60 ? '#f39c12' : (this.value <= 80 ? '#3498db' : '#27ae60'));">
+                </div>
+                
                 <!-- 测算内容 -->
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">测算内容：</label>
@@ -1643,6 +1651,13 @@
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">分类：</label>
                     <select id="ycEditCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;"></select>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">准确度：<span id="ycEditAccuracyValue" style="color: #3498db; font-weight: bold;">70%</span></label>
+                    <input type="range" id="ycEditAccuracy" min="0" max="100" step="5" value="70" 
+                           oninput="document.getElementById('ycEditAccuracyValue').textContent = this.value + '%'; 
+                                   this.style.background = this.value <= 30 ? '#e74c3c' : (this.value <= 60 ? '#f39c12' : (this.value <= 80 ? '#3498db' : '#27ae60'));">
                 </div>
                 
                 <div style="margin-bottom: 20px;">
@@ -1933,6 +1948,41 @@
     border: none;
     border-radius: 20px;
     font-size: 14px;
+    cursor: pointer;
+}
+
+/* 准确度颜色 */
+.accuracy-low { color: #e74c3c; }
+.accuracy-medium { color: #f39c12; }
+.accuracy-good { color: #3498db; }
+.accuracy-high { color: #27ae60; }
+.accuracy-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.accuracy-badge.low { background: #fde8e8; }
+.accuracy-badge.medium { background: #fef5e7; }
+.accuracy-badge.good { background: #e8f4fd; }
+.accuracy-badge.high { background: #e8f8f0; }
+
+/* 滑块样式 */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #ddd;
+    outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #667eea;
     cursor: pointer;
 }
 </style>

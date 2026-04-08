@@ -6248,18 +6248,27 @@ function renderYiceList(isLoadMore = false) {
         const time = new Date(record.createTime).toLocaleDateString('zh-CN');
         const dongyaoArray = record.dongyao || [];
         const guaSymbolHtml = getGuaSymbolHtml(record.upper, record.lower, 36, dongyaoArray);
+        const accuracy = record.accuracy || 70;
+        const accuracyClass = accuracy <= 30 ? 'low' : (accuracy <= 60 ? 'medium' : (accuracy <= 80 ? 'good' : 'high'));
+        const accuracyColor = accuracy <= 30 ? '#e74c3c' : (accuracy <= 60 ? '#f39c12' : (accuracy <= 80 ? '#3498db' : '#27ae60'));
         
         html += `
-            <div class="yc-record-card" onclick="showYiceDetailById('${record.id}')">
+            <div class="yc-record-card" onclick="showYiceDetailById('${record.id}')" 
+                 oncontextmenu="event.preventDefault(); confirmDeleteYice('${record.id}');"
+                 ontouchstart="startLongPress('${record.id}', event)" 
+                 ontouchend="endLongPress()" 
+                 ontouchmove="cancelLongPress()">
                 <div style="display: flex; align-items: center; margin-bottom: 8px;">
                     ${guaSymbolHtml}
                     <span style="font-size: 1.2em; font-weight: bold; margin-left: 10px;">${guaName}</span>
+                    <span class="accuracy-badge ${accuracyClass}" style="margin-left: auto; color: ${accuracyColor};">${accuracy}%</span>
                 </div>
                 <div class="yc-record-header">
                     <span class="yc-record-time">${time}</span>
                     <span class="yc-record-category">${record.category || '未分类'}</span>
                 </div>
                 <div class="yc-record-content">${record.content || '无测算内容'}</div>
+                <div style="color: #999; font-size: 11px; margin-top: 4px;">长按删除</div>
             </div>
         `;
     });
@@ -6294,6 +6303,48 @@ function renderYiceList(isLoadMore = false) {
     } else {
         loadMoreTip.textContent = '';
     }
+}
+
+// 长按删除相关变量
+let longPressTimer = null;
+let longPressTarget = null;
+
+// 开始长按计时
+function startLongPress(recordId, event) {
+    longPressTarget = recordId;
+    longPressTimer = setTimeout(() => {
+        confirmDeleteYice(recordId);
+        longPressTimer = null;
+        longPressTarget = null;
+    }, 500);
+}
+
+// 取消长按
+function cancelLongPress() {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+}
+
+// 结束长按
+function endLongPress() {
+    cancelLongPress();
+}
+
+// 确认删除易策记录
+function confirmDeleteYice(recordId) {
+    showAppConfirm('确定要删除这条记录吗？', function() {
+        deleteYiceRecord(recordId);
+    });
+}
+
+// 删除易策记录
+function deleteYiceRecord(recordId) {
+    ycRecords = ycRecords.filter(r => r.id !== recordId);
+    saveYiceData();
+    renderYiceList();
+    showAppToast('删除成功');
 }
 
 // 根据上下卦查找卦名
@@ -6563,6 +6614,7 @@ function saveYiceRecord() {
     const person = document.getElementById('ycAddPerson').value;
     const analysis = document.getElementById('ycAddAnalysis').value;
     const createTimeInput = document.getElementById('ycAddCreateTime').value;
+    const accuracy = parseInt(document.getElementById('ycAddAccuracy').value) || 70;
     
     if (!ycSelectedUpper || !ycSelectedLower) {
         showAppToast('请选择卦象');
@@ -6583,6 +6635,7 @@ function saveYiceRecord() {
         analysis,
         createTime: createTime,
         updateTime: new Date().toISOString(),
+        accuracy: accuracy,
         replays: []
     };
     
@@ -6730,6 +6783,9 @@ function showYiceDetail() {
     const guaName = getGuaNameBy上下(ycCurrentRecord.upper, ycCurrentRecord.lower);
     const guaSymbol = createGuaElement(ycCurrentRecord.upper, ycCurrentRecord.lower, ycCurrentRecord.dongyao || []);
     const createTime = new Date(ycCurrentRecord.createTime).toLocaleString('zh-CN');
+    const accuracy = ycCurrentRecord.accuracy || 70;
+    const accuracyClass = accuracy <= 30 ? 'low' : (accuracy <= 60 ? 'medium' : (accuracy <= 80 ? 'good' : 'high'));
+    const accuracyColor = accuracy <= 30 ? '#e74c3c' : (accuracy <= 60 ? '#f39c12' : (accuracy <= 80 ? '#3498db' : '#27ae60'));
     
     let dongyaoHtml = '';
     if (ycCurrentRecord.dongyao && ycCurrentRecord.dongyao.length > 0) {
@@ -6777,6 +6833,16 @@ function showYiceDetail() {
         <div class="yc-detail-section">
             <div class="yc-detail-label">分类</div>
             <div class="yc-detail-value">${ycCurrentRecord.category || '未分类'}</div>
+        </div>
+        
+        <div class="yc-detail-section">
+            <div class="yc-detail-label">准确度</div>
+            <div class="yc-detail-value">
+                <span class="accuracy-badge ${accuracyClass}" style="font-size: 16px; color: ${accuracyColor};">${accuracy}%</span>
+                <span style="color: #999; font-size: 12px; margin-left: 10px;">
+                    ${accuracy <= 30 ? '不准' : (accuracy <= 60 ? '一般' : (accuracy <= 80 ? '较准' : '准确'))}
+                </span>
+            </div>
         </div>
         
         <div class="yc-detail-section">
@@ -6946,6 +7012,13 @@ function editYiceRecord() {
     document.getElementById('ycEditPerson').value = ycCurrentRecord.person || '';
     document.getElementById('ycEditAnalysis').value = ycCurrentRecord.analysis || '';
     
+    // 准确度
+    const accuracy = ycCurrentRecord.accuracy || 70;
+    const accuracyInput = document.getElementById('ycEditAccuracy');
+    accuracyInput.value = accuracy;
+    document.getElementById('ycEditAccuracyValue').textContent = accuracy + '%';
+    accuracyInput.style.background = accuracy <= 30 ? '#e74c3c' : (accuracy <= 60 ? '#f39c12' : (accuracy <= 80 ? '#3498db' : '#27ae60'));
+    
     ycEditUpper = ycCurrentRecord.upper;
     ycEditLower = ycCurrentRecord.lower;
     ycEditDongyao = [...(ycCurrentRecord.dongyao || [])];
@@ -7043,6 +7116,7 @@ function updateYiceRecord() {
     ycCurrentRecord.upper = ycSelectedUpper;
     ycCurrentRecord.lower = ycSelectedLower;
     ycCurrentRecord.dongyao = [...ycEditDongyao];
+    ycCurrentRecord.accuracy = parseInt(document.getElementById('ycEditAccuracy').value) || 70;
     ycCurrentRecord.updateTime = new Date().toISOString();
     
     saveYiceData();
