@@ -4769,16 +4769,7 @@ function showModule(moduleName) {
         }
     } else if (moduleName === 'yice') {
         document.getElementById('yiceModule').classList.add('active');
-        // 使用 Promise 处理
-        initYiceDB().then(() => {
-            return loadYiceData();
-        }).then(() => {
-            loadCategoriesToSelect('ycAddCategory');
-            renderYiceList();
-            setupYiceScrollListener();
-        }).catch(err => {
-            console.error('初始化易策失败:', err);
-        });
+        initYice();
     }
 }
 
