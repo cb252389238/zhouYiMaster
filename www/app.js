@@ -5184,11 +5184,21 @@ function initChaXun() {
     document.getElementById('cxBaguaSelect').style.display = 'block';
     document.getElementById('cxGuaDetail').style.display = 'none';
     document.getElementById('cxResult').innerHTML = '';
-    
+
     // 清除所有选中状态
     const allButtons = document.querySelectorAll('#cxUpperBagua .bagua-btn, #cxLowerBagua .bagua-btn');
     allButtons.forEach(btn => btn.classList.remove('selected'));
-    
+
+    // 重置返回按钮状态
+    const backToYiceBtn = document.getElementById('cxBackToYiceBtn');
+    const backToPrevBtn = document.getElementById('cxBackToPrevBtn');
+    const backToRootBtn = document.getElementById('cxBackToRootBtn');
+    const backToHomeBtn = document.getElementById('cxBackToHomeBtn');
+    if (backToYiceBtn) backToYiceBtn.style.display = 'none';
+    if (backToPrevBtn) backToPrevBtn.style.display = 'inline-block';
+    if (backToRootBtn) backToRootBtn.style.display = 'none';
+    if (backToHomeBtn) backToHomeBtn.style.display = 'inline-block';
+
     // 显示上卦选择
     renderBaguaSelect('cxUpperBagua', 'upper');
     // 显示下卦选择
@@ -5282,24 +5292,31 @@ function showGuaDetail(gua, isRootGua = false) {
     if (isRootGua) {
         cxRootGua = gua;
     }
-    
+
     // 处理从易策详情跳转过来的情况 - 设置动爻
     if (fromYice && isRootGua && yiceDongyao.length > 0) {
         cxChangedYaoci = yiceDongyao;
     }
-    
-    // 显示返回按钮
+
+    // 从易策跳转过来时，只显示"返回易策详情"按钮
     const backToYiceBtn = document.getElementById('cxBackToYiceBtn');
+    const backToPrevBtn = document.getElementById('cxBackToPrevBtn');
+    const backToRootBtn = document.getElementById('cxBackToRootBtn');
+    const backToHomeBtn = document.getElementById('cxBackToHomeBtn');
+
     if (fromYice && isRootGua) {
-        if (backToYiceBtn) {
-            backToYiceBtn.style.display = 'inline-block';
-        }
+        // 从易策跳转过来，只显示返回易策详情
+        if (backToYiceBtn) backToYiceBtn.style.display = 'inline-block';
+        if (backToPrevBtn) backToPrevBtn.style.display = 'none';
+        if (backToRootBtn) backToRootBtn.style.display = 'none';
+        if (backToHomeBtn) backToHomeBtn.style.display = 'none';
     } else {
-        if (backToYiceBtn) {
-            backToYiceBtn.style.display = 'none';
-        }
+        // 正常模式，显示返回首页、返回上一页和返回本卦按钮
+        if (backToYiceBtn) backToYiceBtn.style.display = 'none';
+        if (backToPrevBtn) backToPrevBtn.style.display = 'inline-block';
+        if (backToHomeBtn) backToHomeBtn.style.display = 'inline-block';
     }
-    
+
     // 隐藏选择区域，显示详情区域
     document.getElementById('cxBaguaSelect').style.display = 'none';
     document.getElementById('cxGuaDetail').style.display = 'block';
@@ -5361,7 +5378,7 @@ function showGuaDetail(gua, isRootGua = false) {
     }
     
     // 如果不是本卦，显示返回本卦按钮
-    const backToRootBtn = document.getElementById('cxBackToRootBtn');
+    backToRootBtn = document.getElementById('cxBackToRootBtn');
     if (backToRootBtn) {
         backToRootBtn.style.display = (cxRootGua && cxRootGua.number !== gua.number) ? 'inline-block' : 'none';
     }
@@ -5621,10 +5638,19 @@ function backToBaguaSelect() {
     cxChangedYaoci = [];
     cxCurrentGua = {}; // 重置当前卦对象
     cxRootGua = null; // 重置本卦
-    
+
     // 清除所有选中状态
     const allButtons = document.querySelectorAll('#cxUpperBagua .bagua-btn, #cxLowerBagua .bagua-btn');
     allButtons.forEach(btn => btn.classList.remove('selected'));
+
+    // 清除易策跳转状态
+    window.fromYiceDetail = false;
+    window.yiceDongyao = null;
+    window.yiceRecordId = null;
+
+    // 隐藏返回易策详情按钮
+    const backToYiceBtn = document.getElementById('cxBackToYiceBtn');
+    if (backToYiceBtn) backToYiceBtn.style.display = 'none';
 }
 
 // 返回本卦
@@ -6064,18 +6090,19 @@ async function saveYiceDataToDB() {
     if (!yiceDB) {
         await initYiceDB();
     }
-    
+
     return new Promise((resolve, reject) => {
         const transaction = yiceDB.transaction(STORE_NAME, 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
-        
-        // 保存记录
-        store.put({ id: 'records', value: ycRecords });
-        // 保存分类
-        store.put({ id: 'categories', value: ycCategories });
-        
+
+        const recordsData = { id: 'records', value: ycRecords };
+        const categoriesData = { id: 'categories', value: ycCategories };
+
         transaction.oncomplete = () => resolve();
         transaction.onerror = () => reject(transaction.error);
+
+        store.put(recordsData);
+        store.put(categoriesData);
     });
 }
 
@@ -6880,14 +6907,20 @@ function backToYiceDetail() {
     if (backToYiceBtn) {
         backToYiceBtn.style.display = 'none';
     }
-    
+
+    // 清除易策跳转状态
+    window.fromYiceDetail = false;
+    window.yiceDongyao = null;
+    const recordIdToShow = window.yiceRecordId;
+    window.yiceRecordId = null;
+
     // 隐藏查询模块，显示易策详情模块
     document.getElementById('chaxunModule').classList.remove('active');
-    
+
     // 重新加载数据
     loadYiceData();
-    if (window.yiceRecordId) {
-        const record = ycRecords.find(r => r.id === window.yiceRecordId);
+    if (recordIdToShow) {
+        const record = ycRecords.find(r => r.id === recordIdToShow);
         if (record) {
             ycCurrentRecord = record;
             // 显示易策详情
@@ -7039,7 +7072,10 @@ function showEditGuaSelectModal() {
     document.getElementById('ycGuaModal').style.display = 'block';
     renderBaguaSelectForYice('ycUpperBagua', 'upper');
     renderBaguaSelectForYice('ycLowerBagua', 'lower');
-    
+
+    ycSelectedUpper = ycEditUpper;
+    ycSelectedLower = ycEditLower;
+
     // 预选已有的选择
     if (ycSelectedUpper) {
         const upperBtns = document.querySelectorAll('#ycUpperBagua .bagua-btn');
@@ -7077,8 +7113,11 @@ function showEditGuaSelectModal() {
 
 // 确认编辑卦象选择
 function confirmEditGuaSelection() {
-    const guaName = getGuaNameBy上下(ycSelectedUpper, ycSelectedLower);
-    const guaSymbol = createGuaElement(ycSelectedUpper, ycSelectedLower, ycEditDongyao);
+    ycEditUpper = ycSelectedUpper;
+    ycEditLower = ycSelectedLower;
+
+    const guaName = getGuaNameBy上下(ycEditUpper, ycEditLower);
+    const guaSymbol = createGuaElement(ycEditUpper, ycEditLower, ycEditDongyao);
     
     document.getElementById('ycEditGuaText').style.display = 'none';
     const display = document.getElementById('ycEditGuaDisplay');
@@ -7099,13 +7138,13 @@ function confirmEditGuaSelection() {
 // 更新易策记录
 async function updateYiceRecord() {
     if (!ycCurrentRecord) return;
-    
+
     ycCurrentRecord.category = document.getElementById('ycEditCategory').value;
     ycCurrentRecord.content = document.getElementById('ycEditContent').value;
     ycCurrentRecord.person = document.getElementById('ycEditPerson').value;
     ycCurrentRecord.analysis = document.getElementById('ycEditAnalysis').value;
-    ycCurrentRecord.upper = ycSelectedUpper;
-    ycCurrentRecord.lower = ycSelectedLower;
+    ycCurrentRecord.upper = ycEditUpper;
+    ycCurrentRecord.lower = ycEditLower;
     ycCurrentRecord.dongyao = [...ycEditDongyao];
     ycCurrentRecord.accuracy = parseInt(document.getElementById('ycEditAccuracy').value) || 70;
     ycCurrentRecord.updateTime = new Date().toISOString();
