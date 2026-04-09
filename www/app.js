@@ -6181,8 +6181,8 @@ function getGuaSymbolHtml(upper, lower, size = 35, dongyao = []) {
 }
 
 // 渲染易策列表
-function renderYiceList(isLoadMore = false) {
-    loadYiceData();
+async function renderYiceList(isLoadMore = false) {
+    await loadYiceData();
     let records = [...ycRecords];
     
     const searchKeyword = document.getElementById('ycSearchInput')?.value || '';
@@ -6608,7 +6608,7 @@ function closeGuaModal() {
 }
 
 // 保存易策记录
-function saveYiceRecord() {
+async function saveYiceRecord() {
     const category = document.getElementById('ycAddCategory').value;
     const content = document.getElementById('ycAddContent').value;
     const person = document.getElementById('ycAddPerson').value;
@@ -6640,7 +6640,7 @@ function saveYiceRecord() {
     };
     
     ycRecords.push(record);
-    saveYiceData();
+    await saveYiceData();
     
     showAppToast('保存成功');
     
@@ -7106,7 +7106,7 @@ function confirmEditGuaSelection() {
 }
 
 // 更新易策记录
-function updateYiceRecord() {
+async function updateYiceRecord() {
     if (!ycCurrentRecord) return;
     
     ycCurrentRecord.category = document.getElementById('ycEditCategory').value;
@@ -7119,7 +7119,7 @@ function updateYiceRecord() {
     ycCurrentRecord.accuracy = parseInt(document.getElementById('ycEditAccuracy').value) || 70;
     ycCurrentRecord.updateTime = new Date().toISOString();
     
-    saveYiceData();
+    await saveYiceData();
     
     showAppToast('保存成功');
     showYiceDetail();
