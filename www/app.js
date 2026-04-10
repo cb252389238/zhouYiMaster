@@ -7537,6 +7537,8 @@ let mhGuaItems = []
 let mhSpherePoints = []
 let mhContainerSize = 400
 let mhRadius = 150
+let mhCurrentRadius = 150
+let mhBaseRadius = 150
 
 function fibonacciSphere(count) {
     const points = []
@@ -7568,7 +7570,9 @@ function initMeihua() {
     const area = document.querySelector('.mh-gua-area')
     if (area) {
         mhContainerSize = Math.min(area.offsetWidth - 20, 400)
-        mhRadius = (mhContainerSize / 2) - 50
+        mhBaseRadius = (mhContainerSize / 2) - 50
+        mhRadius = mhBaseRadius
+        mhCurrentRadius = mhBaseRadius
     }
     
     circle.style.width = mhContainerSize + 'px'
@@ -7615,7 +7619,6 @@ function createMiniGuaSymbolHtml(upper, lower) {
 function startMeihuaAnimation() {
     const centerX = mhContainerSize / 2
     const centerY = mhContainerSize / 2
-    const perspective = mhRadius * 2.5
     
     function animate() {
         mhRotationAngleY += mhRotationSpeed
@@ -7629,6 +7632,8 @@ function startMeihuaAnimation() {
         const sinRY = Math.sin(mhRotationAngleY * Math.PI / 180)
         const cosRX = Math.cos(mhRotationAngleX * Math.PI / 180)
         const sinRX = Math.sin(mhRotationAngleX * Math.PI / 180)
+        const currentR = mhCurrentRadius
+        const perspective = currentR * 2.5
         
         mhGuaItems.forEach((item, index) => {
             const pt = mhSpherePoints[index]
@@ -7641,10 +7646,10 @@ function startMeihuaAnimation() {
             const z2 = y1 * sinRX + z1 * cosRX
             const x2 = x1
             
-            const screenX = centerX + x2 * mhRadius
-            const screenY = centerY + y2 * mhRadius
+            const screenX = centerX + x2 * currentR
+            const screenY = centerY + y2 * currentR
             
-            const depthScale = (perspective + z2 * mhRadius) / perspective
+            const depthScale = (perspective + z2 * currentR) / perspective
             const clampedScale = Math.max(0.4, Math.min(1.6, depthScale))
             
             item.style.left = screenX + 'px'
@@ -7682,6 +7687,7 @@ function startMeihuaDivination() {
         btn.textContent = '起卦中...'
     }
     
+    const maxRadius = mhBaseRadius * 2.2
     const accelerateStart = Date.now()
     const accelerateDuration = 2500
     
@@ -7690,11 +7696,7 @@ function startMeihuaDivination() {
         const progress = Math.min(elapsed / accelerateDuration, 1)
         
         mhRotationSpeed = 0.3 + progress * progress * 25
-        
-        mhGuaItems.forEach(item => {
-            const opacity = Math.max(0.05, 1 - progress * 0.9)
-            item.style.opacity = opacity
-        })
+        mhCurrentRadius = mhBaseRadius + (maxRadius - mhBaseRadius) * progress * progress
         
         if (progress < 1) {
             requestAnimationFrame(accelerate)
@@ -7742,7 +7744,8 @@ function meihuaCalculate() {
 
 function decelerateAndShowResult(result) {
     const decelerateStart = Date.now()
-    const decelerateDuration = 2000
+    const decelerateDuration = 2500
+    const startRadius = mhCurrentRadius
     
     function decelerate() {
         const elapsed = Date.now() - decelerateStart
@@ -7750,16 +7753,13 @@ function decelerateAndShowResult(result) {
         
         const eased = 1 - (1 - progress) * (1 - progress)
         mhRotationSpeed = 25 * (1 - eased)
-        
-        mhGuaItems.forEach(item => {
-            const opacity = Math.min(1, 0.05 + eased * 0.95)
-            item.style.opacity = opacity
-        })
+        mhCurrentRadius = startRadius + (mhBaseRadius - startRadius) * eased
         
         if (progress < 1) {
             requestAnimationFrame(decelerate)
         } else {
             mhRotationSpeed = 0
+            mhCurrentRadius = mhBaseRadius
             flyOutSelectedHexagram(result)
         }
     }
@@ -7870,6 +7870,7 @@ function closeMeihuaResult() {
 function resetMeihuaState() {
     mhIsDivining = false
     mhRotationSpeed = 0.3
+    mhCurrentRadius = mhBaseRadius
     
     const btn = document.getElementById('mhQiGuaBtn')
     if (btn) {
