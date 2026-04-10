@@ -1279,6 +1279,289 @@
                 font-size: 0.9em;
             }
         }
+
+        /* ==================== 梅花易数模块样式 ==================== */
+        .mh-gua-area {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            background: radial-gradient(ellipse at center, #1a1a3e 0%, #0d0d2b 60%, #050515 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .mh-gua-circle {
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+
+        .mh-gua-item {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: rgba(180, 180, 255, 0.7);
+            font-size: 0.7em;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            will-change: left, top, opacity;
+        }
+
+        .mh-mini-gua {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .mh-mini-yao {
+            height: 2px;
+            border-radius: 1px;
+        }
+
+        .mh-mini-yao.yang {
+            width: 18px;
+            background: rgba(180, 180, 255, 0.8);
+        }
+
+        .mh-mini-yao.yin {
+            width: 18px;
+            height: 2px;
+            position: relative;
+        }
+
+        .mh-mini-yao.yin::before,
+        .mh-mini-yao.yin::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 7px;
+            height: 2px;
+            background: rgba(180, 180, 255, 0.8);
+            border-radius: 1px;
+        }
+
+        .mh-mini-yao.yin::before {
+            left: 0;
+        }
+
+        .mh-mini-yao.yin::after {
+            right: 0;
+        }
+
+        .mh-gua-name {
+            margin-top: 2px;
+            white-space: nowrap;
+            font-size: 0.85em;
+        }
+
+        .mh-center-glow {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.35) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: mhPulse 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .mh-center-taiji {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5em;
+            color: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            animation: mhTaijiSpin 20s linear infinite;
+        }
+
+        @keyframes mhPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+        }
+
+        @keyframes mhTaijiSpin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .mh-qigua-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            border-radius: 30px;
+            font-size: 1.3em;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+            letter-spacing: 3px;
+        }
+
+        .mh-qigua-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .mh-qigua-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .mh-result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mh-result-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0ff 100%);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: mhScaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes mhScaleIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .mh-result-title {
+            font-size: 1.1em;
+            color: #667eea;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .mh-result-symbol {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .mh-result-symbol .gua-symbol-container {
+            font-size: 2.5em;
+        }
+
+        .mh-result-name {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .mh-result-info {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .mh-result-dongyao {
+            color: #e53935;
+            font-weight: bold;
+        }
+
+        .mh-result-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .mh-result-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .mh-result-btn:hover {
+            background: #ddd;
+        }
+
+        .mh-detail-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .mh-detail-btn:hover {
+            background: #5568d3;
+        }
+
+        .mh-yice-btn {
+            background: #34c759;
+            color: white;
+        }
+
+        .mh-yice-btn:hover {
+            background: #2db84d;
+        }
+
+        .mh-flyout {
+            position: fixed;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            text-shadow: 0 0 20px rgba(102, 126, 234, 1), 0 0 40px rgba(102, 126, 234, 0.5);
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .mh-flyout .mh-mini-yao.yang {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .mh-flyout .mh-mini-yao.yin::before,
+        .mh-flyout .mh-mini-yao.yin::after {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .mh-flyout .mh-gua-name {
+            color: white;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .mh-gua-area {
+                height: 360px;
+            }
+            .mh-gua-circle {
+                width: 300px;
+                height: 300px;
+            }
+            .mh-qigua-btn {
+                padding: 12px 35px;
+                font-size: 1.1em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1290,6 +1573,10 @@
 
         <!-- 首页模块选择 -->
         <div id="homeModule" class="module-grid">
+            <div class="module-card" onclick="showModule('meihua')">
+                <h2>🌸 梅花易数</h2>
+                <p>以数起卦，万物皆可占</p>
+            </div>
             <div class="module-card" onclick="showModule('liuyao')">
                 <h2>🪙 六爻起卦</h2>
                 <p>传统金钱起卦法，投掷六次铜钱得卦</p>
@@ -1389,6 +1676,38 @@
                 <div style="text-align: center; margin: 20px 0;">
                     <button class="next-btn" onclick="showLiuYaoDetail()">查看详情</button>
                     <button class="next-btn" onclick="resetLiuYao()" style="margin-left: 10px;">重新起卦</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 梅花易数模块 -->
+        <div id="meihuaModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 5px;">🌸 梅花易数</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 15px;">以数起卦，万物皆可占</p>
+            
+            <div class="mh-gua-area">
+                <div id="mhGuaCircle" class="mh-gua-circle"></div>
+                <div class="mh-center-glow"></div>
+                <div class="mh-center-taiji">☯</div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="mhQiGuaBtn" class="mh-qigua-btn" onclick="startMeihuaDivination()">☯ 起 卦 ☯</button>
+            </div>
+        </div>
+
+        <!-- 梅花易数结果弹层 -->
+        <div id="mhResultModal" class="mh-result-modal" style="display: none;">
+            <div class="mh-result-content">
+                <div class="mh-result-title">🌸 梅花易数</div>
+                <div id="mhResultSymbol" class="mh-result-symbol"></div>
+                <div id="mhResultName" class="mh-result-name"></div>
+                <div id="mhResultInfo" class="mh-result-info"></div>
+                <div class="mh-result-buttons">
+                    <button class="mh-result-btn" onclick="closeMeihuaResult()">关闭</button>
+                    <button class="mh-result-btn mh-detail-btn" onclick="showMeihuaDetail()">卦象详情</button>
+                    <button class="mh-result-btn mh-yice-btn" onclick="addMeihuaToYice()">添加到易策</button>
                 </div>
             </div>
         </div>

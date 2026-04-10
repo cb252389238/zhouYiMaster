@@ -1,4 +1,4 @@
-﻿// 全局变量
+﻿﻿// 全局变量
 let currentModule = null;
 let currentGua = null;
 let score = 0;
@@ -4709,6 +4709,9 @@ function initCharacterPanel() {
 
 // 显示首页
 function showHome() {
+    if (currentModule === 'meihua') {
+        stopMeihuaAnimation()
+    }
     hideAllModules();
     document.getElementById('homeModule').style.display = 'grid';
     currentModule = null;
@@ -4725,6 +4728,9 @@ function hideAllModules() {
 
 // 显示指定模块
 function showModule(moduleName) {
+    if (currentModule === 'meihua') {
+        stopMeihuaAnimation()
+    }
     hideAllModules();
     currentModule = moduleName;
     
@@ -4771,6 +4777,14 @@ function showModule(moduleName) {
     } else if (moduleName === 'yice') {
         document.getElementById('yiceModule').classList.add('active');
         initYice();
+    } else if (moduleName === 'meihua') {
+        document.getElementById('meihuaModule').classList.add('active');
+        if (!window.returningFromMeihua) {
+            initMeihua();
+        } else {
+            window.returningFromMeihua = false;
+            resetMeihuaState();
+        }
     }
 }
 
@@ -6485,12 +6499,23 @@ function showAddYice(keepData = false) {
     // 根据来源更新返回按钮
     const backBtn = document.getElementById('yiceAddBackBtn');
     if (window.yiceFromLiuYao) {
-        backBtn.textContent = '← 返回六爻起卦';
-        backBtn.onclick = function() {
-            window.yiceFromLiuYao = null;
-            window.returningFromYice = true;
-            showModule('liuyao');
-        };
+        if (window.yiceSource === 'meihua') {
+            backBtn.textContent = '← 返回梅花易数';
+            backBtn.onclick = function() {
+                window.yiceFromLiuYao = null;
+                window.yiceSource = null;
+                window.returningFromMeihua = true;
+                showModule('meihua');
+            };
+        } else {
+            backBtn.textContent = '← 返回六爻起卦';
+            backBtn.onclick = function() {
+                window.yiceFromLiuYao = null;
+                window.yiceSource = null;
+                window.returningFromYice = true;
+                showModule('liuyao');
+            };
+        }
     } else {
         backBtn.textContent = '← 返回列表';
         backBtn.onclick = showYiceList;
@@ -6712,9 +6737,17 @@ async function saveYiceRecord() {
     
     // 根据来源决定返回位置
     if (window.yiceFromLiuYao) {
-        window.yiceFromLiuYao = null;
-        window.returningFromYice = true;
-        showModule('liuyao');
+        if (window.yiceSource === 'meihua') {
+            window.yiceFromLiuYao = null;
+            window.yiceSource = null;
+            window.returningFromMeihua = true;
+            showModule('meihua');
+        } else {
+            window.yiceFromLiuYao = null;
+            window.yiceSource = null;
+            window.returningFromYice = true;
+            showModule('liuyao');
+        }
     } else {
         showYiceList();
     }
@@ -7490,6 +7523,360 @@ function setupYiceScrollListener() {
             }, 300);
         }
     });
+}
+
+// ==================== 梅花易数模块 ====================
+let mhAnimationId = null
+let mhRotationAngle = 0
+let mhRotationSpeed = 0.3
+let mhIsDivining = false
+let mhCurrentGua = null
+let mhCurrentDongyao = 0
+let mhGuaItems = []
+let mhContainerSize = 400
+let mhRadius = 165
+
+function initMeihua() {
+    mhRotationAngle = 0
+    mhRotationSpeed = 0.3
+    mhIsDivining = false
+    mhCurrentGua = null
+    mhCurrentDongyao = 0
+    
+    const circle = document.getElementById('mhGuaCircle')
+    if (!circle) return
+    circle.innerHTML = ''
+    mhGuaItems = []
+    
+    const area = document.querySelector('.mh-gua-area')
+    if (area) {
+        mhContainerSize = Math.min(area.offsetWidth - 20, 400)
+        mhRadius = (mhContainerSize / 2) - 35
+    }
+    
+    circle.style.width = mhContainerSize + 'px'
+    circle.style.height = mhContainerSize + 'px'
+    
+    liushisiGua.forEach((gua, index) => {
+        const item = document.createElement('div')
+        item.className = 'mh-gua-item'
+        item.dataset.index = index
+        
+        const symbolHtml = createMiniGuaSymbolHtml(gua.upper, gua.lower)
+        item.innerHTML = symbolHtml + '<div class="mh-gua-name">' + gua.shortName + '</div>'
+        
+        circle.appendChild(item)
+        mhGuaItems.push(item)
+    })
+    
+    if (mhAnimationId) cancelAnimationFrame(mhAnimationId)
+    startMeihuaAnimation()
+    
+    const btn = document.getElementById('mhQiGuaBtn')
+    if (btn) {
+        btn.disabled = false
+        btn.textContent = '☯ 起 卦 ☯'
+    }
+}
+
+function createMiniGuaSymbolHtml(upper, lower) {
+    const upperYao = baguaYaoYinYang[upper]
+    const lowerYao = baguaYaoYinYang[lower]
+    if (!upperYao || !lowerYao) return ''
+    
+    let html = '<div class="mh-mini-gua">'
+    const allYao = [...lowerYao, ...upperYao]
+    for (let i = 0; i < 6; i++) {
+        html += '<div class="mh-mini-yao ' + (allYao[i] === 1 ? 'yang' : 'yin') + '"></div>'
+    }
+    html += '</div>'
+    return html
+}
+
+function startMeihuaAnimation() {
+    const centerX = mhContainerSize / 2
+    const centerY = mhContainerSize / 2
+    
+    function animate() {
+        mhRotationAngle += mhRotationSpeed
+        if (mhRotationAngle >= 360) mhRotationAngle -= 360
+        
+        const time = Date.now() / 1000
+        
+        mhGuaItems.forEach((item, index) => {
+            const baseAngle = (index / 64) * 360
+            const angle = (baseAngle + mhRotationAngle) * Math.PI / 180
+            
+            const x = centerX + mhRadius * Math.cos(angle)
+            const y = centerY + mhRadius * Math.sin(angle)
+            
+            item.style.left = x + 'px'
+            item.style.top = y + 'px'
+            
+            if (!mhIsDivining) {
+                const opacity = 0.3 + 0.7 * Math.abs(Math.sin(time * 0.5 + index * 0.3))
+                item.style.opacity = opacity
+            }
+        })
+        
+        mhAnimationId = requestAnimationFrame(animate)
+    }
+    
+    animate()
+}
+
+function stopMeihuaAnimation() {
+    if (mhAnimationId) {
+        cancelAnimationFrame(mhAnimationId)
+        mhAnimationId = null
+    }
+}
+
+function startMeihuaDivination() {
+    if (mhIsDivining) return
+    mhIsDivining = true
+    
+    const btn = document.getElementById('mhQiGuaBtn')
+    if (btn) {
+        btn.disabled = true
+        btn.textContent = '起卦中...'
+    }
+    
+    const accelerateStart = Date.now()
+    const accelerateDuration = 2500
+    
+    function accelerate() {
+        const elapsed = Date.now() - accelerateStart
+        const progress = Math.min(elapsed / accelerateDuration, 1)
+        
+        mhRotationSpeed = 0.3 + progress * progress * 25
+        
+        mhGuaItems.forEach(item => {
+            const opacity = Math.max(0.05, 1 - progress * 0.9)
+            item.style.opacity = opacity
+        })
+        
+        if (progress < 1) {
+            requestAnimationFrame(accelerate)
+        } else {
+            setTimeout(() => {
+                const result = meihuaCalculate()
+                mhCurrentGua = result.gua
+                mhCurrentDongyao = result.dongyao
+                decelerateAndShowResult(result)
+            }, 1500)
+        }
+    }
+    
+    accelerate()
+}
+
+function meihuaCalculate() {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth() + 1
+    const day = now.getDate()
+    const hour = now.getHours()
+    const minute = now.getMinutes()
+    const second = now.getSeconds()
+    
+    const upperSum = year + month + day + hour + minute
+    const upperRemainder = upperSum % 8
+    
+    const lowerSum = year + month + day + hour + minute + second
+    const lowerRemainder = lowerSum % 8
+    
+    const xiantianMap = { 1: '乾', 2: '兑', 3: '离', 4: '震', 5: '巽', 6: '坎', 7: '艮', 0: '坤' }
+    
+    const upperBagua = xiantianMap[upperRemainder]
+    const lowerBagua = xiantianMap[lowerRemainder]
+    
+    const dongyaoRemainder = lowerSum % 6
+    const dongyao = dongyaoRemainder === 0 ? 6 : dongyaoRemainder
+    
+    const gua = liushisiGua.find(g => g.upper === upperBagua && g.lower === lowerBagua)
+    
+    return { gua, dongyao, upperBagua, lowerBagua }
+}
+
+function decelerateAndShowResult(result) {
+    const decelerateStart = Date.now()
+    const decelerateDuration = 2000
+    
+    function decelerate() {
+        const elapsed = Date.now() - decelerateStart
+        const progress = Math.min(elapsed / decelerateDuration, 1)
+        
+        const eased = 1 - (1 - progress) * (1 - progress)
+        mhRotationSpeed = 25 * (1 - eased)
+        
+        mhGuaItems.forEach(item => {
+            const opacity = Math.min(1, 0.05 + eased * 0.95)
+            item.style.opacity = opacity
+        })
+        
+        if (progress < 1) {
+            requestAnimationFrame(decelerate)
+        } else {
+            mhRotationSpeed = 0
+            flyOutSelectedHexagram(result)
+        }
+    }
+    
+    decelerate()
+}
+
+function flyOutSelectedHexagram(result) {
+    if (!result.gua) {
+        showAppToast('起卦失败，请重试')
+        resetMeihuaState()
+        return
+    }
+    
+    const guaIndex = liushisiGua.findIndex(g => g.upper === result.gua.upper && g.lower === result.gua.lower)
+    if (guaIndex === -1) {
+        showAppToast('起卦失败，请重试')
+        resetMeihuaState()
+        return
+    }
+    
+    const selectedItem = mhGuaItems[guaIndex]
+    const rect = selectedItem.getBoundingClientRect()
+    const viewCenterX = window.innerWidth / 2
+    const viewCenterY = window.innerHeight / 2
+    
+    mhGuaItems.forEach((item, index) => {
+        if (index !== guaIndex) {
+            item.style.transition = 'opacity 0.5s'
+            item.style.opacity = '0'
+        }
+    })
+    
+    const flyOut = document.createElement('div')
+    flyOut.className = 'mh-flyout'
+    flyOut.innerHTML = selectedItem.innerHTML
+    flyOut.style.left = (rect.left + rect.width / 2) + 'px'
+    flyOut.style.top = (rect.top + rect.height / 2) + 'px'
+    flyOut.style.transform = 'translate(-50%, -50%) scale(1)'
+    flyOut.style.fontSize = '0.7em'
+    document.body.appendChild(flyOut)
+    
+    selectedItem.style.opacity = '0'
+    
+    stopMeihuaAnimation()
+    
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            flyOut.style.left = viewCenterX + 'px'
+            flyOut.style.top = viewCenterY + 'px'
+            flyOut.style.transform = 'translate(-50%, -50%) scale(5)'
+            flyOut.style.fontSize = '1em'
+        })
+    })
+    
+    setTimeout(() => {
+        if (flyOut.parentNode) {
+            document.body.removeChild(flyOut)
+        }
+        showMeihuaResult(result)
+    }, 1000)
+}
+
+function showMeihuaResult(result) {
+    const modal = document.getElementById('mhResultModal')
+    const symbolDiv = document.getElementById('mhResultSymbol')
+    const nameDiv = document.getElementById('mhResultName')
+    const infoDiv = document.getElementById('mhResultInfo')
+    
+    if (!result.gua) {
+        showAppToast('起卦失败，请重试')
+        closeMeihuaResult()
+        return
+    }
+    
+    symbolDiv.innerHTML = ''
+    const guaElement = createGuaElement(result.gua.upper, result.gua.lower, [result.dongyao])
+    symbolDiv.appendChild(guaElement)
+    
+    const upperElement = baguaElement[result.gua.upper]
+    const lowerElement = baguaElement[result.gua.lower]
+    let guaNameDisplay
+    if (result.gua.upper === result.gua.lower) {
+        guaNameDisplay = result.gua.upper + '为' + baguaElement[result.gua.upper]
+    } else {
+        guaNameDisplay = upperElement + lowerElement + result.gua.shortName
+    }
+    nameDiv.textContent = guaNameDisplay
+    
+    const yaoNames = ['初', '二', '三', '四', '五', '上']
+    const dongyaoName = yaoNames[result.dongyao - 1]
+    const allYao = [...baguaYaoYinYang[result.gua.lower], ...baguaYaoYinYang[result.gua.upper]]
+    const yaoValue = allYao[result.dongyao - 1]
+    const yaoPrefix = yaoValue === 1 ? '九' : '六'
+    
+    infoDiv.innerHTML = '上卦：' + result.upperBagua + '（' + baguaElement[result.upperBagua] + '）<br>' +
+        '下卦：' + result.lowerBagua + '（' + baguaElement[result.lowerBagua] + '）<br>' +
+        '动爻：<span class="mh-result-dongyao">' + yaoPrefix + dongyaoName + '</span>'
+    
+    modal.style.display = 'flex'
+}
+
+function closeMeihuaResult() {
+    document.getElementById('mhResultModal').style.display = 'none'
+    resetMeihuaState()
+}
+
+function resetMeihuaState() {
+    mhIsDivining = false
+    mhRotationSpeed = 0.3
+    
+    const btn = document.getElementById('mhQiGuaBtn')
+    if (btn) {
+        btn.disabled = false
+        btn.textContent = '☯ 起 卦 ☯'
+    }
+    
+    mhGuaItems.forEach(item => {
+        item.style.transition = 'opacity 0.5s'
+        item.style.opacity = '1'
+        setTimeout(() => {
+            item.style.transition = ''
+        }, 500)
+    })
+    
+    if (!mhAnimationId) {
+        startMeihuaAnimation()
+    }
+}
+
+function showMeihuaDetail() {
+    if (!mhCurrentGua) return
+    
+    document.getElementById('mhResultModal').style.display = 'none'
+    stopMeihuaAnimation()
+    
+    showModule('chaxun')
+    showGuaDetail(mhCurrentGua, true)
+    toggleYaociChange(mhCurrentDongyao)
+}
+
+function addMeihuaToYice() {
+    if (!mhCurrentGua) {
+        showAppToast('请先起卦')
+        return
+    }
+    
+    window.yiceFromLiuYao = {
+        upper: mhCurrentGua.upper,
+        lower: mhCurrentGua.lower,
+        guaName: mhCurrentGua.name,
+        dongyao: [mhCurrentDongyao]
+    }
+    window.yiceSource = 'meihua'
+    
+    document.getElementById('mhResultModal').style.display = 'none'
+    stopMeihuaAnimation()
+    showAddYicePreFill()
 }
 
 
