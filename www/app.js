@@ -5315,6 +5315,10 @@ function showGuaDetail(gua, isRootGua = false) {
         if (backToYiceBtn) backToYiceBtn.style.display = 'none';
         if (backToPrevBtn) backToPrevBtn.style.display = 'inline-block';
         if (backToHomeBtn) backToHomeBtn.style.display = 'inline-block';
+        // 如果不是本卦，显示返回本卦按钮
+        if (backToRootBtn) {
+            backToRootBtn.style.display = (cxRootGua && cxRootGua.number !== gua.number) ? 'inline-block' : 'none';
+        }
     }
 
     // 隐藏选择区域，显示详情区域
@@ -5375,12 +5379,6 @@ function showGuaDetail(gua, isRootGua = false) {
         } else {
             changeGuaBtn.style.display = 'none';
         }
-    }
-    
-    // 如果不是本卦，显示返回本卦按钮
-    backToRootBtn = document.getElementById('cxBackToRootBtn');
-    if (backToRootBtn) {
-        backToRootBtn.style.display = (cxRootGua && cxRootGua.number !== gua.number) ? 'inline-block' : 'none';
     }
 }
 
