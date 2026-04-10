@@ -337,17 +337,18 @@ let cxRootGua = null; // 保存本卦（原始卦）
 let cxActiveCharacter = null; // 当前选中的汉字
 
 // 易策模块变量
-let yiceDB = null;
-let yiceCurrentPage = 1;
-let yicePageSize = 10;
-let yiceTotalCount = 0;
-let yiceRecords = [];
-let yiceCategories = [];
-let yiceEditingId = null;
-let yiceCurrentRecord = null;
-let yiceSelectedGua = { upper: null, lower: null, name: null, changeYao: 0 };
-let yiceUpperBagua = null;
-let yiceLowerBagua = null;
+// 易策模块数据库变量已在上方声明，此处不再重复声明
+// yiceDB 用于 IndexedDB 数据库实例
+// let ycCurrentPage = 1;
+// let ycPageSize = 10;
+let ycTotalCount = 0;
+// let ycRecords = [];
+// let ycCategories = [];
+let ycEditingId = null;
+// let ycCurrentRecord = null;
+let ycSelectedGua = { upper: null, lower: null, name: null, changeYao: 0 };
+let ycUpperBagua = null;
+let ycLowerBagua = null;
 
 const cxCharacterOriginMap = {
     '乾': {
@@ -6030,102 +6031,151 @@ let ycPageSize = 10;
 let ycFilteredRecords = [];
 let ycIsLoadingMore = false;
 
-// ==================== IndexedDB 数据库 ====================
-const DB_NAME = 'YiShiDB';
-const DB_VERSION = 1;
-const STORE_NAME = 'yiceData';
+// ==================== SQLite 数据库 ====================
+const DB_NAME = 'yishi.db';
+let yiceDB = null;
+let dbInitialized = false;
 
-// 初始化 IndexedDB
-function initYiceDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        
-        request.onerror = () => reject(request.error);
-        
-        request.onsuccess = () => {
-            yiceDB = request.result;
-            resolve(yiceDB);
-        };
-        
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-            }
-        };
-    });
+function getSQLitePlugin() {
+    if (window.CapacitorSQLite) {
+        return window.CapacitorSQLite;
+    }
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorSQLite) {
+        return window.Capacitor.Plugins.CapacitorSQLite;
+    }
+    const err = 'CapacitorSQLite 插件未加载，请确保已执行 npx cap sync';
+    alert('【错误】' + err);
+    throw new Error(err);
 }
 
-// 从 IndexedDB 读取数据
+async function initYiceDB() {
+    if (dbInitialized && yiceDB) return;
+
+    try {
+        const sqlite = getSQLitePlugin();
+
+        await sqlite.createConnection({ database: DB_NAME });
+        await sqlite.open({ database: DB_NAME });
+
+        await sqlite.execute({
+            database: DB_NAME,
+            statements: `
+                CREATE TABLE IF NOT EXISTS yice_records (
+                    id TEXT PRIMARY KEY,
+                    category TEXT,
+                    content TEXT,
+                    person TEXT,
+                    upper TEXT,
+                    lower TEXT,
+                    dongyao TEXT,
+                    analysis TEXT,
+                    createTime TEXT,
+                    updateTime TEXT,
+                    accuracy INTEGER,
+                    replays TEXT
+                );
+
+                CREATE TABLE IF NOT EXISTS yice_categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS yice_meta (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                );
+            `
+        });
+
+        yiceDB = sqlite;
+        dbInitialized = true;
+        console.log('SQLite 数据库初始化成功');
+    } catch (e) {
+        alert('【错误】SQLite 初始化失败: ' + e.message);
+        throw e;
+    }
+}
+
 async function loadYiceDataFromDB() {
-    if (!yiceDB) {
-        await initYiceDB();
-    }
-    
-    return new Promise((resolve, reject) => {
-        const transaction = yiceDB.transaction(STORE_NAME, 'readonly');
-        const store = transaction.objectStore(STORE_NAME);
-        
-        // 分别读取 records 和 categories
-        const recordsRequest = store.get('records');
-        const categoriesRequest = store.get('categories');
-        
-        transaction.oncomplete = () => {
-            const records = recordsRequest.result ? recordsRequest.result.value : null;
-            const categories = categoriesRequest.result ? categoriesRequest.result.value : null;
-            resolve({
-                records: records,
-                categories: categories
-            });
+    await initYiceDB();
+
+    try {
+        const recordsResult = await yiceDB.query({
+            database: DB_NAME,
+            statement: 'SELECT * FROM yice_records',
+            values: []
+        });
+
+        const categoriesResult = await yiceDB.query({
+            database: DB_NAME,
+            statement: 'SELECT * FROM yice_categories',
+            values: []
+        });
+
+        const records = recordsResult.values || [];
+        const categories = categoriesResult.values ? categoriesResult.values.map(c => c.name) : [];
+
+        return {
+            records: records,
+            categories: categories
         };
-        
-        transaction.onerror = () => reject(transaction.error);
-    });
-}
-
-// 保存数据到 IndexedDB
-async function saveYiceDataToDB() {
-    if (!yiceDB) {
-        await initYiceDB();
+    } catch (e) {
+        alert('【错误】从 SQLite 加载数据失败: ' + e.message);
+        throw e;
     }
-
-    return new Promise((resolve, reject) => {
-        const transaction = yiceDB.transaction(STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(STORE_NAME);
-
-        const recordsData = { id: 'records', value: ycRecords };
-        const categoriesData = { id: 'categories', value: ycCategories };
-
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-
-        store.put(recordsData);
-        store.put(categoriesData);
-    });
 }
 
-// 从 IndexedDB 加载数据
+async function saveYiceDataToDB() {
+    await initYiceDB();
+
+    try {
+        await yiceDB.execute({
+            database: DB_NAME,
+            statements: 'DELETE FROM yice_records; DELETE FROM yice_categories;'
+        });
+
+        for (const record of ycRecords) {
+            const sql = "INSERT INTO yice_records (id, category, content, person, upper, lower, dongyao, analysis, createTime, updateTime, accuracy, replays) VALUES ('" +
+                record.id + "', '" + (record.category || '').replace(/'/g, "''") + "', '" + (record.content || '').replace(/'/g, "''") + "', '" + (record.person || '').replace(/'/g, "''") + "', '" + (record.upper || '') + "', '" + (record.lower || '') + "', '" + JSON.stringify(record.dongyao || []).replace(/'/g, "''") + "', '" + (record.analysis || '').replace(/'/g, "''") + "', '" + (record.createTime || '') + "', '" + (record.updateTime || '') + "', " + (record.accuracy || 70) + ", '" + JSON.stringify(record.replays || []).replace(/'/g, "''") + "')";
+            await yiceDB.execute({
+                database: DB_NAME,
+                statements: sql
+            });
+        }
+
+        const uniqueCategories = [...new Set(ycCategories)];
+        for (const cat of uniqueCategories) {
+            const sql = "INSERT OR IGNORE INTO yice_categories (name) VALUES ('" + cat.replace(/'/g, "''") + "')";
+            await yiceDB.execute({
+                database: DB_NAME,
+                statements: sql
+            });
+        }
+
+        console.log('数据保存到 SQLite 成功');
+    } catch (e) {
+        alert('【错误】保存数据到 SQLite 失败: ' + e.message);
+        throw e;
+    }
+}
+
+// 从 SQLite 加载数据
 async function loadYiceData() {
     try {
         const data = await loadYiceDataFromDB();
-        
-        if (data && data.records) {
-            ycRecords = data.records || [];
-            ycCategories = data.categories || ['事业', '感情', '财运', '学业', '健康', '其他'];
+
+        if (data && data.records && data.records.length > 0) {
+            ycRecords = data.records.map(r => ({
+                ...r,
+                dongyao: JSON.parse(r.dongyao || '[]'),
+                replays: JSON.parse(r.replays || '[]')
+            }));
+            ycCategories = data.categories && data.categories.length > 0
+                ? [...new Set(data.categories)]
+                : ['事业', '感情', '财运', '学业', '健康', '其他'];
         } else {
             ycRecords = [];
             ycCategories = ['事业', '感情', '财运', '学业', '健康', '其他'];
-        }
-        
-        // 兼容旧版 localStorage 数据（一次性迁移）
-        const oldRecords = localStorage.getItem('yiceRecords');
-        const oldCategories = localStorage.getItem('yiceCategories');
-        if (oldRecords || oldCategories) {
-            if (oldRecords) ycRecords = JSON.parse(oldRecords);
-            if (oldCategories) ycCategories = JSON.parse(oldCategories);
-            await saveYiceDataToDB();
-            localStorage.removeItem('yiceRecords');
-            localStorage.removeItem('yiceCategories');
         }
     } catch (e) {
         console.error('加载数据失败:', e);
@@ -6134,7 +6184,7 @@ async function loadYiceData() {
     }
 }
 
-// 保存数据到 IndexedDB
+// 保存数据到 SQLite
 async function saveYiceData() {
     try {
         await saveYiceDataToDB();
@@ -6356,9 +6406,9 @@ function confirmDeleteYice(recordId) {
 }
 
 // 删除易策记录
-function deleteYiceRecord(recordId) {
+async function deleteYiceRecord(recordId) {
     ycRecords = ycRecords.filter(r => r.id !== recordId);
-    saveYiceData();
+    await saveYiceData();
     renderYiceList();
     showAppToast('删除成功');
 }
@@ -6742,30 +6792,30 @@ function renderCategoryList() {
 }
 
 // 添加分类
-function addCategory() {
+async function addCategory() {
     const name = document.getElementById('ycNewCategory').value.trim();
     if (!name) {
         showAppToast('请输入分类名称');
         return;
     }
-    
+
     if (ycCategories.includes(name)) {
         showAppToast('分类已存在');
         return;
     }
-    
+
     ycCategories.push(name);
-    saveYiceData();
+    await saveYiceData();
     document.getElementById('ycNewCategory').value = '';
     renderCategoryList();
 }
 
 // 编辑分类
 function editCategory(index) {
-    showAppPrompt('请输入新的分类名称', ycCategories[index], function(newName) {
+    showAppPrompt('请输入新的分类名称', ycCategories[index], async function(newName) {
         if (newName && newName.trim() && newName !== ycCategories[index]) {
             ycCategories[index] = newName.trim();
-            saveYiceData();
+            await saveYiceData();
             renderCategoryList();
         }
     });
@@ -6773,9 +6823,9 @@ function editCategory(index) {
 
 // 删除分类
 function deleteCategory(index) {
-    showAppConfirm('确定要删除分类 "' + ycCategories[index] + '" 吗？', function() {
+    showAppConfirm('确定要删除分类 "' + ycCategories[index] + '" 吗？', async function() {
         ycCategories.splice(index, 1);
-        saveYiceData();
+        await saveYiceData();
         renderCategoryList();
     });
 }
@@ -7170,31 +7220,31 @@ function closeReplayModal() {
 }
 
 // 保存复盘记录
-function saveReplay() {
+async function saveReplay() {
     if (!ycCurrentRecord) return;
-    
+
     const content = document.getElementById('ycReplayContent').value;
     const diff = document.getElementById('ycReplayDiff').value;
-    
+
     if (!content.trim()) {
         showAppToast('请输入事情进展');
         return;
     }
-    
+
     const replay = {
         id: Date.now().toString(),
         content,
         diff: diff || '',
         time: new Date().toISOString()
     };
-    
+
     if (!ycCurrentRecord.replays) {
         ycCurrentRecord.replays = [];
     }
     ycCurrentRecord.replays.push(replay);
-    
-    saveYiceData();
-    
+
+    await saveYiceData();
+
     showAppToast('复盘记录保存成功');
     closeReplayModal();
     showYiceDetail();
@@ -7209,35 +7259,45 @@ async function backupYiceData() {
         const day = String(now.getDate()).padStart(2, '0');
         const hour = String(now.getHours()).padStart(2, '0');
         const minute = String(now.getMinutes()).padStart(2, '0');
-        const fileName = `易师${year}${month}${day}${hour}${minute}.json`;
-        
-        const data = {
-            records: ycRecords,
-            categories: ycCategories,
-            backupTime: new Date().toLocaleString('zh-CN')
-        };
-        
-        const json = JSON.stringify(data, null, 2);
-        
-        // 使用原生 Android 接口保存到 Download 目录
+        const fileName = `易师${year}${month}${day}${hour}${minute}.db`;
+
+        await initYiceDB();
+
+        const dbName = DB_NAME.replace('.db', '');
+
         if (window.AndroidFileSaver) {
-            console.log('使用 AndroidFileSaver 保存文件...');
-            const result = window.AndroidFileSaver.saveToDownloads(fileName, json);
-            console.log('保存结果:', result);
-            
-            if (result && result.startsWith('success:')) {
-                const filePath = result.substring(8);
-                showAppToast('备份成功！<br><span style="font-size: 12px; color: #666;">' + filePath + '</span>');
+            const readResult = window.AndroidFileSaver.exportDbAsBase64(dbName);
+
+            if (readResult && !readResult.startsWith('error:')) {
+                const saveResult = window.AndroidFileSaver.saveBase64ToDownloads(fileName, readResult);
+                if (saveResult && saveResult.startsWith('success:')) {
+                    const filePath = saveResult.substring(8);
+                    showAppToast('备份成功！<br><span style="font-size: 12px; color: #666;">' + filePath + '</span>');
+                } else {
+                    showAppToast('备份失败<br><span style="font-size: 12px; color: #666;">' + saveResult + '</span>');
+                }
             } else {
-                showAppToast('备份失败<br><span style="font-size: 12px; color: #666;">' + result + '</span>');
+                showAppToast('读取数据库文件失败<br><span style="font-size: 12px; color: #666;">' + readResult + '</span>');
             }
         } else {
-            console.warn('AndroidFileSaver 不可用，尝试浏览器下载...');
-            doBrowserDownload(fileName, json);
+            const pathResult = await yiceDB.getNCDatabasePath({
+                path: 'default',
+                database: DB_NAME
+            });
+            const dbPath = pathResult.path;
+            const response = await fetch('file://' + dbPath);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
+            showAppToast('备份成功！文件已下载: ' + fileName);
         }
     } catch (error) {
         console.error('备份失败:', error);
-        showAppToast('备份失败<br><span style="font-size: 12px; color: #666;">' + error + '</span>');
+        showAppToast('备份失败<br><span style="font-size: 12px; color: #666;">' + error.message + '</span>');
     }
 }
 
@@ -7260,28 +7320,93 @@ function importYiceData() {
 }
 
 // 处理导入
-function handleYiceImport(event) {
+async function handleYiceImport(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            
-            if (!data.records || !Array.isArray(data.records)) {
+
+    try {
+        const buffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(buffer);
+
+        // 检查是否是 SQLite 数据库文件（以 "SQLite format 3" 开头）
+        const header = String.fromCharCode.apply(null, uint8Array.slice(0, 15));
+        if (header === 'SQLite format 3') {
+            // 是 SQLite 数据库文件，需要直接替换
+            await importSqliteDb(uint8Array);
+        } else {
+            // 尝试作为 JSON 解析
+            const text = new TextDecoder().decode(buffer);
+            const jsonData = JSON.parse(text);
+
+            let records = [];
+            let categories = [];
+
+            if (jsonData.export && jsonData.export.tables) {
+                const tables = jsonData.export.tables;
+                for (const table of tables) {
+                    if (table.name === 'yice_records') {
+                        records = table.values || [];
+                    } else if (table.name === 'yice_categories') {
+                        categories = (table.values || []).map(v => v.name);
+                    }
+                }
+            } else if (jsonData.records) {
+                records = jsonData.records;
+                categories = jsonData.categories || [];
+            } else {
                 showAppToast('导入文件格式不正确');
                 return;
             }
-            
-            // 显示导入选项弹框
-            showImportOptionsModal(data);
-        } catch (err) {
-            showAppToast('导入失败：' + err.message);
+
+            showImportOptionsModal({ records, categories });
         }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+        showAppToast('导入失败：' + err.message);
+    }
     event.target.value = '';
+}
+
+// 导入 SQLite 数据库文件
+async function importSqliteDb(uint8Array) {
+    try {
+        let binaryStr = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+            const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
+            binaryStr += String.fromCharCode.apply(null, chunk);
+        }
+        const base64 = btoa(binaryStr);
+
+        if (window.AndroidFileSaver) {
+            try {
+                if (yiceDB) {
+                    await yiceDB.close({ database: DB_NAME });
+                    await yiceDB.closeConnection({ database: DB_NAME });
+                }
+            } catch (e) {
+                console.log('关闭连接:', e.message);
+            }
+            dbInitialized = false;
+            yiceDB = null;
+
+            const dbName = DB_NAME.replace('.db', '');
+            const writeResult = window.AndroidFileSaver.writeDbFromBase64(dbName, base64);
+
+            if (writeResult && writeResult.startsWith('success:')) {
+                await initYiceDB();
+                await loadYiceData();
+                renderYiceList();
+                loadCategoriesToSelect('ycAddCategory');
+                showAppToast('导入成功！');
+            } else {
+                showAppToast('导入失败: ' + writeResult);
+            }
+        } else {
+            showAppToast('当前环境不支持导入');
+        }
+    } catch (err) {
+        showAppToast('导入失败：' + err.message);
+    }
 }
 
 // 显示导入选项弹框
@@ -7301,13 +7426,13 @@ function showImportOptionsModal(data) {
     document.body.appendChild(modal);
     
     // 追加数据
-    document.getElementById('ycImportAppend').onclick = function() {
+    document.getElementById('ycImportAppend').onclick = async function() {
         const newRecords = data.records.map(r => ({
             ...r,
             id: Date.now() + Math.random().toString(36).substr(2, 9)
         }));
         ycRecords = [...ycRecords, ...newRecords];
-        
+
         if (data.categories && Array.isArray(data.categories)) {
             data.categories.forEach(cat => {
                 if (!ycCategories.includes(cat)) {
@@ -7315,22 +7440,22 @@ function showImportOptionsModal(data) {
                 }
             });
         }
-        
-        saveYiceData();
+
+        await saveYiceData();
         renderYiceList();
         loadCategoriesToSelect('ycAddCategory');
         document.body.removeChild(modal);
         showAppToast('追加成功！共导入 ' + newRecords.length + ' 条记录');
     };
-    
+
     // 覆盖数据
-    document.getElementById('ycImportCover').onclick = function() {
+    document.getElementById('ycImportCover').onclick = async function() {
         ycRecords = data.records;
         if (data.categories && Array.isArray(data.categories)) {
             ycCategories = data.categories;
         }
-        
-        saveYiceData();
+
+        await saveYiceData();
         renderYiceList();
         loadCategoriesToSelect('ycAddCategory');
         document.body.removeChild(modal);

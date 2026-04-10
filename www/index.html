@@ -1513,7 +1513,7 @@
                 <button class="yc-action-item" onclick="showCategoryManage()">分类管理</button>
                 <button class="yc-action-item" onclick="document.getElementById('ycImportFileInput').click()">导入数据</button>
                 <button class="yc-action-item" onclick="backupYiceData()">备份数据</button>
-                <input type="file" id="ycImportFileInput" accept=".json" style="display: none;" onchange="handleYiceImport(event)">
+                <input type="file" id="ycImportFileInput" style="display: none;" onchange="handleYiceImport(event)">
             </div>
         </div>
 
@@ -1892,7 +1892,7 @@
         <div style="background: white; max-width: 500px; margin: 50px auto; padding: 30px; border-radius: 15px;">
             <h3 style="text-align: center; margin-bottom: 20px;">导入数据</h3>
             <div style="margin-bottom: 20px;">
-                <input type="file" id="yiceImportFile" accept=".json" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <input type="file" id="yiceImportFile" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
             </div>
             <div style="text-align: center;">
                 <button onclick="closeImportPopup()" class="option-btn" style="background: #999;">取消</button>
