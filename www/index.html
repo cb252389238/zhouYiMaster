@@ -1562,6 +1562,93 @@
                 font-size: 1.1em;
             }
         }
+
+        /* ==================== 画符起卦模块样式 ==================== */
+        .hf-canvas-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .hf-canvas {
+            display: block;
+            width: 100%;
+            height: 400px;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        .hf-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ccc;
+            font-size: 1.2em;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .hf-hint.hidden {
+            opacity: 0;
+        }
+
+        .hf-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 600px;
+            margin: 15px auto 0;
+            padding: 0 10px;
+        }
+
+        .hf-pen-sizes {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hf-pen-btn {
+            padding: 6px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .hf-pen-btn.hf-pen-active {
+            background: #667eea;
+            color: #fff;
+            border-color: #667eea;
+        }
+
+        .hf-clear-btn {
+            padding: 6px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #e53935;
+            border-color: #ffcdd2;
+        }
+
+        .hf-clear-btn:hover {
+            background: #ffebee;
+        }
+
+        @media (max-width: 768px) {
+            .hf-canvas {
+                height: 320px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1576,6 +1663,10 @@
             <div class="module-card" onclick="showModule('meihua')">
                 <h2>🌸 梅花易数</h2>
                 <p>以数起卦，万物皆可占</p>
+            </div>
+            <div class="module-card" onclick="showModule('huafu')">
+                <h2>🖌️ 画符起卦</h2>
+                <p>以符入卦，心诚则灵</p>
             </div>
             <div class="module-card" onclick="showModule('liuyao')">
                 <h2>🪙 六爻起卦</h2>
@@ -1796,6 +1887,89 @@
             </div>
         </div>
 
+        <!-- 画符起卦模块 -->
+        <div id="huafuModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 5px;">🖌️ 画符起卦</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 15px;">以符入卦，心诚则灵</p>
+            
+            <div class="hf-canvas-wrapper">
+                <canvas id="hfCanvas" class="hf-canvas"></canvas>
+                <div id="hfHint" class="hf-hint">在画布上随意书写或作画</div>
+            </div>
+            
+            <div class="hf-toolbar">
+                <div class="hf-pen-sizes">
+                    <span style="font-size: 0.9em; color: #666;">笔触：</span>
+                    <button class="hf-pen-btn hf-pen-active" data-size="2" onclick="hfSetPenSize(2, this)">细</button>
+                    <button class="hf-pen-btn" data-size="5" onclick="hfSetPenSize(5, this)">中</button>
+                    <button class="hf-pen-btn" data-size="10" onclick="hfSetPenSize(10, this)">粗</button>
+                </div>
+                <button class="hf-clear-btn" onclick="hfClearCanvas()">清除画布</button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="hfQiGuaBtn" class="mh-qigua-btn" onclick="hfStartDivination()">🖌️ 确定起卦</button>
+            </div>
+
+            <!-- 画符起卦-内联新增易策记录 -->
+            <div id="hfInlineYice" style="display: none; margin-top: 30px; border-top: 2px solid #667eea; padding-top: 20px;">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📝 新增卦象记录</h3>
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">测算时间：</label>
+                        <input type="datetime-local" id="hfYiceTime" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">分类：</label>
+                        <select id="hfYiceCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                            <option value="">请选择分类</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">准确度：<span id="hfYiceAccuracyVal" style="color: #3498db; font-weight: bold;">70%</span></label>
+                        <input type="range" id="hfYiceAccuracy" min="0" max="100" step="5" value="70"
+                               oninput="document.getElementById('hfYiceAccuracyVal').textContent = this.value + '%';">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">测算内容：</label>
+                        <textarea id="hfYiceContent" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请输入测算内容..."></textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">测算人：</label>
+                        <input type="text" id="hfYicePerson" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请输入测算人姓名">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">卦象：</label>
+                        <div id="hfYiceGuaDisplay" style="background: #f9f9f9; padding: 15px; border-radius: 10px; text-align: center;"></div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">解卦（您的分析思路）：</label>
+                        <textarea id="hfYiceAnalysis" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;" placeholder="请输入解卦思路..."></textarea>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                        <button class="option-btn" onclick="saveHuafuInlineYice()" style="background: #34c759; color: white;">保存记录</button>
+                        <button class="option-btn" onclick="cancelHuafuInlineYice()">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 画符起卦结果弹层 -->
+        <div id="hfResultModal" class="mh-result-modal" style="display: none;">
+            <div class="mh-result-content">
+                <div class="mh-result-title">🖌️ 画符起卦</div>
+                <div id="hfResultSymbol" class="mh-result-symbol"></div>
+                <div id="hfResultName" class="mh-result-name"></div>
+                <div id="hfResultInfo" class="mh-result-info"></div>
+                <div class="mh-result-buttons">
+                    <button class="mh-result-btn" onclick="closeHuafuResult()">关闭</button>
+                    <button class="mh-result-btn mh-detail-btn" onclick="showHuafuDetail()">卦象详情</button>
+                    <button class="mh-result-btn mh-yice-btn" onclick="addHuafuToYice()">添加到易策</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 六十四卦查询模块 -->
         <div id="chaxunModule" class="practice-area">
             <button class="back-btn" onclick="showHome()" id="cxBackToHomeBtn">← 返回首页</button>
@@ -1819,6 +1993,7 @@
                             <button class="back-btn" onclick="backToYiceDetail()" id="cxBackToYiceBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回易策详情</button>
                             <button class="back-btn" onclick="backToLiuYaoFromCx()" id="cxBackToLiuYaoBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回六爻起卦</button>
                             <button class="back-btn" onclick="backToMeihuaFromCx()" id="cxBackToMeihuaBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回梅花易数</button>
+                            <button class="back-btn" onclick="backToHuafuFromCx()" id="cxBackToHuafuBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回画符起卦</button>
                         </div>
                         
                         <div class="gua-image">
