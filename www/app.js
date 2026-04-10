@@ -7527,17 +7527,34 @@ function setupYiceScrollListener() {
 
 // ==================== 梅花易数模块 ====================
 let mhAnimationId = null
-let mhRotationAngle = 0
+let mhRotationAngleY = 0
+let mhRotationAngleX = 0
 let mhRotationSpeed = 0.3
 let mhIsDivining = false
 let mhCurrentGua = null
 let mhCurrentDongyao = 0
 let mhGuaItems = []
+let mhSpherePoints = []
 let mhContainerSize = 400
-let mhRadius = 165
+let mhRadius = 150
+
+function fibonacciSphere(count) {
+    const points = []
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5))
+    for (let i = 0; i < count; i++) {
+        const y = 1 - (i / (count - 1)) * 2
+        const radiusAtY = Math.sqrt(1 - y * y)
+        const theta = goldenAngle * i
+        const x = Math.cos(theta) * radiusAtY
+        const z = Math.sin(theta) * radiusAtY
+        points.push({ x, y, z })
+    }
+    return points
+}
 
 function initMeihua() {
-    mhRotationAngle = 0
+    mhRotationAngleY = 0
+    mhRotationAngleX = 0
     mhRotationSpeed = 0.3
     mhIsDivining = false
     mhCurrentGua = null
@@ -7551,11 +7568,13 @@ function initMeihua() {
     const area = document.querySelector('.mh-gua-area')
     if (area) {
         mhContainerSize = Math.min(area.offsetWidth - 20, 400)
-        mhRadius = (mhContainerSize / 2) - 35
+        mhRadius = (mhContainerSize / 2) - 50
     }
     
     circle.style.width = mhContainerSize + 'px'
     circle.style.height = mhContainerSize + 'px'
+    
+    mhSpherePoints = fibonacciSphere(64)
     
     liushisiGua.forEach((gua, index) => {
         const item = document.createElement('div')
@@ -7596,26 +7615,47 @@ function createMiniGuaSymbolHtml(upper, lower) {
 function startMeihuaAnimation() {
     const centerX = mhContainerSize / 2
     const centerY = mhContainerSize / 2
+    const perspective = mhRadius * 2.5
     
     function animate() {
-        mhRotationAngle += mhRotationSpeed
-        if (mhRotationAngle >= 360) mhRotationAngle -= 360
+        mhRotationAngleY += mhRotationSpeed
+        if (mhRotationAngleY >= 360) mhRotationAngleY -= 360
+        
+        mhRotationAngleX += mhRotationSpeed * 0.3
+        if (mhRotationAngleX >= 360) mhRotationAngleX -= 360
         
         const time = Date.now() / 1000
+        const cosRY = Math.cos(mhRotationAngleY * Math.PI / 180)
+        const sinRY = Math.sin(mhRotationAngleY * Math.PI / 180)
+        const cosRX = Math.cos(mhRotationAngleX * Math.PI / 180)
+        const sinRX = Math.sin(mhRotationAngleX * Math.PI / 180)
         
         mhGuaItems.forEach((item, index) => {
-            const baseAngle = (index / 64) * 360
-            const angle = (baseAngle + mhRotationAngle) * Math.PI / 180
+            const pt = mhSpherePoints[index]
             
-            const x = centerX + mhRadius * Math.cos(angle)
-            const y = centerY + mhRadius * Math.sin(angle)
+            const x1 = pt.x * cosRY + pt.z * sinRY
+            const z1 = -pt.x * sinRY + pt.z * cosRY
+            const y1 = pt.y
             
-            item.style.left = x + 'px'
-            item.style.top = y + 'px'
+            const y2 = y1 * cosRX - z1 * sinRX
+            const z2 = y1 * sinRX + z1 * cosRX
+            const x2 = x1
+            
+            const screenX = centerX + x2 * mhRadius
+            const screenY = centerY + y2 * mhRadius
+            
+            const depthScale = (perspective + z2 * mhRadius) / perspective
+            const clampedScale = Math.max(0.4, Math.min(1.6, depthScale))
+            
+            item.style.left = screenX + 'px'
+            item.style.top = screenY + 'px'
+            item.style.transform = 'translate(-50%, -50%) scale(' + clampedScale + ')'
+            item.style.zIndex = Math.round(z2 * 100 + 100)
             
             if (!mhIsDivining) {
-                const opacity = 0.3 + 0.7 * Math.abs(Math.sin(time * 0.5 + index * 0.3))
-                item.style.opacity = opacity
+                const depthOpacity = 0.3 + 0.7 * ((z2 + 1) / 2)
+                const breathe = 0.7 + 0.3 * Math.abs(Math.sin(time * 0.5 + index * 0.3))
+                item.style.opacity = depthOpacity * breathe
             }
         })
         
@@ -7679,11 +7719,12 @@ function meihuaCalculate() {
     const hour = now.getHours()
     const minute = now.getMinutes()
     const second = now.getSeconds()
+    const millisecond = now.getMilliseconds()
     
-    const upperSum = year + month + day + hour + minute
+    const upperSum = year + month + day + hour + minute + second
     const upperRemainder = upperSum % 8
     
-    const lowerSum = year + month + day + hour + minute + second
+    const lowerSum = year + month + day + hour + minute + second + millisecond
     const lowerRemainder = lowerSum % 8
     
     const xiantianMap = { 1: '乾', 2: '兑', 3: '离', 4: '震', 5: '巽', 6: '坎', 7: '艮', 0: '坤' }
