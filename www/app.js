@@ -4764,27 +4764,13 @@ function showModule(moduleName) {
         }
     } else if (moduleName === 'liuyao') {
         document.getElementById('liuyaoModule').classList.add('active');
-        // 如果是从易策返回的，保留当前卦象；否则初始化
-        if (!window.returningFromYice) {
-            initLiuYao();
-        } else {
-            window.returningFromYice = false;
-            // 恢复卦象显示
-            if (window.lyCurrentGua && lyYaoci.length === 6) {
-                showLiuYaoResult();
-            }
-        }
+        initLiuYao();
     } else if (moduleName === 'yice') {
         document.getElementById('yiceModule').classList.add('active');
         initYice();
     } else if (moduleName === 'meihua') {
         document.getElementById('meihuaModule').classList.add('active');
-        if (!window.returningFromMeihua) {
-            initMeihua();
-        } else {
-            window.returningFromMeihua = false;
-            resetMeihuaState();
-        }
+        initMeihua();
     }
 }
 
@@ -5711,6 +5697,8 @@ function initLiuYao() {
     if (yaoDisplay) {
         yaoDisplay.innerHTML = '';
     }
+    
+    document.getElementById('lyInlineYice').style.display = 'none';
 }
 
 // 更新进度显示
@@ -5872,8 +5860,6 @@ function addToYiceFromLiuYao() {
     }
     
     const gua = window.lyCurrentGua;
-    
-    // 计算变爻（6或9为变爻）
     const dongyao = [];
     lyYaoci.forEach((value, index) => {
         if (value === 6 || value === 9) {
@@ -5881,16 +5867,34 @@ function addToYiceFromLiuYao() {
         }
     });
     
-    // 保存数据到全局变量，供新增页面使用
-    window.yiceFromLiuYao = {
-        upper: gua.upper,
-        lower: gua.lower,
-        guaName: gua.name,
-        dongyao: dongyao
-    };
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('lyYiceTime').value = `${year}-${month}-${day}T${hour}:${minute}`;
     
-    // 跳转到易策新增页面
-    showAddYicePreFill();
+    document.getElementById('lyYiceCategory').value = '';
+    document.getElementById('lyYiceContent').value = '';
+    document.getElementById('lyYicePerson').value = '';
+    document.getElementById('lyYiceAnalysis').value = '';
+    document.getElementById('lyYiceAccuracy').value = 70;
+    document.getElementById('lyYiceAccuracyVal').textContent = '70%';
+    
+    loadCategoriesToSelect('lyYiceCategory');
+    
+    const guaName = getGuaNameBy上下(gua.upper, gua.lower);
+    const guaSymbol = createGuaElement(gua.upper, gua.lower, dongyao);
+    document.getElementById('lyYiceGuaDisplay').innerHTML = `
+        <div style="font-size: 1.5em; margin-bottom: 10px;">${guaName}</div>
+        <div style="font-size: 4em;">${guaSymbol.outerHTML}</div>
+    `;
+    
+    window._lyInlineDongyao = dongyao;
+    
+    document.getElementById('lyInlineYice').style.display = 'block';
+    document.getElementById('lyInlineYice').scrollIntoView({ behavior: 'smooth' });
 }
 
 // 预填充从六爻跳转过来的数据
@@ -6498,28 +6502,8 @@ function showAddYice(keepData = false) {
     
     // 根据来源更新返回按钮
     const backBtn = document.getElementById('yiceAddBackBtn');
-    if (window.yiceFromLiuYao) {
-        if (window.yiceSource === 'meihua') {
-            backBtn.textContent = '← 返回梅花易数';
-            backBtn.onclick = function() {
-                window.yiceFromLiuYao = null;
-                window.yiceSource = null;
-                window.returningFromMeihua = true;
-                showModule('meihua');
-            };
-        } else {
-            backBtn.textContent = '← 返回六爻起卦';
-            backBtn.onclick = function() {
-                window.yiceFromLiuYao = null;
-                window.yiceSource = null;
-                window.returningFromYice = true;
-                showModule('liuyao');
-            };
-        }
-    } else {
-        backBtn.textContent = '← 返回列表';
-        backBtn.onclick = showYiceList;
-    }
+    backBtn.textContent = '← 返回列表';
+    backBtn.onclick = showYiceList;
     
     // 隐藏六爻模块，显示易策新增模块
     document.getElementById('liuyaoModule').classList.remove('active');
@@ -6735,22 +6719,7 @@ async function saveYiceRecord() {
     
     showAppToast('保存成功');
     
-    // 根据来源决定返回位置
-    if (window.yiceFromLiuYao) {
-        if (window.yiceSource === 'meihua') {
-            window.yiceFromLiuYao = null;
-            window.yiceSource = null;
-            window.returningFromMeihua = true;
-            showModule('meihua');
-        } else {
-            window.yiceFromLiuYao = null;
-            window.yiceSource = null;
-            window.returningFromYice = true;
-            showModule('liuyao');
-        }
-    } else {
-        showYiceList();
-    }
+    showYiceList();
 }
 
 // 折叠/展开查询面板
@@ -7600,6 +7569,8 @@ function initMeihua() {
         btn.disabled = false
         btn.textContent = '☯ 起 卦 ☯'
     }
+    
+    document.getElementById('mhInlineYice').style.display = 'none'
 }
 
 function createMiniGuaSymbolHtml(upper, lower) {
@@ -7908,17 +7879,122 @@ function addMeihuaToYice() {
         return
     }
     
-    window.yiceFromLiuYao = {
-        upper: mhCurrentGua.upper,
-        lower: mhCurrentGua.lower,
-        guaName: mhCurrentGua.name,
-        dongyao: [mhCurrentDongyao]
-    }
-    window.yiceSource = 'meihua'
-    
     document.getElementById('mhResultModal').style.display = 'none'
-    stopMeihuaAnimation()
-    showAddYicePreFill()
+    
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hour = String(now.getHours()).padStart(2, '0')
+    const minute = String(now.getMinutes()).padStart(2, '0')
+    document.getElementById('mhYiceTime').value = `${year}-${month}-${day}T${hour}:${minute}`
+    
+    document.getElementById('mhYiceCategory').value = ''
+    document.getElementById('mhYiceContent').value = ''
+    document.getElementById('mhYicePerson').value = ''
+    document.getElementById('mhYiceAnalysis').value = ''
+    document.getElementById('mhYiceAccuracy').value = 70
+    document.getElementById('mhYiceAccuracyVal').textContent = '70%'
+    
+    loadCategoriesToSelect('mhYiceCategory')
+    
+    const gua = mhCurrentGua
+    const dongyao = [mhCurrentDongyao]
+    const guaName = getGuaNameBy上下(gua.upper, gua.lower)
+    const guaSymbol = createGuaElement(gua.upper, gua.lower, dongyao)
+    document.getElementById('mhYiceGuaDisplay').innerHTML = `
+        <div style="font-size: 1.5em; margin-bottom: 10px;">${guaName}</div>
+        <div style="font-size: 4em;">${guaSymbol.outerHTML}</div>
+    `
+    
+    document.getElementById('mhInlineYice').style.display = 'block'
+    document.getElementById('mhInlineYice').scrollIntoView({ behavior: 'smooth' })
+}
+
+async function saveLiuYaoInlineYice() {
+    if (!window.lyCurrentGua) {
+        showAppToast('请先起卦')
+        return
+    }
+    
+    const gua = window.lyCurrentGua
+    const dongyao = window._lyInlineDongyao || []
+    const category = document.getElementById('lyYiceCategory').value
+    const content = document.getElementById('lyYiceContent').value
+    const person = document.getElementById('lyYicePerson').value
+    const analysis = document.getElementById('lyYiceAnalysis').value
+    const createTimeInput = document.getElementById('lyYiceTime').value
+    const accuracy = parseInt(document.getElementById('lyYiceAccuracy').value) || 70
+    
+    const createTime = createTimeInput ? new Date(createTimeInput).toISOString() : new Date().toISOString()
+    
+    const record = {
+        id: Date.now().toString(),
+        category,
+        content,
+        person,
+        upper: gua.upper,
+        lower: gua.lower,
+        dongyao: [...dongyao],
+        analysis,
+        createTime: createTime,
+        updateTime: new Date().toISOString(),
+        accuracy: accuracy,
+        replays: []
+    }
+    
+    ycRecords.push(record)
+    await saveYiceData()
+    
+    showAppToast('保存成功')
+    cancelLiuYaoInlineYice()
+}
+
+function cancelLiuYaoInlineYice() {
+    document.getElementById('lyInlineYice').style.display = 'none'
+}
+
+async function saveMeihuaInlineYice() {
+    if (!mhCurrentGua) {
+        showAppToast('请先起卦')
+        return
+    }
+    
+    const gua = mhCurrentGua
+    const dongyao = [mhCurrentDongyao]
+    const category = document.getElementById('mhYiceCategory').value
+    const content = document.getElementById('mhYiceContent').value
+    const person = document.getElementById('mhYicePerson').value
+    const analysis = document.getElementById('mhYiceAnalysis').value
+    const createTimeInput = document.getElementById('mhYiceTime').value
+    const accuracy = parseInt(document.getElementById('mhYiceAccuracy').value) || 70
+    
+    const createTime = createTimeInput ? new Date(createTimeInput).toISOString() : new Date().toISOString()
+    
+    const record = {
+        id: Date.now().toString(),
+        category,
+        content,
+        person,
+        upper: gua.upper,
+        lower: gua.lower,
+        dongyao: [...dongyao],
+        analysis,
+        createTime: createTime,
+        updateTime: new Date().toISOString(),
+        accuracy: accuracy,
+        replays: []
+    }
+    
+    ycRecords.push(record)
+    await saveYiceData()
+    
+    showAppToast('保存成功')
+    cancelMeihuaInlineYice()
+}
+
+function cancelMeihuaInlineYice() {
+    document.getElementById('mhInlineYice').style.display = 'none'
 }
 
 
