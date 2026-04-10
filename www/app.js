@@ -4764,13 +4764,25 @@ function showModule(moduleName) {
         }
     } else if (moduleName === 'liuyao') {
         document.getElementById('liuyaoModule').classList.add('active');
-        initLiuYao();
+        if (window.fromLiuYaoDetail) {
+            window.fromLiuYaoDetail = false;
+            if (window.lyCurrentGua && lyYaoci.length === 6) {
+                showLiuYaoResult();
+            }
+        } else {
+            initLiuYao();
+        }
     } else if (moduleName === 'yice') {
         document.getElementById('yiceModule').classList.add('active');
         initYice();
     } else if (moduleName === 'meihua') {
         document.getElementById('meihuaModule').classList.add('active');
-        initMeihua();
+        if (window.fromMeihuaDetail) {
+            window.fromMeihuaDetail = false;
+            resetMeihuaState();
+        } else {
+            initMeihua();
+        }
     }
 }
 
@@ -5195,7 +5207,11 @@ function initChaXun() {
     const backToPrevBtn = document.getElementById('cxBackToPrevBtn');
     const backToRootBtn = document.getElementById('cxBackToRootBtn');
     const backToHomeBtn = document.getElementById('cxBackToHomeBtn');
+    const backToLiuYaoBtn = document.getElementById('cxBackToLiuYaoBtn');
+    const backToMeihuaBtn = document.getElementById('cxBackToMeihuaBtn');
     if (backToYiceBtn) backToYiceBtn.style.display = 'none';
+    if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'none';
+    if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'none';
     if (backToPrevBtn) backToPrevBtn.style.display = 'inline-block';
     if (backToRootBtn) backToRootBtn.style.display = 'none';
     if (backToHomeBtn) backToHomeBtn.style.display = 'inline-block';
@@ -5279,6 +5295,8 @@ function showGuaDetail(gua, isRootGua = false) {
     
     // 保存跳转状态（因为showModule会重置window.fromYiceDetail）
     const fromYice = window.fromYiceDetail;
+    const fromLiuYao = window.fromLiuYaoDetail;
+    const fromMeihua = window.fromMeihuaDetail;
     const yiceDongyao = window.yiceDongyao ? [...window.yiceDongyao] : [];
     
     // 只有在非本卦跳转时才清空变爻状态
@@ -5304,19 +5322,33 @@ function showGuaDetail(gua, isRootGua = false) {
     const backToPrevBtn = document.getElementById('cxBackToPrevBtn');
     const backToRootBtn = document.getElementById('cxBackToRootBtn');
     const backToHomeBtn = document.getElementById('cxBackToHomeBtn');
+    const backToLiuYaoBtn = document.getElementById('cxBackToLiuYaoBtn');
+    const backToMeihuaBtn = document.getElementById('cxBackToMeihuaBtn');
+
+    if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'none';
+    if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'none';
 
     if (fromYice && isRootGua) {
-        // 从易策跳转过来，只显示返回易策详情
         if (backToYiceBtn) backToYiceBtn.style.display = 'inline-block';
         if (backToPrevBtn) backToPrevBtn.style.display = 'none';
         if (backToRootBtn) backToRootBtn.style.display = 'none';
         if (backToHomeBtn) backToHomeBtn.style.display = 'none';
+    } else if (fromLiuYao && isRootGua) {
+        if (backToYiceBtn) backToYiceBtn.style.display = 'none';
+        if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'inline-block';
+        if (backToPrevBtn) backToPrevBtn.style.display = 'none';
+        if (backToRootBtn) backToRootBtn.style.display = 'none';
+        if (backToHomeBtn) backToHomeBtn.style.display = 'none';
+    } else if (fromMeihua && isRootGua) {
+        if (backToYiceBtn) backToYiceBtn.style.display = 'none';
+        if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'inline-block';
+        if (backToPrevBtn) backToPrevBtn.style.display = 'none';
+        if (backToRootBtn) backToRootBtn.style.display = 'none';
+        if (backToHomeBtn) backToHomeBtn.style.display = 'none';
     } else {
-        // 正常模式，显示返回首页、返回上一页和返回本卦按钮
         if (backToYiceBtn) backToYiceBtn.style.display = 'none';
         if (backToPrevBtn) backToPrevBtn.style.display = 'inline-block';
         if (backToHomeBtn) backToHomeBtn.style.display = 'inline-block';
-        // 如果不是本卦，显示返回本卦按钮
         if (backToRootBtn) {
             backToRootBtn.style.display = (cxRootGua && cxRootGua.number !== gua.number) ? 'inline-block' : 'none';
         }
@@ -5956,17 +5988,14 @@ function findGuaByYaoci(yaoci) {
 function showLiuYaoDetail() {
     if (!window.lyCurrentGua) return;
     
-    // 切换到查询模块
-    showModule('chaxun');
+    window.fromLiuYaoDetail = true;
     
-    // 显示卦象详情
+    showModule('chaxun');
     showGuaDetail(window.lyCurrentGua, true);
     
-    // 自动标记老阴老阳的变爻
     lyYaoci.forEach((yaoValue, index) => {
-        const yaoNum = index + 1; // 爻位从 1 开始
+        const yaoNum = index + 1;
         if (yaoValue === 6 || yaoValue === 9) {
-            // 老阴或老阳，自动标记为变爻
             toggleYaociChange(yaoNum);
         }
     });
@@ -6983,6 +7012,20 @@ function backToYiceDetail() {
     }
 }
 
+function backToLiuYaoFromCx() {
+    const backToLiuYaoBtn = document.getElementById('cxBackToLiuYaoBtn');
+    if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'none';
+    
+    showModule('liuyao');
+}
+
+function backToMeihuaFromCx() {
+    const backToMeihuaBtn = document.getElementById('cxBackToMeihuaBtn');
+    if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'none';
+    
+    showModule('meihua');
+}
+
 // 渲染易策详情HTML（从showYiceDetail中提取）
 function renderYiceDetailHtml() {
     if (!ycCurrentRecord) return;
@@ -7865,6 +7908,8 @@ function resetMeihuaState() {
 function showMeihuaDetail() {
     if (!mhCurrentGua) return
     
+    window.fromMeihuaDetail = true
+    
     document.getElementById('mhResultModal').style.display = 'none'
     stopMeihuaAnimation()
     
@@ -7995,6 +8040,7 @@ async function saveMeihuaInlineYice() {
 
 function cancelMeihuaInlineYice() {
     document.getElementById('mhInlineYice').style.display = 'none'
+    resetMeihuaState()
 }
 
 
