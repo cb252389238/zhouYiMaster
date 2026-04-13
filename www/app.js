@@ -6100,6 +6100,134 @@ let ycIsLoadingMore = false;
 const DB_NAME = 'yishi.db';
 let yiceDB = null;
 let dbInitialized = false;
+let ycWriteQueue = Promise.resolve()
+const ycPendingActions = new Set()
+
+function parseYiceJsonArray(value) {
+    if (Array.isArray(value)) return value
+    if (!value) return []
+
+    try {
+        const parsed = JSON.parse(value)
+        return Array.isArray(parsed) ? parsed : []
+    } catch (e) {
+        console.warn('易策数组字段解析失败:', e)
+        return []
+    }
+}
+
+function normalizeYiceText(value) {
+    return typeof value === 'string' ? value.trim() : ''
+}
+
+function normalizeYiceDate(value, fallback = null) {
+    const date = value ? new Date(value) : null
+    if (date && !Number.isNaN(date.getTime())) {
+        return date.toISOString()
+    }
+    return fallback || new Date().toISOString()
+}
+
+function normalizeDongyaoList(value) {
+    const list = parseYiceJsonArray(value)
+        .map(item => Number(item))
+        .filter(item => Number.isInteger(item) && item >= 1 && item <= 6)
+
+    return [...new Set(list)].sort((a, b) => a - b)
+}
+
+function normalizeYiceReplay(replay) {
+    return {
+        id: normalizeYiceText(replay?.id) || Date.now().toString(),
+        content: normalizeYiceText(replay?.content),
+        diff: normalizeYiceText(replay?.diff),
+        time: normalizeYiceDate(replay?.time)
+    }
+}
+
+function normalizeYiceRecord(record) {
+    return {
+        id: normalizeYiceText(record?.id) || Date.now().toString(),
+        category: normalizeYiceText(record?.category),
+        content: normalizeYiceText(record?.content),
+        person: normalizeYiceText(record?.person),
+        upper: normalizeYiceText(record?.upper),
+        lower: normalizeYiceText(record?.lower),
+        dongyao: normalizeDongyaoList(record?.dongyao),
+        analysis: normalizeYiceText(record?.analysis),
+        createTime: normalizeYiceDate(record?.createTime),
+        updateTime: normalizeYiceDate(record?.updateTime, normalizeYiceDate(record?.createTime)),
+        accuracy: Math.max(0, Math.min(100, Number(record?.accuracy) || 70)),
+        replays: parseYiceJsonArray(record?.replays)
+            .map(normalizeYiceReplay)
+            .filter(item => item.content)
+    }
+}
+
+function getButtonByActionName(actionName) {
+    const buttonMap = {
+        saveYiceRecord: document.querySelector('#yiceAddModule .option-btn[onclick="saveYiceRecord()"]'),
+        updateYiceRecord: document.querySelector('#yiceEditModule .option-btn[onclick="updateYiceRecord()"]'),
+        saveReplay: document.querySelector('#ycReplayModal .option-btn[onclick="saveReplay()"]'),
+        saveLiuYaoInlineYice: document.querySelector('#lyInlineYice .option-btn[onclick="saveLiuYaoInlineYice()"]'),
+        saveMeihuaInlineYice: document.querySelector('#mhInlineYice .option-btn[onclick="saveMeihuaInlineYice()"]'),
+        saveHuafuInlineYice: document.querySelector('#hfInlineYice .option-btn[onclick="saveHuafuInlineYice()"]'),
+        addCategory: document.querySelector('#yiceCategoryModule .option-btn[onclick="addCategory()"]')
+    }
+
+    return buttonMap[actionName] || null
+}
+
+function setYiceActionLoading(actionName, isLoading) {
+    const button = getButtonByActionName(actionName)
+    if (!button) return
+
+    if (isLoading) {
+        if (!button.dataset.originalText) {
+            button.dataset.originalText = button.textContent
+        }
+        button.disabled = true
+        button.style.opacity = '0.6'
+        button.style.pointerEvents = 'none'
+        button.textContent = '处理中...'
+        return
+    }
+
+    button.disabled = false
+    button.style.opacity = ''
+    button.style.pointerEvents = ''
+    if (button.dataset.originalText) {
+        button.textContent = button.dataset.originalText
+    }
+}
+
+async function runYiceAction(actionName, action) {
+    if (ycPendingActions.has(actionName)) {
+        showAppToast('正在处理中，请勿重复操作')
+        return false
+    }
+
+    ycPendingActions.add(actionName)
+    setYiceActionLoading(actionName, true)
+
+    try {
+        await action()
+        return true
+    } catch (e) {
+        console.error('易策操作失败:', e)
+        showAppToast('操作失败<br><span style="font-size: 12px; color: #666;">' + e.message + '</span>')
+        throw e
+    } finally {
+        ycPendingActions.delete(actionName)
+        setYiceActionLoading(actionName, false)
+    }
+}
+
+function queueYiceWrite(task) {
+    const runner = ycWriteQueue.then(task, task)
+    ycWriteQueue = runner.catch(() => {})
+    return runner
+}
 
 function getSQLitePlugin() {
     if (window.CapacitorSQLite) {
@@ -6167,7 +6295,7 @@ async function loadYiceDataFromDB() {
     try {
         const recordsResult = await yiceDB.query({
             database: DB_NAME,
-            statement: 'SELECT * FROM yice_records',
+            statement: 'SELECT * FROM yice_records ORDER BY datetime(createTime) DESC, id DESC',
             values: []
         });
 
@@ -6190,6 +6318,15 @@ async function loadYiceDataFromDB() {
     }
 }
 
+function escapeSqlString(value) {
+    return String(value ?? '').replace(/'/g, "''")
+}
+
+function buildYiceRecordInsertSql(record) {
+    return "INSERT INTO yice_records (id, category, content, person, upper, lower, dongyao, analysis, createTime, updateTime, accuracy, replays) VALUES ('" +
+        escapeSqlString(record.id) + "', '" + escapeSqlString(record.category) + "', '" + escapeSqlString(record.content) + "', '" + escapeSqlString(record.person) + "', '" + escapeSqlString(record.upper) + "', '" + escapeSqlString(record.lower) + "', '" + escapeSqlString(JSON.stringify(record.dongyao || [])) + "', '" + escapeSqlString(record.analysis) + "', '" + escapeSqlString(record.createTime) + "', '" + escapeSqlString(record.updateTime) + "', " + (record.accuracy || 70) + ", '" + escapeSqlString(JSON.stringify(record.replays || [])) + "')"
+}
+
 async function saveYiceDataToDB() {
     await initYiceDB();
 
@@ -6200,8 +6337,7 @@ async function saveYiceDataToDB() {
         });
 
         for (const record of ycRecords) {
-            const sql = "INSERT INTO yice_records (id, category, content, person, upper, lower, dongyao, analysis, createTime, updateTime, accuracy, replays) VALUES ('" +
-                record.id + "', '" + (record.category || '').replace(/'/g, "''") + "', '" + (record.content || '').replace(/'/g, "''") + "', '" + (record.person || '').replace(/'/g, "''") + "', '" + (record.upper || '') + "', '" + (record.lower || '') + "', '" + JSON.stringify(record.dongyao || []).replace(/'/g, "''") + "', '" + (record.analysis || '').replace(/'/g, "''") + "', '" + (record.createTime || '') + "', '" + (record.updateTime || '') + "', " + (record.accuracy || 70) + ", '" + JSON.stringify(record.replays || []).replace(/'/g, "''") + "')";
+            const sql = buildYiceRecordInsertSql(record)
             await yiceDB.execute({
                 database: DB_NAME,
                 statements: sql
@@ -6224,19 +6360,93 @@ async function saveYiceDataToDB() {
     }
 }
 
+async function insertYiceRecordToDB(record) {
+    await initYiceDB()
+
+    await yiceDB.execute({
+        database: DB_NAME,
+        statements: buildYiceRecordInsertSql(record)
+    })
+}
+
+async function updateYiceRecordInDB(record) {
+    await initYiceDB()
+
+    const sql = "UPDATE yice_records SET " +
+        "category='" + escapeSqlString(record.category) + "', " +
+        "content='" + escapeSqlString(record.content) + "', " +
+        "person='" + escapeSqlString(record.person) + "', " +
+        "upper='" + escapeSqlString(record.upper) + "', " +
+        "lower='" + escapeSqlString(record.lower) + "', " +
+        "dongyao='" + escapeSqlString(JSON.stringify(record.dongyao || [])) + "', " +
+        "analysis='" + escapeSqlString(record.analysis) + "', " +
+        "createTime='" + escapeSqlString(record.createTime) + "', " +
+        "updateTime='" + escapeSqlString(record.updateTime) + "', " +
+        "accuracy=" + (record.accuracy || 70) + ", " +
+        "replays='" + escapeSqlString(JSON.stringify(record.replays || [])) + "' " +
+        "WHERE id='" + escapeSqlString(record.id) + "'"
+
+    await yiceDB.execute({
+        database: DB_NAME,
+        statements: sql
+    })
+}
+
+async function deleteYiceRecordFromDB(recordId) {
+    await initYiceDB()
+
+    await yiceDB.execute({
+        database: DB_NAME,
+        statements: "DELETE FROM yice_records WHERE id='" + escapeSqlString(recordId) + "'"
+    })
+}
+
+async function saveYiceCategoriesToDB() {
+    await initYiceDB()
+
+    await yiceDB.execute({
+        database: DB_NAME,
+        statements: 'DELETE FROM yice_categories;'
+    })
+
+    const uniqueCategories = [...new Set(ycCategories)];
+    for (const cat of uniqueCategories) {
+        const sql = "INSERT OR IGNORE INTO yice_categories (name) VALUES ('" + escapeSqlString(cat) + "')"
+        await yiceDB.execute({
+            database: DB_NAME,
+            statements: sql
+        })
+    }
+}
+
+async function replaceAllYiceDataInDB(records, categories) {
+    await initYiceDB()
+
+    await yiceDB.execute({
+        database: DB_NAME,
+        statements: 'DELETE FROM yice_records; DELETE FROM yice_categories;'
+    })
+
+    for (const record of records) {
+        await insertYiceRecordToDB(record)
+    }
+
+    ycCategories = Array.isArray(categories) && categories.length > 0
+        ? [...new Set(categories)]
+        : ['事业', '感情', '财运', '学业', '健康', '其他']
+
+    await saveYiceCategoriesToDB()
+}
+
 // 从 SQLite 加载数据
 async function loadYiceData() {
     try {
         const data = await loadYiceDataFromDB();
 
         if (data && data.records && data.records.length > 0) {
-            ycRecords = data.records.map(r => ({
-                ...r,
-                dongyao: JSON.parse(r.dongyao || '[]'),
-                replays: JSON.parse(r.replays || '[]')
-            }));
+            ycRecords = data.records.map(normalizeYiceRecord);
             ycCategories = data.categories && data.categories.length > 0
-                ? [...new Set(data.categories)]
+                ? [...new Set(data.categories.map(normalizeYiceText).filter(Boolean))]
                 : ['事业', '感情', '财运', '学业', '健康', '其他'];
         } else {
             ycRecords = [];
@@ -6263,7 +6473,7 @@ async function initYice() {
     await initYiceDB();
     await loadYiceData();
     loadCategoriesToSelect('ycAddCategory');
-    renderYiceList();
+    await renderYiceList();
     setupYiceScrollListener();
 }
 
@@ -6313,7 +6523,6 @@ function getGuaSymbolHtml(upper, lower, size = 35, dongyao = []) {
 
 // 渲染易策列表
 async function renderYiceList(isLoadMore = false) {
-    await loadYiceData();
     let records = [...ycRecords];
     
     const searchKeyword = document.getElementById('ycSearchInput')?.value || '';
@@ -6472,10 +6681,16 @@ function confirmDeleteYice(recordId) {
 
 // 删除易策记录
 async function deleteYiceRecord(recordId) {
-    ycRecords = ycRecords.filter(r => r.id !== recordId);
-    await saveYiceData();
-    renderYiceList();
-    showAppToast('删除成功');
+    await runYiceAction('deleteYiceRecord_' + recordId, async () => {
+        await queueYiceWrite(async () => {
+            await loadYiceData()
+            ycRecords = ycRecords.filter(r => r.id !== recordId)
+            await deleteYiceRecordFromDB(recordId)
+        })
+
+        await renderYiceList()
+        showAppToast('删除成功')
+    })
 }
 
 // 根据上下卦查找卦名
@@ -6731,42 +6946,36 @@ function closeGuaModal() {
 
 // 保存易策记录
 async function saveYiceRecord() {
-    const category = document.getElementById('ycAddCategory').value;
-    const content = document.getElementById('ycAddContent').value;
-    const person = document.getElementById('ycAddPerson').value;
-    const analysis = document.getElementById('ycAddAnalysis').value;
-    const createTimeInput = document.getElementById('ycAddCreateTime').value;
-    const accuracy = parseInt(document.getElementById('ycAddAccuracy').value) || 70;
-    
-    if (!ycSelectedUpper || !ycSelectedLower) {
-        showAppToast('请选择卦象');
-        return;
-    }
-    
-    // 使用用户选择的时间，如果没有选择则使用当前时间
-    const createTime = createTimeInput ? new Date(createTimeInput).toISOString() : new Date().toISOString();
-    
-    const record = {
-        id: Date.now().toString(),
-        category,
-        content,
-        person,
-        upper: ycSelectedUpper,
-        lower: ycSelectedLower,
-        dongyao: [...ycSelectedDongyao],
-        analysis,
-        createTime: createTime,
-        updateTime: new Date().toISOString(),
-        accuracy: accuracy,
-        replays: []
-    };
-    
-    ycRecords.push(record);
-    await saveYiceData();
-    
-    showAppToast('保存成功');
-    
-    showYiceList();
+    await runYiceAction('saveYiceRecord', async () => {
+        if (!ycSelectedUpper || !ycSelectedLower) {
+            showAppToast('请选择卦象')
+            return
+        }
+
+        const record = normalizeYiceRecord({
+            id: Date.now().toString(),
+            category: document.getElementById('ycAddCategory').value,
+            content: document.getElementById('ycAddContent').value,
+            person: document.getElementById('ycAddPerson').value,
+            upper: ycSelectedUpper,
+            lower: ycSelectedLower,
+            dongyao: [...ycSelectedDongyao],
+            analysis: document.getElementById('ycAddAnalysis').value,
+            createTime: document.getElementById('ycAddCreateTime').value,
+            updateTime: new Date().toISOString(),
+            accuracy: parseInt(document.getElementById('ycAddAccuracy').value) || 70,
+            replays: []
+        })
+
+        await queueYiceWrite(async () => {
+            await loadYiceData()
+            await insertYiceRecordToDB(record)
+            ycRecords.unshift(record)
+        })
+
+        showAppToast('保存成功')
+        showYiceList()
+    })
 }
 
 // 折叠/展开查询面板
@@ -6842,29 +7051,36 @@ function renderCategoryList() {
 
 // 添加分类
 async function addCategory() {
-    const name = document.getElementById('ycNewCategory').value.trim();
-    if (!name) {
-        showAppToast('请输入分类名称');
-        return;
-    }
+    await runYiceAction('addCategory', async () => {
+        const name = normalizeYiceText(document.getElementById('ycNewCategory').value)
+        if (!name) {
+            showAppToast('请输入分类名称')
+            return
+        }
 
-    if (ycCategories.includes(name)) {
-        showAppToast('分类已存在');
-        return;
-    }
+        await queueYiceWrite(async () => {
+            await loadYiceData()
+            if (ycCategories.includes(name)) {
+                showAppToast('分类已存在')
+                return
+            }
 
-    ycCategories.push(name);
-    await saveYiceData();
-    document.getElementById('ycNewCategory').value = '';
-    renderCategoryList();
+            ycCategories.push(name)
+            await saveYiceCategoriesToDB()
+        })
+
+        document.getElementById('ycNewCategory').value = ''
+        renderCategoryList()
+    })
 }
 
 // 编辑分类
 function editCategory(index) {
     showAppPrompt('请输入新的分类名称', ycCategories[index], async function(newName) {
         if (newName && newName.trim() && newName !== ycCategories[index]) {
+            await loadYiceData()
             ycCategories[index] = newName.trim();
-            await saveYiceData();
+            await saveYiceCategoriesToDB()
             renderCategoryList();
         }
     });
@@ -6873,14 +7089,16 @@ function editCategory(index) {
 // 删除分类
 function deleteCategory(index) {
     showAppConfirm('确定要删除分类 "' + ycCategories[index] + '" 吗？', async function() {
+        await loadYiceData()
         ycCategories.splice(index, 1);
-        await saveYiceData();
+        await saveYiceCategoriesToDB()
         renderCategoryList();
     });
 }
 
 // 根据ID显示卦象详情
-function showYiceDetailById(id) {
+async function showYiceDetailById(id) {
+    await loadYiceData()
     ycCurrentRecord = ycRecords.find(r => r.id === id);
     if (!ycCurrentRecord) return;
     
@@ -6998,7 +7216,7 @@ function jumpToGuaDetailFromYice() {
 }
 
 // 返回易策详情
-function backToYiceDetail() {
+async function backToYiceDetail() {
     // 隐藏返回按钮
     const backToYiceBtn = document.getElementById('cxBackToYiceBtn');
     if (backToYiceBtn) {
@@ -7015,7 +7233,7 @@ function backToYiceDetail() {
     document.getElementById('chaxunModule').classList.remove('active');
 
     // 重新加载数据
-    loadYiceData();
+    await loadYiceData();
     if (recordIdToShow) {
         const record = ycRecords.find(r => r.id === recordIdToShow);
         if (record) {
@@ -7255,22 +7473,37 @@ function confirmEditGuaSelection() {
 
 // 更新易策记录
 async function updateYiceRecord() {
-    if (!ycCurrentRecord) return;
+    if (!ycCurrentRecord) return
 
-    ycCurrentRecord.category = document.getElementById('ycEditCategory').value;
-    ycCurrentRecord.content = document.getElementById('ycEditContent').value;
-    ycCurrentRecord.person = document.getElementById('ycEditPerson').value;
-    ycCurrentRecord.analysis = document.getElementById('ycEditAnalysis').value;
-    ycCurrentRecord.upper = ycEditUpper;
-    ycCurrentRecord.lower = ycEditLower;
-    ycCurrentRecord.dongyao = [...ycEditDongyao];
-    ycCurrentRecord.accuracy = parseInt(document.getElementById('ycEditAccuracy').value) || 70;
-    ycCurrentRecord.updateTime = new Date().toISOString();
-    
-    await saveYiceData();
-    
-    showAppToast('保存成功');
-    showYiceDetail();
+    await runYiceAction('updateYiceRecord', async () => {
+        const updatedRecord = normalizeYiceRecord({
+            ...ycCurrentRecord,
+            category: document.getElementById('ycEditCategory').value,
+            content: document.getElementById('ycEditContent').value,
+            person: document.getElementById('ycEditPerson').value,
+            analysis: document.getElementById('ycEditAnalysis').value,
+            upper: ycEditUpper,
+            lower: ycEditLower,
+            dongyao: [...ycEditDongyao],
+            updateTime: new Date().toISOString(),
+            accuracy: parseInt(document.getElementById('ycEditAccuracy').value) || 70
+        })
+
+        await queueYiceWrite(async () => {
+            await loadYiceData()
+            const recordIndex = ycRecords.findIndex(r => r.id === updatedRecord.id)
+            if (recordIndex === -1) {
+                throw new Error('记录不存在或已被删除')
+            }
+
+            await updateYiceRecordInDB(updatedRecord)
+            ycRecords[recordIndex] = updatedRecord
+            ycCurrentRecord = ycRecords[recordIndex]
+        })
+
+        showAppToast('保存成功')
+        showYiceDetail()
+    })
 }
 
 // 显示复盘表单
@@ -7291,33 +7524,46 @@ function closeReplayModal() {
 
 // 保存复盘记录
 async function saveReplay() {
-    if (!ycCurrentRecord) return;
+    if (!ycCurrentRecord) return
 
-    const content = document.getElementById('ycReplayContent').value;
-    const diff = document.getElementById('ycReplayDiff').value;
+    await runYiceAction('saveReplay', async () => {
+        const content = normalizeYiceText(document.getElementById('ycReplayContent').value)
+        const diff = normalizeYiceText(document.getElementById('ycReplayDiff').value)
 
-    if (!content.trim()) {
-        showAppToast('请输入事情进展');
-        return;
-    }
+        if (!content) {
+            showAppToast('请输入事情进展')
+            return
+        }
 
-    const replay = {
-        id: Date.now().toString(),
-        content,
-        diff: diff || '',
-        time: new Date().toISOString()
-    };
+        const replay = normalizeYiceReplay({
+            id: Date.now().toString(),
+            content,
+            diff,
+            time: new Date().toISOString()
+        })
 
-    if (!ycCurrentRecord.replays) {
-        ycCurrentRecord.replays = [];
-    }
-    ycCurrentRecord.replays.push(replay);
+        await queueYiceWrite(async () => {
+            await loadYiceData()
+            const recordIndex = ycRecords.findIndex(r => r.id === ycCurrentRecord.id)
+            if (recordIndex === -1) {
+                throw new Error('记录不存在或已被删除')
+            }
 
-    await saveYiceData();
+            const updatedRecord = normalizeYiceRecord({
+                ...ycRecords[recordIndex],
+                replays: [...(ycRecords[recordIndex].replays || []), replay],
+                updateTime: new Date().toISOString()
+            })
 
-    showAppToast('复盘记录保存成功');
-    closeReplayModal();
-    showYiceDetail();
+            await updateYiceRecordInDB(updatedRecord)
+            ycRecords[recordIndex] = updatedRecord
+            ycCurrentRecord = ycRecords[recordIndex]
+        })
+
+        showAppToast('复盘记录保存成功')
+        closeReplayModal()
+        showYiceDetail()
+    })
 }
 
 // 备份数据 - 保存到手机 Download 目录
@@ -7501,6 +7747,7 @@ function showImportOptionsModal(data) {
             ...r,
             id: Date.now() + Math.random().toString(36).substr(2, 9)
         }));
+        await loadYiceData()
         ycRecords = [...ycRecords, ...newRecords];
 
         if (data.categories && Array.isArray(data.categories)) {
@@ -7511,8 +7758,11 @@ function showImportOptionsModal(data) {
             });
         }
 
-        await saveYiceData();
-        renderYiceList();
+        for (const record of newRecords) {
+            await insertYiceRecordToDB(record)
+        }
+        await saveYiceCategoriesToDB()
+        await renderYiceList();
         loadCategoriesToSelect('ycAddCategory');
         document.body.removeChild(modal);
         showAppToast('追加成功！共导入 ' + newRecords.length + ' 条记录');
@@ -7520,13 +7770,10 @@ function showImportOptionsModal(data) {
 
     // 覆盖数据
     document.getElementById('ycImportCover').onclick = async function() {
-        ycRecords = data.records;
-        if (data.categories && Array.isArray(data.categories)) {
-            ycCategories = data.categories;
-        }
-
-        await saveYiceData();
-        renderYiceList();
+        ycRecords = Array.isArray(data.records) ? data.records : []
+        await replaceAllYiceDataInDB(ycRecords, data.categories)
+        await loadYiceData()
+        await renderYiceList();
         loadCategoriesToSelect('ycAddCategory');
         document.body.removeChild(modal);
         showAppToast('覆盖成功！共导入 ' + ycRecords.length + ' 条记录');
@@ -7982,42 +8229,37 @@ function addMeihuaToYice() {
 }
 
 async function saveLiuYaoInlineYice() {
-    if (!window.lyCurrentGua) {
-        showAppToast('请先起卦')
-        return
-    }
-    
-    const gua = window.lyCurrentGua
-    const dongyao = window._lyInlineDongyao || []
-    const category = document.getElementById('lyYiceCategory').value
-    const content = document.getElementById('lyYiceContent').value
-    const person = document.getElementById('lyYicePerson').value
-    const analysis = document.getElementById('lyYiceAnalysis').value
-    const createTimeInput = document.getElementById('lyYiceTime').value
-    const accuracy = parseInt(document.getElementById('lyYiceAccuracy').value) || 70
-    
-    const createTime = createTimeInput ? new Date(createTimeInput).toISOString() : new Date().toISOString()
-    
-    const record = {
-        id: Date.now().toString(),
-        category,
-        content,
-        person,
-        upper: gua.upper,
-        lower: gua.lower,
-        dongyao: [...dongyao],
-        analysis,
-        createTime: createTime,
-        updateTime: new Date().toISOString(),
-        accuracy: accuracy,
-        replays: []
-    }
-    
-    ycRecords.push(record)
-    await saveYiceData()
-    
-    showAppToast('保存成功')
-    cancelLiuYaoInlineYice()
+    await runYiceAction('saveLiuYaoInlineYice', async () => {
+        if (!window.lyCurrentGua) {
+            showAppToast('请先起卦')
+            return
+        }
+
+        const gua = window.lyCurrentGua
+        const record = normalizeYiceRecord({
+            id: Date.now().toString(),
+            category: document.getElementById('lyYiceCategory').value,
+            content: document.getElementById('lyYiceContent').value,
+            person: document.getElementById('lyYicePerson').value,
+            upper: gua.upper,
+            lower: gua.lower,
+            dongyao: [...(window._lyInlineDongyao || [])],
+            analysis: document.getElementById('lyYiceAnalysis').value,
+            createTime: document.getElementById('lyYiceTime').value,
+            updateTime: new Date().toISOString(),
+            accuracy: parseInt(document.getElementById('lyYiceAccuracy').value) || 70,
+            replays: []
+        })
+
+        await queueYiceWrite(async () => {
+            await loadYiceData()
+            await insertYiceRecordToDB(record)
+            ycRecords.unshift(record)
+        })
+
+        showAppToast('保存成功')
+        cancelLiuYaoInlineYice()
+    })
 }
 
 function cancelLiuYaoInlineYice() {
@@ -8025,42 +8267,37 @@ function cancelLiuYaoInlineYice() {
 }
 
 async function saveMeihuaInlineYice() {
-    if (!mhCurrentGua) {
-        showAppToast('请先起卦')
-        return
-    }
-    
-    const gua = mhCurrentGua
-    const dongyao = [mhCurrentDongyao]
-    const category = document.getElementById('mhYiceCategory').value
-    const content = document.getElementById('mhYiceContent').value
-    const person = document.getElementById('mhYicePerson').value
-    const analysis = document.getElementById('mhYiceAnalysis').value
-    const createTimeInput = document.getElementById('mhYiceTime').value
-    const accuracy = parseInt(document.getElementById('mhYiceAccuracy').value) || 70
-    
-    const createTime = createTimeInput ? new Date(createTimeInput).toISOString() : new Date().toISOString()
-    
-    const record = {
-        id: Date.now().toString(),
-        category,
-        content,
-        person,
-        upper: gua.upper,
-        lower: gua.lower,
-        dongyao: [...dongyao],
-        analysis,
-        createTime: createTime,
-        updateTime: new Date().toISOString(),
-        accuracy: accuracy,
-        replays: []
-    }
-    
-    ycRecords.push(record)
-    await saveYiceData()
-    
-    showAppToast('保存成功')
-    cancelMeihuaInlineYice()
+    await runYiceAction('saveMeihuaInlineYice', async () => {
+        if (!mhCurrentGua) {
+            showAppToast('请先起卦')
+            return
+        }
+
+        const gua = mhCurrentGua
+        const record = normalizeYiceRecord({
+            id: Date.now().toString(),
+            category: document.getElementById('mhYiceCategory').value,
+            content: document.getElementById('mhYiceContent').value,
+            person: document.getElementById('mhYicePerson').value,
+            upper: gua.upper,
+            lower: gua.lower,
+            dongyao: [mhCurrentDongyao],
+            analysis: document.getElementById('mhYiceAnalysis').value,
+            createTime: document.getElementById('mhYiceTime').value,
+            updateTime: new Date().toISOString(),
+            accuracy: parseInt(document.getElementById('mhYiceAccuracy').value) || 70,
+            replays: []
+        })
+
+        await queueYiceWrite(async () => {
+            await loadYiceData()
+            await insertYiceRecordToDB(record)
+            ycRecords.unshift(record)
+        })
+
+        showAppToast('保存成功')
+        cancelMeihuaInlineYice()
+    })
 }
 
 function cancelMeihuaInlineYice() {
@@ -8378,42 +8615,37 @@ function addHuafuToYice() {
 }
 
 async function saveHuafuInlineYice() {
-    if (!hfCurrentGua) {
-        showAppToast('请先起卦')
-        return
-    }
-    
-    const gua = hfCurrentGua
-    const dongyao = [hfCurrentDongyao]
-    const category = document.getElementById('hfYiceCategory').value
-    const content = document.getElementById('hfYiceContent').value
-    const person = document.getElementById('hfYicePerson').value
-    const analysis = document.getElementById('hfYiceAnalysis').value
-    const createTimeInput = document.getElementById('hfYiceTime').value
-    const accuracy = parseInt(document.getElementById('hfYiceAccuracy').value) || 70
-    
-    const createTime = createTimeInput ? new Date(createTimeInput).toISOString() : new Date().toISOString()
-    
-    const record = {
-        id: Date.now().toString(),
-        category,
-        content,
-        person,
-        upper: gua.upper,
-        lower: gua.lower,
-        dongyao: [...dongyao],
-        analysis,
-        createTime: createTime,
-        updateTime: new Date().toISOString(),
-        accuracy: accuracy,
-        replays: []
-    }
-    
-    ycRecords.push(record)
-    await saveYiceData()
-    
-    showAppToast('保存成功')
-    cancelHuafuInlineYice()
+    await runYiceAction('saveHuafuInlineYice', async () => {
+        if (!hfCurrentGua) {
+            showAppToast('请先起卦')
+            return
+        }
+
+        const gua = hfCurrentGua
+        const record = normalizeYiceRecord({
+            id: Date.now().toString(),
+            category: document.getElementById('hfYiceCategory').value,
+            content: document.getElementById('hfYiceContent').value,
+            person: document.getElementById('hfYicePerson').value,
+            upper: gua.upper,
+            lower: gua.lower,
+            dongyao: [hfCurrentDongyao],
+            analysis: document.getElementById('hfYiceAnalysis').value,
+            createTime: document.getElementById('hfYiceTime').value,
+            updateTime: new Date().toISOString(),
+            accuracy: parseInt(document.getElementById('hfYiceAccuracy').value) || 70,
+            replays: []
+        })
+
+        await queueYiceWrite(async () => {
+            await loadYiceData()
+            await insertYiceRecordToDB(record)
+            ycRecords.unshift(record)
+        })
+
+        showAppToast('保存成功')
+        cancelHuafuInlineYice()
+    })
 }
 
 function cancelHuafuInlineYice() {
