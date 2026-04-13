@@ -1,8 +1,8 @@
 /* ==================== 六爻模块样式 ==================== */
 .ly-coin-wrapper {
-    width: 100px;
-    height: 100px;
-    flex: 0 0 100px;
+    width: 84px;
+    height: 84px;
+    flex: 0 0 84px;
     aspect-ratio: 1 / 1;
     display: flex;
     align-items: center;
@@ -18,9 +18,9 @@
 }
 
 .ly-coin {
-    width: 108%;
-    height: 108%;
-    margin: -4%;
+    width: 100%;
+    height: 100%;
+    margin: 0;
     display: block;
     object-fit: cover;
     transition: transform 0.1s;
@@ -41,15 +41,15 @@
         box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     25% {
-        transform: rotateY(720deg) rotateX(180deg) scale(1.1);
+        transform: rotateY(720deg) rotateX(180deg) scale(1.04);
         box-shadow: 0 8px 16px rgba(0,0,0,0.4);
     }
     50% {
-        transform: rotateY(1440deg) rotateX(360deg) scale(1.15);
+        transform: rotateY(1440deg) rotateX(360deg) scale(1.08);
         box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
     75% {
-        transform: rotateY(2160deg) rotateX(540deg) scale(1.1);
+        transform: rotateY(2160deg) rotateX(540deg) scale(1.04);
         box-shadow: 0 8px 16px rgba(0,0,0,0.4);
     }
     100% {
@@ -123,4 +123,12 @@
 .yao-line.yang:before,
 .yao-line.yang:after {
     display: none;
+}
+
+@media (max-width: 768px) {
+    .ly-coin-wrapper {
+        width: 72px;
+        height: 72px;
+        flex: 0 0 72px;
+    }
 }
