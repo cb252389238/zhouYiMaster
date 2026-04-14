@@ -3,6 +3,7 @@ let cxCurrentGua = null
 let cxChangedYaoci = []
 let cxRootGua = null
 let cxActiveCharacter = null
+let cxInterpretationModalBound = false
 
 function initChaXun() {
     cxCurrentGua = {}
@@ -90,6 +91,392 @@ function setElementHtmlFromString(element, html) {
     element.innerHTML = html
 }
 
+function escapeHtml(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+}
+
+function buildCxInterpretationButton(label, onClick, extraClass = '') {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = `cx-interpret-btn${extraClass ? ` ${extraClass}` : ''}`
+    button.textContent = label
+    button.onclick = event => {
+        event.stopPropagation()
+        onClick(event)
+    }
+    return button
+}
+
+function buildCxInterpretationSection(title, bodyHtml, sectionClass = '') {
+    return `<section class="cx-interpretation-section${sectionClass ? ` ${sectionClass}` : ''}"><h4>${escapeHtml(title)}</h4>${bodyHtml}</section>`
+}
+
+function buildCxParagraphs(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return `<p>${escapeHtml(cxInterpretationFallbackText)}</p>`
+    }
+
+    return items.map(item => `<p>${escapeHtml(item)}</p>`).join('')
+}
+
+function buildCxList(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return `<p>${escapeHtml(cxInterpretationFallbackText)}</p>`
+    }
+
+    const listItems = items.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+    return `<ul class="cx-interpretation-list">${listItems}</ul>`
+}
+
+function buildCxDetailItems(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return `<p>${escapeHtml(cxInterpretationFallbackText)}</p>`
+    }
+
+    const detailItems = items.map(item => {
+        const term = escapeHtml(item.term || item.word || item.char || item.label || '词条')
+        const description = escapeHtml(item.description || item.meaning || item.explanation || cxInterpretationFallbackText)
+        return `<div class="cx-interpretation-detail-item"><div class="cx-interpretation-detail-term">${term}</div><div class="cx-interpretation-detail-desc">${description}</div></div>`
+    }).join('')
+
+    return `<div class="cx-interpretation-detail-list">${detailItems}</div>`
+}
+
+function getCxInterpretationSubtitle(gua, type, yaoNum) {
+    if (type === 'guaName') {
+        return `第${gua.number}卦 ${gua.name}`
+    }
+
+    if (type === 'tuanshi') {
+        return `第${gua.number}卦 ${gua.name} · 卦辞`
+    }
+
+    if (type === 'yaoci') {
+        return `第${gua.number}卦 ${gua.name} · 第${yaoNum}爻`
+    }
+
+    return gua.name
+}
+
+function getCxInterpretationTitle(gua, type, yaoNum) {
+    if (type === 'guaName') {
+        return `${gua.shortName}卦卦名解读`
+    }
+
+    if (type === 'tuanshi') {
+        return `${gua.shortName}卦卦辞解读`
+    }
+
+    if (type === 'yaoci') {
+        return `${gua.shortName}卦第${yaoNum}爻解读`
+    }
+
+    return `${gua.shortName}卦解读`
+}
+
+function getCxCleanText(text) {
+    return String(text || '').replace(/[：。，“”、；？！,.!\s]/g, '')
+}
+
+function getCxUniqueChars(text) {
+    const chars = []
+    getCxCleanText(text).split('').forEach(char => {
+        if (char && !chars.includes(char)) {
+            chars.push(char)
+        }
+    })
+    return chars
+}
+
+function getCxCharacterInterpretation(char) {
+    if (typeof cxCharacterOriginMap !== 'undefined' && cxCharacterOriginMap[char]) {
+        const info = cxCharacterOriginMap[char]
+        return {
+            term: char,
+            description: `${info.originalMeaning} ${info.evolution}`
+        }
+    }
+
+    return {
+        term: char,
+        description: `该字在当前语境中需要结合整句来理解，后续会补充更细的字源与义项说明。`
+    }
+}
+
+function buildCxCharacterInterpretationsFromText(text, limit = 6) {
+    return getCxUniqueChars(text)
+        .slice(0, limit)
+        .map(getCxCharacterInterpretation)
+}
+
+function createCxAutoEntry(title, originalText, characterInterpretations, traditionalInterpretation, plainMeaning, keyPoints, commonMisunderstandings) {
+    return {
+        title,
+        originalText,
+        wordInterpretations: [],
+        characterInterpretations,
+        traditionalInterpretation,
+        plainMeaning,
+        keyPoints,
+        commonMisunderstandings
+    }
+}
+
+function buildAutoGuaNameInterpretation(gua) {
+    const upperName = baguaData[gua.upper] ? baguaData[gua.upper].name : gua.upper
+    const lowerName = baguaData[gua.lower] ? baguaData[gua.lower].name : gua.lower
+    const upperElement = baguaElement[gua.upper] || gua.upper
+    const lowerElement = baguaElement[gua.lower] || gua.lower
+    const isPure = gua.upper === gua.lower
+    const pureSummary = isPure
+        ? `上下同为${upperName}，卦势纯一，主题格外集中。`
+        : `上卦为${upperName}，下卦为${lowerName}，形成“上${upperElement}下${lowerElement}”的复合情境。`
+
+    return createCxAutoEntry(
+        getCxInterpretationTitle(gua, 'guaName'),
+        gua.name,
+        [],
+        [
+            `${gua.name}之名，先从卦象组合立意。${pureSummary}`,
+            `卦名中的“${gua.shortName}”不是单独的标签，而是全卦主旨的集中提示，阅读卦辞与爻辞时都应回到这一主题来把握。`
+        ],
+        [
+            `理解卦名时，可以先看它对应的上下卦，再看它在现实中更像哪一种局面。`,
+            `卦名往往就是全卦的总标题：先把主题读对，后面的卦辞和爻辞就更容易顺着理解。`
+        ],
+        [
+            `先看卦名，再看卦辞`,
+            `卦名是全卦主题的入口`,
+            `${isPure ? '纯卦更重德性本身的展开' : '复卦更重两种力量的互动关系'}`
+        ],
+        [
+            `不要把卦名只当成字面组合，它通常包含整卦的主旨。`,
+            `也不要离开上下卦单独理解卦名，否则容易只见字面，不见卦象。`
+        ]
+    )
+}
+
+function buildAutoTuanshiInterpretation(gua) {
+    return createCxAutoEntry(
+        getCxInterpretationTitle(gua, 'tuanshi'),
+        gua.tuanshi,
+        buildCxCharacterInterpretationsFromText(gua.tuanshi),
+        [
+            `卦辞是整卦的总判断，往往用很短的话说明此卦所处的大势、可行之道与吉凶边界。阅读时应结合卦名与卦象，不宜孤立拆句。`,
+            `${gua.shortName}卦的卦辞，重点在于先定主旨，再看哪些条件有利、哪些做法需要谨慎；其中判断词与行动词往往是理解重点。`
+        ],
+        [
+            `可以把卦辞看成“这一卦整体在说什么、适合怎么做、什么地方要小心”的总纲。`,
+            `如果爻辞像分阶段展开，那卦辞就是总原则。先读懂卦辞，后看六爻会更清楚。`
+        ],
+        [
+            `卦辞先定全局`,
+            `判断词常比吉凶字面更重要`,
+            `读爻辞时要回看卦辞总纲`
+        ],
+        [
+            `不要把卦辞当成对所有情境都完全一样的结论。`,
+            `也不要只盯着“吉”“凶”二字，更要看它为什么吉、为什么凶。`
+        ]
+    )
+}
+
+function buildAutoYaociInterpretation(gua, yaoNum) {
+    const yaoci = gua.yaoci[yaoNum - 1] || ''
+    const parts = yaoci.split('：')
+    const yaoTitle = parts[0] || `第${yaoNum}爻`
+    const yaoContent = parts[1] || parts[0] || ''
+    const positionText = ['初位，事势刚起', '二位，渐入其位', '三位，进退交界', '四位，近上未上', '五位，居中得尊', '上位，至极当变'][yaoNum - 1]
+
+    return createCxAutoEntry(
+        getCxInterpretationTitle(gua, 'yaoci', yaoNum),
+        yaoci,
+        buildCxCharacterInterpretationsFromText(yaoContent || yaoci),
+        [
+            `${yaoTitle}所处的是${positionText}的阶段，因此解读这条爻辞，关键要看它在全卦发展中的位置，而不是只看字面吉凶。`,
+            `${gua.shortName}卦第${yaoNum}爻更像是在提示：当事情发展到这一层时，应如何把握进退、守持分寸，并避免因失位或失时而生偏差。`
+        ],
+        [
+            `爻辞可以理解成“到了这一阶段，最该注意什么”。`,
+            `同一卦六爻不是重复说同一件事，而是在写事情从开始到变化的不同层次。`
+        ],
+        [
+            `先看爻位，再看句意`,
+            `爻辞重阶段，不重孤立字面`,
+            `理解进退分寸，比直接断吉凶更重要`
+        ],
+        [
+            `不要把单条爻辞直接当成全卦结论。`,
+            `也不要忽略它所处的爻位，不同位置说的话，重点完全不同。`
+        ]
+    )
+}
+
+function buildAutoInterpretation(gua, type, yaoNum) {
+    if (type === 'guaName') {
+        return buildAutoGuaNameInterpretation(gua)
+    }
+
+    if (type === 'tuanshi') {
+        return buildAutoTuanshiInterpretation(gua)
+    }
+
+    return buildAutoYaociInterpretation(gua, yaoNum)
+}
+
+function mergeCxInterpretationData(autoData, customData) {
+    if (!customData) return autoData
+
+    return {
+        ...autoData,
+        ...customData,
+        wordInterpretations: customData.wordInterpretations || autoData.wordInterpretations,
+        characterInterpretations: customData.characterInterpretations || autoData.characterInterpretations,
+        traditionalInterpretation: customData.traditionalInterpretation || autoData.traditionalInterpretation,
+        plainMeaning: customData.plainMeaning || autoData.plainMeaning,
+        keyPoints: customData.keyPoints || autoData.keyPoints,
+        commonMisunderstandings: customData.commonMisunderstandings || autoData.commonMisunderstandings
+    }
+}
+
+function createCxFallbackInterpretation(gua, type, yaoNum) {
+    return buildAutoInterpretation(gua, type, yaoNum)
+}
+
+function getCxInterpretationData(gua, type, yaoNum = null) {
+    const autoData = buildAutoInterpretation(gua, type, yaoNum)
+    const guaData = guaInterpretationMap && guaInterpretationMap[gua.name]
+    const tuanshiHandwrittenData = typeof guaTuanshiHandwrittenMap !== 'undefined'
+        ? guaTuanshiHandwrittenMap[gua.name]
+        : null
+    const overrideData = typeof guaInterpretationOverrides !== 'undefined'
+        ? guaInterpretationOverrides[gua.name]
+        : null
+
+    let customEntry = null
+    if (type === 'tuanshi' && tuanshiHandwrittenData) {
+        customEntry = tuanshiHandwrittenData
+    }
+
+    if (overrideData) {
+        if (!customEntry && type === 'guaName' && overrideData.guaName) {
+            customEntry = overrideData.guaName
+        } else if (!customEntry && type === 'tuanshi' && overrideData.tuanshi) {
+            customEntry = overrideData.tuanshi
+        } else if (!customEntry && type === 'yaoci' && overrideData.yaoci && overrideData.yaoci[yaoNum]) {
+            customEntry = overrideData.yaoci[yaoNum]
+        }
+    }
+
+    if (customEntry) {
+        return mergeCxInterpretationData(autoData, customEntry)
+    }
+
+    if (!guaData) {
+        return autoData
+    }
+
+    if (type === 'guaName' && guaData.guaName) {
+        return mergeCxInterpretationData(autoData, guaData.guaName)
+    }
+
+    if (type === 'tuanshi' && guaData.tuanshi) {
+        return mergeCxInterpretationData(autoData, guaData.tuanshi)
+    }
+
+    if (type === 'yaoci' && guaData.yaoci && guaData.yaoci[yaoNum]) {
+        return mergeCxInterpretationData(autoData, guaData.yaoci[yaoNum])
+    }
+
+    return autoData
+}
+
+function renderCxInterpretationContent(data, type) {
+    const sections = [
+        buildCxInterpretationSection('原文', `<p>${escapeHtml(data.originalText)}</p>`, 'cx-interpretation-original')
+    ]
+
+    if (type !== 'guaName') {
+        sections.push(buildCxInterpretationSection('逐字解读', buildCxDetailItems(data.characterInterpretations)))
+    }
+
+    sections.push(
+        buildCxInterpretationSection('传统解读', buildCxParagraphs(data.traditionalInterpretation)),
+        buildCxInterpretationSection('白话提示', buildCxParagraphs(data.plainMeaning), 'cx-interpretation-plain'),
+        buildCxInterpretationSection('学习要点', buildCxList(data.keyPoints)),
+        buildCxInterpretationSection('常见误解', buildCxList(data.commonMisunderstandings), 'cx-interpretation-misunderstanding')
+    )
+
+    return sections.join('')
+}
+
+function openCxInterpretationModal(gua, type, yaoNum = null) {
+    const modal = document.getElementById('cxInterpretationModal')
+    const titleEl = document.getElementById('cxInterpretationTitle')
+    const subtitleEl = document.getElementById('cxInterpretationSubtitle')
+    const contentEl = document.getElementById('cxInterpretationContent')
+    const data = getCxInterpretationData(gua, type, yaoNum)
+
+    titleEl.textContent = data.title || getCxInterpretationTitle(gua, type, yaoNum)
+    subtitleEl.textContent = getCxInterpretationSubtitle(gua, type, yaoNum)
+    contentEl.innerHTML = renderCxInterpretationContent(data, type)
+    modal.style.display = 'flex'
+    modal.setAttribute('aria-hidden', 'false')
+    document.body.style.overflow = 'hidden'
+}
+
+function closeCxInterpretationModal() {
+    const modal = document.getElementById('cxInterpretationModal')
+    if (!modal) return
+
+    modal.style.display = 'none'
+    modal.setAttribute('aria-hidden', 'true')
+    document.body.style.overflow = ''
+}
+
+function bindCxInterpretationModalEvents() {
+    if (cxInterpretationModalBound) return
+
+    const modal = document.getElementById('cxInterpretationModal')
+    const closeBtn = document.getElementById('cxInterpretationClose')
+    if (!modal || !closeBtn) return
+
+    closeBtn.addEventListener('click', closeCxInterpretationModal)
+    modal.addEventListener('click', event => {
+        if (event.target === modal) {
+            closeCxInterpretationModal()
+        }
+    })
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && modal.style.display === 'flex') {
+            closeCxInterpretationModal()
+        }
+    })
+
+    cxInterpretationModalBound = true
+}
+
+function renderCxGuaName(guaNameDisplay, gua) {
+    const container = document.getElementById('cxGuaName')
+    container.innerHTML = ''
+
+    const row = document.createElement('div')
+    row.className = 'cx-gua-name-row'
+
+    const text = document.createElement('div')
+    text.innerHTML = formatClickableText(guaNameDisplay, { source: '卦名', large: true })
+
+    const button = buildCxInterpretationButton('解读', () => openCxInterpretationModal(gua, 'guaName'), 'cx-gua-name-interpret-btn')
+
+    row.append(text, button)
+    container.appendChild(row)
+}
+
 function buildYaociItem(yaoci, yaoNum) {
     const yaoItem = document.createElement('div')
     yaoItem.className = 'yaoci-item'
@@ -107,7 +494,18 @@ function buildYaociItem(yaoci, yaoNum) {
 
     const titleDiv = document.createElement('div')
     titleDiv.className = 'yaoci-title'
-    setElementHtmlFromString(titleDiv, `第${yaoNum}爻：${formatClickableText(yaociTitle, { source: `第${yaoNum}爻标题` })}`)
+
+    const titleRow = document.createElement('div')
+    titleRow.className = 'cx-yaoci-header'
+
+    const titleText = document.createElement('div')
+    titleText.className = 'cx-yaoci-header-main'
+    setElementHtmlFromString(titleText, `第${yaoNum}爻：${formatClickableText(yaociTitle, { source: `第${yaoNum}爻标题` })}`)
+
+    const interpretationBtn = buildCxInterpretationButton('解读', () => openCxInterpretationModal(cxCurrentGua, 'yaoci', yaoNum), 'cx-corner-interpret-btn')
+
+    titleRow.append(titleText, interpretationBtn)
+    titleDiv.appendChild(titleRow)
 
     const contentDiv = document.createElement('div')
     contentDiv.className = 'yaoci-content'
@@ -119,6 +517,7 @@ function buildYaociItem(yaoci, yaoNum) {
 
 function showGuaDetail(gua, isRootGua = false) {
     cxCurrentGua = gua
+    bindCxInterpretationModalEvents()
 
     const fromYice = window.fromYiceDetail
     const fromLiuYao = window.fromLiuYaoDetail
@@ -197,8 +596,16 @@ function showGuaDetail(gua, isRootGua = false) {
         ? `${gua.upper}为${baguaElement[gua.upper]}卦`
         : `${upperElement}${lowerElement}${gua.shortName}卦`
 
-    setElementHtmlFromString(document.getElementById('cxGuaName'), formatClickableText(guaNameDisplay, { source: '卦名', large: true }))
+    renderCxGuaName(guaNameDisplay, gua)
     setElementHtmlFromString(document.getElementById('cxTuanshi'), formatClickableText(gua.tuanshi, { source: '卦辞' }))
+
+    const tuanshiBtn = document.getElementById('cxTuanshiInterpretBtn')
+    if (tuanshiBtn) {
+        tuanshiBtn.onclick = event => {
+            event.stopPropagation()
+            openCxInterpretationModal(gua, 'tuanshi')
+        }
+    }
 
     renderYaociList(gua)
     updateGuaButtons(gua)
@@ -390,6 +797,7 @@ function jumpToBianGua() {
 function backToBaguaSelect() {
     document.getElementById('cxBaguaSelect').style.display = 'block'
     document.getElementById('cxGuaDetail').style.display = 'none'
+    closeCxInterpretationModal()
     cxChangedYaoci = []
     cxCurrentGua = {}
     cxRootGua = null

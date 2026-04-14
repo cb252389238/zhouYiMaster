@@ -10,6 +10,232 @@
     <link rel="stylesheet" href="yice.css">
     <link rel="stylesheet" href="meihua.css">
     <link rel="stylesheet" href="huafu.css">
+    <style>
+        .cx-section-header {
+            position: relative;
+            margin-bottom: 10px;
+            padding-right: 60px;
+        }
+
+        .cx-section-header h3 {
+            margin: 0;
+            color: #667eea;
+        }
+
+        .cx-gua-name-row {
+            position: relative;
+            display: inline-block;
+            padding-right: 30px;
+            text-align: center;
+        }
+
+        .cx-interpret-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border: 1px solid #8fa2ff;
+            border-radius: 999px;
+            background: #eef1ff;
+            color: #4d63d6;
+            font-size: 0.75em;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .cx-gua-name-interpret-btn,
+        .cx-corner-interpret-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+
+        .cx-gua-name-interpret-btn {
+            min-width: 0;
+            padding: 0 4px;
+            border-radius: 10px;
+            font-size: 0.6em;
+            line-height: 1.35;
+            transform: translate(2px, -22%);
+        }
+
+        .cx-interpret-btn:hover {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .cx-yaoci-header {
+            position: relative;
+            padding-right: 60px;
+            margin-bottom: 8px;
+        }
+
+        .cx-yaoci-header-main {
+            min-height: 24px;
+        }
+
+        .cx-interpretation-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.6);
+            z-index: 2200;
+            padding: 24px;
+        }
+
+        .cx-interpretation-panel {
+            width: min(860px, 100%);
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
+            background: #fffdf8;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 60px rgba(15, 23, 42, 0.25);
+        }
+
+        .cx-interpretation-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 22px 24px 18px;
+            border-bottom: 1px solid #ece6d8;
+            background: linear-gradient(180deg, #fff8e8 0%, #fffdf8 100%);
+        }
+
+        .cx-interpretation-title {
+            font-size: 1.35em;
+            font-weight: bold;
+            color: #2f365f;
+            margin-bottom: 6px;
+        }
+
+        .cx-interpretation-subtitle {
+            color: #8b6f3d;
+            font-size: 0.95em;
+        }
+
+        .cx-interpretation-close {
+            border: none;
+            background: transparent;
+            color: #7a6a52;
+            cursor: pointer;
+            font-size: 1.5em;
+            line-height: 1;
+            padding: 2px 4px;
+        }
+
+        .cx-interpretation-content {
+            padding: 24px;
+            overflow-y: auto;
+            display: grid;
+            gap: 16px;
+        }
+
+        .cx-interpretation-section {
+            background: #fff;
+            border: 1px solid #efe6d2;
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+
+        .cx-interpretation-section h4 {
+            margin: 0 0 10px;
+            color: #6a56c8;
+            font-size: 1em;
+        }
+
+        .cx-interpretation-original {
+            background: #fff6df;
+            border-color: #f1ddae;
+        }
+
+        .cx-interpretation-original p {
+            font-size: 1.08em;
+            line-height: 1.85;
+            color: #5b4426;
+        }
+
+        .cx-interpretation-plain {
+            background: #f5f8ff;
+            border-color: #dce5ff;
+        }
+
+        .cx-interpretation-misunderstanding {
+            background: #fff7f1;
+            border-color: #f1dbc8;
+        }
+
+        .cx-interpretation-detail-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .cx-interpretation-detail-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #faf8f2;
+            border: 1px solid #eee3cc;
+        }
+
+        .cx-interpretation-detail-term {
+            font-weight: bold;
+            color: #5a4a2f;
+            margin-bottom: 4px;
+        }
+
+        .cx-interpretation-detail-desc {
+            color: #333;
+            line-height: 1.75;
+        }
+
+        .cx-interpretation-section p,
+        .cx-interpretation-section li {
+            color: #333;
+            line-height: 1.8;
+        }
+
+        .cx-interpretation-section p + p,
+        .cx-interpretation-section li + li {
+            margin-top: 8px;
+        }
+
+        .cx-interpretation-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .cx-section-header,
+            .cx-yaoci-header,
+            .cx-interpretation-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .cx-interpretation-modal {
+                padding: 12px;
+            }
+
+            .cx-interpretation-panel {
+                max-height: 88vh;
+            }
+
+            .cx-interpretation-header,
+            .cx-interpretation-content {
+                padding: 18px;
+            }
+
+            .cx-interpretation-close {
+                align-self: flex-end;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -371,7 +597,10 @@
                         
                         <!-- 卦辞 -->
                         <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                            <h3 style="color: #667eea; margin-bottom: 10px;">卦辞</h3>
+                            <div class="cx-section-header">
+                                <h3>卦辞</h3>
+                                <button type="button" class="cx-interpret-btn cx-corner-interpret-btn" id="cxTuanshiInterpretBtn">解读</button>
+                            </div>
                             <p id="cxTuanshi" style="font-size: 1.2em; line-height: 1.8;"></p>
                         </div>
                         
@@ -405,6 +634,19 @@
                             <p data-field="evolution">这里会说明该字在后世、尤其《易经》语境中的延伸含义。</p>
                         </div>
                     </aside>
+                </div>
+            </div>
+
+            <div id="cxInterpretationModal" class="cx-interpretation-modal" aria-hidden="true">
+                <div class="cx-interpretation-panel" role="dialog" aria-modal="true" aria-labelledby="cxInterpretationTitle">
+                    <div class="cx-interpretation-header">
+                        <div>
+                            <div class="cx-interpretation-title" id="cxInterpretationTitle">深入解读</div>
+                            <div class="cx-interpretation-subtitle" id="cxInterpretationSubtitle"></div>
+                        </div>
+                        <button type="button" class="cx-interpretation-close" id="cxInterpretationClose" aria-label="关闭解读弹层">✕</button>
+                    </div>
+                    <div class="cx-interpretation-content" id="cxInterpretationContent"></div>
                 </div>
             </div>
 
@@ -658,6 +900,9 @@
     </div>
 
     <script src="yizhou-data.js"></script>
+    <script src="gua-interpretation-data.js"></script>
+    <script src="gua-interpretation-overrides.js"></script>
+    <script src="gua-tuanshi-handwritten.js"></script>
     <script src="pinyin-data.js"></script>
     <script src="app.js"></script>
     <script src="ui-common.js"></script>
