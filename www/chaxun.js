@@ -425,9 +425,15 @@ function openCxInterpretationModal(gua, type, yaoNum = null) {
     titleEl.textContent = data.title || getCxInterpretationTitle(gua, type, yaoNum)
     subtitleEl.textContent = getCxInterpretationSubtitle(gua, type, yaoNum)
     contentEl.innerHTML = renderCxInterpretationContent(data, type)
+    contentEl.scrollTop = 0
     modal.style.display = 'flex'
     modal.setAttribute('aria-hidden', 'false')
     document.body.style.overflow = 'hidden'
+    titleEl.focus({ preventScroll: true })
+    requestAnimationFrame(() => {
+        contentEl.scrollTop = 0
+        contentEl.scrollTo({ top: 0, behavior: 'auto' })
+    })
 }
 
 function closeCxInterpretationModal() {
