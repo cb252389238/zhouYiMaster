@@ -410,7 +410,10 @@ async function saveMeihuaInlineYice() {
             analysis: document.getElementById('mhYiceAnalysis').value,
             createTime: document.getElementById('mhYiceTime').value,
             updateTime: new Date().toISOString(),
-            accuracy: parseInt(document.getElementById('mhYiceAccuracy').value) || 70,
+            accuracy: (() => {
+                const accuracy = parseInt(document.getElementById('mhYiceAccuracy').value, 10)
+                return Number.isNaN(accuracy) ? 70 : accuracy
+            })(),
             replays: []
         })
 

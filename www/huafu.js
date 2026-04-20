@@ -307,7 +307,10 @@ async function saveHuafuInlineYice() {
             analysis: document.getElementById('hfYiceAnalysis').value,
             createTime: document.getElementById('hfYiceTime').value,
             updateTime: new Date().toISOString(),
-            accuracy: parseInt(document.getElementById('hfYiceAccuracy').value) || 70,
+            accuracy: (() => {
+                const accuracy = parseInt(document.getElementById('hfYiceAccuracy').value, 10)
+                return Number.isNaN(accuracy) ? 70 : accuracy
+            })(),
             replays: []
         })
 

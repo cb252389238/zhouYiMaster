@@ -4208,7 +4208,10 @@ async function saveLiuYaoInlineYice() {
             analysis: document.getElementById('lyYiceAnalysis').value,
             createTime: document.getElementById('lyYiceTime').value,
             updateTime: new Date().toISOString(),
-            accuracy: parseInt(document.getElementById('lyYiceAccuracy').value) || 70,
+            accuracy: (() => {
+                const accuracy = parseInt(document.getElementById('lyYiceAccuracy').value, 10)
+                return Number.isNaN(accuracy) ? 70 : accuracy
+            })(),
             replays: []
         })
 

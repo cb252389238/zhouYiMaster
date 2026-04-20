@@ -64,7 +64,7 @@ function createYiceRecordCard(record) {
 
     const guaName = getGuaNameBy上下(record.upper, record.lower)
     const time = new Date(record.createTime).toLocaleDateString('zh-CN')
-    const accuracy = record.accuracy || 70
+    const accuracy = record.accuracy ?? 70
     const accuracyClass = accuracy <= 30 ? 'low' : (accuracy <= 60 ? 'medium' : (accuracy <= 80 ? 'good' : 'high'))
     const accuracyColor = accuracy <= 30 ? '#e74c3c' : (accuracy <= 60 ? '#f39c12' : (accuracy <= 80 ? '#3498db' : '#27ae60'))
 
@@ -449,6 +449,11 @@ function closeGuaModal() {
     document.getElementById('ycConfirmGuaBtn').style.display = 'none'
 }
 
+function getAccuracyValue(inputId) {
+    const accuracy = parseInt(document.getElementById(inputId).value, 10)
+    return Number.isNaN(accuracy) ? 70 : accuracy
+}
+
 async function saveYiceRecord() {
     await runYiceAction('saveYiceRecord', async () => {
         if (!ycSelectedUpper || !ycSelectedLower) {
@@ -467,7 +472,7 @@ async function saveYiceRecord() {
             analysis: document.getElementById('ycAddAnalysis').value,
             createTime: document.getElementById('ycAddCreateTime').value,
             updateTime: new Date().toISOString(),
-            accuracy: parseInt(document.getElementById('ycAddAccuracy').value) || 70,
+            accuracy: getAccuracyValue('ycAddAccuracy'),
             replays: []
         })
 
@@ -798,7 +803,7 @@ function editYiceRecord() {
     document.getElementById('ycEditPerson').value = ycCurrentRecord.person || ''
     document.getElementById('ycEditAnalysis').value = ycCurrentRecord.analysis || ''
 
-    const accuracy = ycCurrentRecord.accuracy || 70
+    const accuracy = ycCurrentRecord.accuracy ?? 70
     const accuracyInput = document.getElementById('ycEditAccuracy')
     accuracyInput.value = accuracy
     document.getElementById('ycEditAccuracyValue').textContent = accuracy + '%'
@@ -874,7 +879,7 @@ async function updateYiceRecord() {
             lower: ycEditLower,
             dongyao: [...ycEditDongyao],
             updateTime: new Date().toISOString(),
-            accuracy: parseInt(document.getElementById('ycEditAccuracy').value) || 70
+            accuracy: getAccuracyValue('ycEditAccuracy')
         })
 
         await queueYiceWrite(async () => {
@@ -908,8 +913,8 @@ async function saveReplay() {
     await runYiceAction('saveReplay', async () => {
         const content = normalizeYiceText(document.getElementById('ycReplayContent').value)
         const diff = normalizeYiceText(document.getElementById('ycReplayDiff').value)
-        if (!content) {
-            showAppToast('请输入事情进展')
+        if (!content && !diff) {
+            showAppToast('请至少填写事情进展或与预测的差异')
             return
         }
 

@@ -93,8 +93,10 @@ function escapeSqlString(value) {
 }
 
 function buildYiceRecordInsertSql(record) {
+    const accuracy = record.accuracy ?? 70
+
     return "INSERT INTO yice_records (id, category, content, person, upper, lower, dongyao, analysis, createTime, updateTime, accuracy, replays) VALUES ('" +
-        escapeSqlString(record.id) + "', '" + escapeSqlString(record.category) + "', '" + escapeSqlString(record.content) + "', '" + escapeSqlString(record.person) + "', '" + escapeSqlString(record.upper) + "', '" + escapeSqlString(record.lower) + "', '" + escapeSqlString(JSON.stringify(record.dongyao || [])) + "', '" + escapeSqlString(record.analysis) + "', '" + escapeSqlString(record.createTime) + "', '" + escapeSqlString(record.updateTime) + "', " + (record.accuracy || 70) + ", '" + escapeSqlString(JSON.stringify(record.replays || [])) + "')"
+        escapeSqlString(record.id) + "', '" + escapeSqlString(record.category) + "', '" + escapeSqlString(record.content) + "', '" + escapeSqlString(record.person) + "', '" + escapeSqlString(record.upper) + "', '" + escapeSqlString(record.lower) + "', '" + escapeSqlString(JSON.stringify(record.dongyao || [])) + "', '" + escapeSqlString(record.analysis) + "', '" + escapeSqlString(record.createTime) + "', '" + escapeSqlString(record.updateTime) + "', " + accuracy + ", '" + escapeSqlString(JSON.stringify(record.replays || [])) + "')"
 }
 
 async function saveYiceDataToDB() {
@@ -139,6 +141,8 @@ async function insertYiceRecordToDB(record) {
 async function updateYiceRecordInDB(record) {
     await initYiceDB()
 
+    const accuracy = record.accuracy ?? 70
+
     const sql = "UPDATE yice_records SET " +
         "category='" + escapeSqlString(record.category) + "', " +
         "content='" + escapeSqlString(record.content) + "', " +
@@ -149,7 +153,7 @@ async function updateYiceRecordInDB(record) {
         "analysis='" + escapeSqlString(record.analysis) + "', " +
         "createTime='" + escapeSqlString(record.createTime) + "', " +
         "updateTime='" + escapeSqlString(record.updateTime) + "', " +
-        "accuracy=" + (record.accuracy || 70) + ", " +
+        "accuracy=" + accuracy + ", " +
         "replays='" + escapeSqlString(JSON.stringify(record.replays || [])) + "' " +
         "WHERE id='" + escapeSqlString(record.id) + "'"
 

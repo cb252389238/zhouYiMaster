@@ -61,6 +61,9 @@ function normalizeYiceReplay(replay) {
 }
 
 function normalizeYiceRecord(record) {
+    const rawAccuracy = Number(record?.accuracy)
+    const normalizedAccuracy = Number.isNaN(rawAccuracy) ? 70 : rawAccuracy
+
     return {
         id: normalizeYiceText(record?.id) || Date.now().toString(),
         category: normalizeYiceText(record?.category),
@@ -72,10 +75,10 @@ function normalizeYiceRecord(record) {
         analysis: normalizeYiceText(record?.analysis),
         createTime: normalizeYiceDate(record?.createTime),
         updateTime: normalizeYiceDate(record?.updateTime, normalizeYiceDate(record?.createTime)),
-        accuracy: Math.max(0, Math.min(100, Number(record?.accuracy) || 70)),
+        accuracy: Math.max(0, Math.min(100, normalizedAccuracy)),
         replays: parseYiceJsonArray(record?.replays)
             .map(normalizeYiceReplay)
-            .filter(item => item.content)
+            .filter(item => item.content || item.diff)
     }
 }
 
