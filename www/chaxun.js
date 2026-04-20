@@ -702,8 +702,22 @@ function updateGuaButtons(gua) {
     cuoguaBtn.dataset.guaName = cuogua.name
 }
 
+function getYaoYinYangFromYaoci(yaoci) {
+    const prefix = String(yaoci || '').split('：')[0]
+
+    if (prefix.includes('九')) {
+        return 1
+    }
+
+    if (prefix.includes('六')) {
+        return 0
+    }
+
+    return null
+}
+
 function getHuGua(gua) {
-    const yaoyin = gua.yaoci.map(y => y.includes('九') ? 1 : 0)
+    const yaoyin = gua.yaoci.map(getYaoYinYangFromYaoci)
     const lowerYao = [yaoyin[1], yaoyin[2], yaoyin[3]]
     const upperYao = [yaoyin[2], yaoyin[3], yaoyin[4]]
     const lowerBagua = findBaguaByYaoYinYang(lowerYao)
@@ -716,7 +730,7 @@ function getHuGua(gua) {
 }
 
 function getZongGua(gua) {
-    const yaoyin = gua.yaoci.map(y => y.includes('九') ? 1 : 0)
+    const yaoyin = gua.yaoci.map(getYaoYinYangFromYaoci)
     const reversedYao = yaoyin.reverse()
     const lowerYao = [reversedYao[0], reversedYao[1], reversedYao[2]]
     const upperYao = [reversedYao[3], reversedYao[4], reversedYao[5]]
@@ -752,7 +766,7 @@ function findBaguaByYaoYinYang(yaoArray) {
 }
 
 function getBianGua(gua, changedYaoci) {
-    const yaoyin = gua.yaoci.map(y => y.includes('九') ? 1 : 0)
+    const yaoyin = gua.yaoci.map(getYaoYinYangFromYaoci)
     changedYaoci.forEach(yaoNum => {
         const index = yaoNum - 1
         yaoyin[index] = yaoyin[index] === 1 ? 0 : 1
