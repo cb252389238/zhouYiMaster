@@ -1,4 +1,4 @@
-﻿﻿// 全局变量
+﻿// 全局变量
 let currentModule = null;
 let currentGua = null;
 let score = 0;
@@ -10,7 +10,6 @@ function initApp() {
     console.log('八卦数据:', Object.keys(baguaData).length, '卦')
 
     initCharacterPanel()
-    initAppUpdateCheck()
 }
 
 document.addEventListener('DOMContentLoaded', initApp)
