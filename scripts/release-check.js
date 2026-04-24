@@ -45,7 +45,6 @@ try {
     runCheck('node --check "www/gua-common.js"')
     runCheck('node --check "www/text-render.js"')
     runCheck('node --check "www/char-panel.js"')
-    runCheck('node --check "www/update.js"')
     runCheck('node --check "www/guaxiang.js"')
     runCheck('node --check "www/practice-memory.js"')
     runCheck('node --check "www/chaxun.js"')
