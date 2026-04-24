@@ -402,7 +402,14 @@ function renderCxInterpretationContent(data, type) {
     ]
 
     if (type !== 'guaName') {
-        sections.push(buildCxInterpretationSection('逐字解读', buildCxDetailItems(data.characterInterpretations)))
+        const detailItems = Array.isArray(data.wordInterpretations) && data.wordInterpretations.length > 0
+            ? data.wordInterpretations
+            : data.characterInterpretations
+        const detailTitle = Array.isArray(data.wordInterpretations) && data.wordInterpretations.length > 0
+            ? '逐词解读'
+            : '逐字解读'
+
+        sections.push(buildCxInterpretationSection(detailTitle, buildCxDetailItems(detailItems)))
     }
 
     sections.push(
