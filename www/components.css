@@ -341,27 +341,42 @@ input[type="range"]::-webkit-slider-thumb {
 
 .cx-ganzhi-time-control input,
 .cx-ganzhi-time-control button {
-    height: 34px;
+    min-height: 40px;
     border-radius: 999px;
     border: 1px solid rgba(102, 126, 234, 0.28);
     font: inherit;
+    font-size: 16px;
 }
 
 .cx-ganzhi-time-control input {
-    padding: 0 12px;
+    min-width: 230px;
+    padding: 0 14px;
     color: #2f365f;
     background: #ffffff;
 }
 
 .cx-ganzhi-time-control button {
-    padding: 0 14px;
+    padding: 0 16px;
     background: #667eea;
     color: #ffffff;
     cursor: pointer;
+    font-weight: 700;
 }
 
 .cx-ganzhi-time-control button:hover {
     background: #5368d7;
+}
+
+@media (max-width: 768px) {
+    .cx-ganzhi-time-control {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .cx-ganzhi-time-control input,
+    .cx-ganzhi-time-control button {
+        width: 100%;
+    }
 }
 
 .cx-ganzhi-pill-list,

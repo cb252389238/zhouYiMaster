@@ -231,6 +231,15 @@ function useCxNajiaCurrentTime() {
     refreshCxNajiaBySelectedTime()
 }
 
+function buildCxNajiaTimeControl(selectedDate) {
+    return `
+        <div class="cx-ganzhi-time-control">
+            <input type="datetime-local" value="${formatDateTimeLocalValue(selectedDate)}" onchange="handleCxNajiaTimeChange(this)">
+            <button type="button" onclick="useCxNajiaCurrentTime()">当前时间</button>
+        </div>
+    `
+}
+
 function getXunKong(ganzhi) {
     const ganIndex = naJiaTianGan.indexOf(ganzhi[0])
     const zhiIndex = naJiaDiZhi.indexOf(ganzhi[1])
@@ -384,10 +393,7 @@ function renderCxNajiaInfo(gua) {
 
     timeEl.innerHTML = `
         <div class="cx-ganzhi-now">测算时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
-        <div class="cx-ganzhi-time-control">
-            <input type="datetime-local" value="${formatDateTimeLocalValue(selectedDate)}" onchange="handleCxNajiaTimeChange(this)">
-            <button type="button" onclick="useCxNajiaCurrentTime()">使用当前时间</button>
-        </div>
+        ${buildCxNajiaTimeControl(selectedDate)}
         <div class="cx-ganzhi-pill-list">
             <span class="cx-ganzhi-pill-year">年柱：${ganzhiTime.year}</span>
             <span class="cx-ganzhi-pill-month">月柱：${ganzhiTime.month}</span>
