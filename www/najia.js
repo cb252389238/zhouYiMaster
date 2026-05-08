@@ -183,6 +183,17 @@ function getCurrentGanzhiTime(date = new Date()) {
     return { date, year, month, day, hour }
 }
 
+function getXunKong(ganzhi) {
+    const ganIndex = naJiaTianGan.indexOf(ganzhi[0])
+    const zhiIndex = naJiaDiZhi.indexOf(ganzhi[1])
+    if (ganIndex < 0 || zhiIndex < 0) return ''
+
+    const xunStartZhiIndex = ((zhiIndex - ganIndex) % 12 + 12) % 12
+    const firstKongIndex = (xunStartZhiIndex + 10) % 12
+    const secondKongIndex = (xunStartZhiIndex + 11) % 12
+    return `${naJiaDiZhi[firstKongIndex]}${naJiaDiZhi[secondKongIndex]}`
+}
+
 function getRelationByWuxing(gongWuxing, yaoWuxing) {
     if (gongWuxing === yaoWuxing) return '兄弟'
 
@@ -320,6 +331,7 @@ function renderCxNajiaInfo(gua) {
     const monthBranch = ganzhiTime.month[1]
     const state = getWuxingStateByMonthBranch(monthBranch)
     const gongInfo = getGuaGongInfo(gua)
+    const xunKong = getXunKong(ganzhiTime.day)
 
     timeEl.innerHTML = `
         <div class="cx-ganzhi-now">当前时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
@@ -330,6 +342,7 @@ function renderCxNajiaInfo(gua) {
             <span class="cx-ganzhi-pill-hour">时柱：${ganzhiTime.hour}</span>
             <span class="cx-ganzhi-pill-gong">${gongInfo.gong}宫${gongInfo.element}</span>
             <span class="cx-ganzhi-pill-stage">${gongInfo.stage}</span>
+            <span class="cx-ganzhi-pill-xunkong">旬空：${xunKong}</span>
         </div>
     `
 

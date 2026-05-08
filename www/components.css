@@ -392,6 +392,12 @@ input[type="range"]::-webkit-slider-thumb {
     color: #344054;
 }
 
+.cx-ganzhi-pill-list .cx-ganzhi-pill-xunkong {
+    background: #fff7ed;
+    border-color: #fdba74;
+    color: #9a3412;
+}
+
 .cx-najia-image {
     margin: 18px 0;
 }
