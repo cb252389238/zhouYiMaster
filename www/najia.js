@@ -83,6 +83,25 @@ const guaGongMap = {
     '雷天大壮': ['坤', 4], '泽天夬': ['坤', 5], '水天需': ['坤', 4], '水地比': ['坤', 3]
 }
 
+const guaGongStageMap = {
+    '乾为天': '本宫', '天风姤': '一世', '天山遁': '二世', '天地否': '三世',
+    '风地观': '四世', '山地剥': '五世', '火地晋': '游魂', '火天大有': '归魂',
+    '兑为泽': '本宫', '泽水困': '一世', '泽地萃': '二世', '泽山咸': '三世',
+    '水山蹇': '四世', '地山谦': '五世', '雷山小过': '游魂', '雷泽归妹': '归魂',
+    '离为火': '本宫', '火山旅': '一世', '火风鼎': '二世', '火水未济': '三世',
+    '山水蒙': '四世', '风水涣': '五世', '天水讼': '游魂', '天火同人': '归魂',
+    '震为雷': '本宫', '雷地豫': '一世', '雷水解': '二世', '雷风恒': '三世',
+    '地风升': '四世', '水风井': '五世', '泽风大过': '游魂', '泽雷随': '归魂',
+    '巽为风': '本宫', '风天小畜': '一世', '风火家人': '二世', '风雷益': '三世',
+    '天雷无妄': '四世', '火雷噬嗑': '五世', '山雷颐': '游魂', '山风蛊': '归魂',
+    '坎为水': '本宫', '水泽节': '一世', '水雷屯': '二世', '水火既济': '三世',
+    '泽火革': '四世', '雷火丰': '五世', '地火明夷': '游魂', '地水师': '归魂',
+    '艮为山': '本宫', '山火贲': '一世', '山天大畜': '二世', '山泽损': '三世',
+    '火泽睽': '四世', '天泽履': '五世', '风泽中孚': '游魂', '风山渐': '归魂',
+    '坤为地': '本宫', '地雷复': '一世', '地泽临': '二世', '地天泰': '三世',
+    '雷天大壮': '四世', '泽天夬': '五世', '水天需': '游魂', '水地比': '归魂'
+}
+
 const jieqiMonthStart = [
     { name: '小寒', monthIndex: 12, constant: 5.4055 },
     { name: '立春', monthIndex: 1, constant: 3.87 },
@@ -177,11 +196,23 @@ function getRelationByWuxing(gongWuxing, yaoWuxing) {
 
 function getGuaGongInfo(gua) {
     const config = guaGongMap[gua.name]
-    if (!config) return { gong: gua.lower, element: baguaGongWuxing[gua.lower], shi: 6, ying: 3 }
+    if (!config) return {
+        gong: gua.lower,
+        element: baguaGongWuxing[gua.lower],
+        shi: 6,
+        ying: 3,
+        stage: gua.upper === gua.lower ? '本宫' : '未定'
+    }
 
     const shi = config[1]
     const ying = shi > 3 ? shi - 3 : shi + 3
-    return { gong: config[0], element: baguaGongWuxing[config[0]], shi, ying }
+    return {
+        gong: config[0],
+        element: baguaGongWuxing[config[0]],
+        shi,
+        ying,
+        stage: guaGongStageMap[gua.name] || `${shi}世`
+    }
 }
 
 function getLiushenByDayGan(dayGan) {
@@ -293,11 +324,12 @@ function renderCxNajiaInfo(gua) {
     timeEl.innerHTML = `
         <div class="cx-ganzhi-now">当前时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
         <div class="cx-ganzhi-pill-list">
-            <span>年柱：${ganzhiTime.year}</span>
-            <span>月柱：${ganzhiTime.month}</span>
-            <span>日柱：${ganzhiTime.day}</span>
-            <span>时柱：${ganzhiTime.hour}</span>
-            <span>${gongInfo.gong}宫${gongInfo.element}</span>
+            <span class="cx-ganzhi-pill-year">年柱：${ganzhiTime.year}</span>
+            <span class="cx-ganzhi-pill-month">月柱：${ganzhiTime.month}</span>
+            <span class="cx-ganzhi-pill-day">日柱：${ganzhiTime.day}</span>
+            <span class="cx-ganzhi-pill-hour">时柱：${ganzhiTime.hour}</span>
+            <span class="cx-ganzhi-pill-gong">${gongInfo.gong}宫${gongInfo.element}</span>
+            <span class="cx-ganzhi-pill-stage">${gongInfo.stage}</span>
         </div>
     `
 
