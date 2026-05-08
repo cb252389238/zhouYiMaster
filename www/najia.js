@@ -2,6 +2,8 @@
 const naJiaTianGan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
 const naJiaDiZhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
 const naJiaWuxing = ['木', '火', '土', '金', '水']
+const ganzhiDayEpochOffset = 77
+let cxNajiaSelectedDate = null
 
 const ganWuxing = {
     '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
@@ -162,7 +164,7 @@ function getGanzhiMonth(date, yearGan) {
 function getGanzhiDay(date) {
     const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
     const days = Math.floor(utc / 86400000)
-    return getGanzhiIndex(days + 40)
+    return getGanzhiIndex(days + ganzhiDayEpochOffset)
 }
 
 function getGanzhiHour(date, dayGan) {
@@ -181,6 +183,52 @@ function getCurrentGanzhiTime(date = new Date()) {
     const hour = getGanzhiHour(date, day[0])
 
     return { date, year, month, day, hour }
+}
+
+function getCxNajiaSelectedDate() {
+    if (!cxNajiaSelectedDate) {
+        cxNajiaSelectedDate = new Date()
+    }
+
+    return new Date(cxNajiaSelectedDate.getTime())
+}
+
+function setCxNajiaSelectedDate(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return false
+
+    cxNajiaSelectedDate = new Date(date.getTime())
+    return true
+}
+
+function formatDateTimeLocalValue(date) {
+    const pad = value => String(value).padStart(2, '0')
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+function refreshCxNajiaBySelectedTime() {
+    if (!cxCurrentGua || !cxCurrentGua.name) return
+
+    const cxSymbolEl = document.getElementById('cxSymbol')
+    if (cxSymbolEl) {
+        cxSymbolEl.innerHTML = ''
+        cxSymbolEl.appendChild(createCxNajiaGuaElement(cxCurrentGua, cxChangedYaoci || []))
+    }
+
+    renderCxNajiaInfo(cxCurrentGua)
+}
+
+function handleCxNajiaTimeChange(input) {
+    if (!input || !input.value) return
+
+    const nextDate = new Date(input.value)
+    if (setCxNajiaSelectedDate(nextDate)) {
+        refreshCxNajiaBySelectedTime()
+    }
+}
+
+function useCxNajiaCurrentTime() {
+    setCxNajiaSelectedDate(new Date())
+    refreshCxNajiaBySelectedTime()
 }
 
 function getXunKong(ganzhi) {
@@ -283,7 +331,7 @@ function createNajiaYaoLine(isYang, isOld = false) {
 }
 
 function createCxNajiaGuaElement(gua, changedIndices = []) {
-    const ganzhiTime = getCurrentGanzhiTime()
+    const ganzhiTime = getCurrentGanzhiTime(getCxNajiaSelectedDate())
     const rows = getNajiaRows(gua, ganzhiTime)
     const container = document.createElement('div')
     container.className = 'cx-najia-gua'
@@ -327,14 +375,19 @@ function renderCxNajiaInfo(gua) {
     const stateEl = document.getElementById('cxWuxingState')
     if (!timeEl || !stateEl) return
 
-    const ganzhiTime = getCurrentGanzhiTime()
+    const selectedDate = getCxNajiaSelectedDate()
+    const ganzhiTime = getCurrentGanzhiTime(selectedDate)
     const monthBranch = ganzhiTime.month[1]
     const state = getWuxingStateByMonthBranch(monthBranch)
     const gongInfo = getGuaGongInfo(gua)
     const xunKong = getXunKong(ganzhiTime.day)
 
     timeEl.innerHTML = `
-        <div class="cx-ganzhi-now">当前时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
+        <div class="cx-ganzhi-now">测算时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
+        <div class="cx-ganzhi-time-control">
+            <input type="datetime-local" value="${formatDateTimeLocalValue(selectedDate)}" onchange="handleCxNajiaTimeChange(this)">
+            <button type="button" onclick="useCxNajiaCurrentTime()">使用当前时间</button>
+        </div>
         <div class="cx-ganzhi-pill-list">
             <span class="cx-ganzhi-pill-year">年柱：${ganzhiTime.year}</span>
             <span class="cx-ganzhi-pill-month">月柱：${ganzhiTime.month}</span>
