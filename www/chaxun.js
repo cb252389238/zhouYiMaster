@@ -601,7 +601,8 @@ function showGuaDetail(gua, isRootGua = false) {
 
     const cxSymbolEl = document.getElementById('cxSymbol')
     cxSymbolEl.innerHTML = ''
-    cxSymbolEl.appendChild(createGuaElement(gua.upper, gua.lower, cxChangedYaoci || []))
+    cxSymbolEl.appendChild(createCxNajiaGuaElement(gua, cxChangedYaoci || []))
+    renderCxNajiaInfo(gua)
 
     const upperElement = baguaElement[gua.upper]
     const lowerElement = baguaElement[gua.lower]
@@ -688,7 +689,8 @@ function toggleYaociChange(yaoNum) {
 
     const cxSymbolEl = document.getElementById('cxSymbol')
     cxSymbolEl.innerHTML = ''
-    cxSymbolEl.appendChild(createGuaElement(cxCurrentGua.upper, cxCurrentGua.lower, cxChangedYaoci))
+    cxSymbolEl.appendChild(createCxNajiaGuaElement(cxCurrentGua, cxChangedYaoci))
+    renderCxNajiaInfo(cxCurrentGua)
 }
 
 function updateGuaButtons(gua) {

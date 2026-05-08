@@ -582,9 +582,11 @@
                             <button class="back-btn" onclick="backToHuafuFromCx()" id="cxBackToHuafuBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回画符起卦</button>
                         </div>
                         
-                        <div class="gua-image">
+                        <div id="cxGanzhiTime" class="cx-ganzhi-time"></div>
+                        <div class="gua-image cx-najia-image">
                             <div class="gua-symbol" id="cxSymbol"></div>
                         </div>
+                        <div id="cxWuxingState" class="cx-wuxing-state"></div>
                         <div class="gua-name-display" id="cxGuaName"></div>
                         
                         <!-- 变卦、互卦、综卦、错卦 -->
@@ -907,6 +909,7 @@
     <script src="app.js"></script>
     <script src="ui-common.js"></script>
     <script src="gua-common.js"></script>
+    <script src="najia.js"></script>
     <script src="text-render.js"></script>
     <script src="char-panel.js"></script>
     <script src="guaxiang.js"></script>

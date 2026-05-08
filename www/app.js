@@ -1,4 +1,4 @@
-﻿// 全局变量
+﻿﻿// 全局变量
 let currentModule = null;
 let currentGua = null;
 let score = 0;
