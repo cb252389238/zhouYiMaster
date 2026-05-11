@@ -320,8 +320,8 @@ function getWuxingStateByMonthBranch(monthBranch) {
     const monthIndex = naJiaWuxing.indexOf(monthWuxing)
     return {
         wang: monthWuxing,
-        xiang: naJiaWuxing[(monthIndex + 4) % 5],
-        xiu: naJiaWuxing[(monthIndex + 1) % 5],
+        xiang: naJiaWuxing[(monthIndex + 1) % 5],
+        xiu: naJiaWuxing[(monthIndex + 4) % 5],
         qiu: naJiaWuxing[(monthIndex + 3) % 5],
         si: naJiaWuxing[(monthIndex + 2) % 5]
     }
