@@ -552,6 +552,10 @@ function showGuaDetail(gua, isRootGua = false) {
         cxChangedYaoci = yiceDongyao
     }
 
+    if (fromYice && isRootGua && typeof setCxNajiaSelectedDate === 'function') {
+        setCxNajiaSelectedDate(new Date(window.yiceMeasureTime))
+    }
+
     const backToYiceBtn = document.getElementById('cxBackToYiceBtn')
     const backToPrevBtn = document.getElementById('cxBackToPrevBtn')
     const backToRootBtn = document.getElementById('cxBackToRootBtn')
@@ -835,6 +839,7 @@ function backToBaguaSelect() {
 
     window.fromYiceDetail = false
     window.yiceDongyao = null
+    window.yiceMeasureTime = null
     window.yiceRecordId = null
 
     const backToYiceBtn = document.getElementById('cxBackToYiceBtn')

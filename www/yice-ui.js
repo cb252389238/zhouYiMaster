@@ -626,6 +626,7 @@ function jumpToGuaDetailFromYice() {
     window.fromYiceDetail = true
     window.yiceDongyao = ycCurrentRecord.dongyao || []
     window.yiceRecordId = ycCurrentRecord.id
+    window.yiceMeasureTime = ycCurrentRecord.createTime
     showModule('chaxun')
     showGuaDetail(gua, true)
 }
@@ -635,6 +636,7 @@ async function backToYiceDetail() {
     if (backToYiceBtn) backToYiceBtn.style.display = 'none'
     window.fromYiceDetail = false
     window.yiceDongyao = null
+    window.yiceMeasureTime = null
     const recordIdToShow = window.yiceRecordId
     window.yiceRecordId = null
     document.getElementById('chaxunModule').classList.remove('active')
