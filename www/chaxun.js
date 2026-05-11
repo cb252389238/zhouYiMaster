@@ -56,21 +56,20 @@ function renderBaguaSelect(containerId, position) {
         }
         svgHtml += '</svg>'
         btn.innerHTML = `<div>${svgHtml}</div><div style="font-size:0.7em;margin-top:5px;">${key}</div>`
-        btn.onclick = () => selectBaguaForChaXun(key, position)
+        btn.onclick = event => selectBaguaForChaXun(key, position, event.currentTarget)
         container.appendChild(btn)
     })
 }
 
-function selectBaguaForChaXun(baguaName, position) {
+function selectBaguaForChaXun(baguaName, position, buttonElement) {
     if (position === 'upper') {
-        cxCurrentGua = {}
         cxCurrentGua.upper = baguaName
         document.querySelectorAll('#cxUpperBagua .bagua-btn').forEach(btn => btn.classList.remove('selected'))
-        event.currentTarget.classList.add('selected')
+        buttonElement.classList.add('selected')
     } else {
         cxCurrentGua.lower = baguaName
         document.querySelectorAll('#cxLowerBagua .bagua-btn').forEach(btn => btn.classList.remove('selected'))
-        event.currentTarget.classList.add('selected')
+        buttonElement.classList.add('selected')
     }
 
     if (cxCurrentGua.upper && cxCurrentGua.lower) {
