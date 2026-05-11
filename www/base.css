@@ -483,6 +483,22 @@ header p {
     width: min(180px, 100%);
 }
 
+.related-gua-actions .option-btn:disabled,
+.related-gua-actions .option-btn.disabled {
+    background: #e6e8ef;
+    border-color: #d0d5dd;
+    color: #98a2b3;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.related-gua-actions .option-btn:disabled:hover,
+.related-gua-actions .option-btn.disabled:hover {
+    background: #e6e8ef;
+    border-color: #d0d5dd;
+    color: #98a2b3;
+}
+
 @media (max-width: 768px) {
     body {
         padding: 10px;

@@ -639,9 +639,13 @@ function showGuaDetail(gua, isRootGua = false) {
             if (bianGua) {
                 changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`
                 changeGuaBtn.style.display = 'inline-block'
+                updateChangeGuaButtonState(changeGuaBtn, cxCurrentGua, bianGua)
             }
         } else {
             changeGuaBtn.style.display = 'none'
+            changeGuaBtn.disabled = false
+            changeGuaBtn.classList.remove('disabled')
+            changeGuaBtn.title = ''
         }
     }
 }
@@ -685,9 +689,13 @@ function toggleYaociChange(yaoNum) {
         if (bianGua) {
             changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`
             changeGuaBtn.style.display = 'inline-block'
+            updateChangeGuaButtonState(changeGuaBtn, cxCurrentGua, bianGua)
         }
     } else {
         changeGuaBtn.style.display = 'none'
+        changeGuaBtn.disabled = false
+        changeGuaBtn.classList.remove('disabled')
+        changeGuaBtn.title = ''
     }
 
     const cxSymbolEl = document.getElementById('cxSymbol')
@@ -712,6 +720,21 @@ function updateGuaButtons(gua) {
     huguaBtn.dataset.guaName = hugua.name
     zongguaBtn.dataset.guaName = zonggua.name
     cuoguaBtn.dataset.guaName = cuogua.name
+
+    updateRelatedGuaButtonState(huguaBtn, gua, hugua)
+    updateRelatedGuaButtonState(zongguaBtn, gua, zonggua)
+    updateRelatedGuaButtonState(cuoguaBtn, gua, cuogua)
+}
+
+function updateRelatedGuaButtonState(button, currentGua, targetGua) {
+    const disabled = !targetGua || targetGua.number === currentGua.number
+    button.disabled = disabled
+    button.classList.toggle('disabled', disabled)
+    button.title = disabled ? '该卦与当前卦相同，无需跳转' : ''
+}
+
+function updateChangeGuaButtonState(button, currentGua, targetGua) {
+    updateRelatedGuaButtonState(button, currentGua, targetGua)
 }
 
 function getYaoYinYangFromYaoci(yaoci) {
@@ -809,7 +832,7 @@ function jumpToGua(type) {
 
     if (targetGuaName) {
         const targetGua = liushisiGua.find(g => g.name === targetGuaName)
-        if (targetGua) {
+        if (targetGua && targetGua.number !== cxCurrentGua.number) {
             showGuaDetail(targetGua, false)
             cxChangedYaoci = savedChangedYaoci
         }
@@ -820,7 +843,7 @@ function jumpToBianGua() {
     if (cxChangedYaoci.length === 0) return
     const savedChangedYaoci = [...cxChangedYaoci]
     const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci)
-    if (bianGua) {
+    if (bianGua && bianGua.number !== cxCurrentGua.number) {
         showGuaDetail(bianGua, false)
         cxChangedYaoci = savedChangedYaoci
     }
