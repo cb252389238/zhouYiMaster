@@ -1,4 +1,4 @@
-﻿﻿// 全局变量
+﻿// 全局变量
 let currentModule = null;
 let currentGua = null;
 let score = 0;
@@ -10,9 +10,271 @@ function initApp() {
     console.log('八卦数据:', Object.keys(baguaData).length, '卦')
 
     initCharacterPanel()
+    initHomeModuleSettings()
 }
 
 document.addEventListener('DOMContentLoaded', initApp)
+
+// ==================== 首页功能设置 ====================
+const HOME_MODULE_SETTINGS_KEY = 'zhouyi-home-module-settings'
+let homeSettingsDraggingItem = null
+let homeSettingsPointerState = null
+let homeSettingsLongPressTimer = null
+let homeSettingsPlaceholder = null
+
+function getDefaultHomeModules() {
+    return Array.from(document.querySelectorAll('#homeModule .module-card[data-home-module]')).map(card => ({
+        id: card.dataset.homeModule,
+        label: card.querySelector('h2') ? card.querySelector('h2').textContent.trim() : card.dataset.homeModule,
+        visible: true
+    }))
+}
+
+function loadHomeModuleSettings() {
+    const defaultModules = getDefaultHomeModules()
+    let savedModules = []
+
+    try {
+        savedModules = JSON.parse(localStorage.getItem(HOME_MODULE_SETTINGS_KEY) || '[]')
+    } catch (error) {
+        savedModules = []
+    }
+
+    const defaultMap = new Map(defaultModules.map(item => [item.id, item]))
+    const result = []
+
+    savedModules.forEach(item => {
+        if (item && defaultMap.has(item.id)) {
+            const defaultItem = defaultMap.get(item.id)
+            result.push({
+                ...defaultItem,
+                visible: item.visible !== false
+            })
+            defaultMap.delete(item.id)
+        }
+    })
+
+    defaultMap.forEach(item => result.push(item))
+    return result.length ? result : defaultModules
+}
+
+function applyHomeModuleSettings() {
+    const homeModule = document.getElementById('homeModule')
+    if (!homeModule) return
+
+    const settings = loadHomeModuleSettings()
+    const cards = new Map(Array.from(homeModule.querySelectorAll('.module-card[data-home-module]')).map(card => [card.dataset.homeModule, card]))
+
+    settings.forEach(item => {
+        const card = cards.get(item.id)
+        if (!card) return
+        card.style.display = item.visible ? '' : 'none'
+        homeModule.appendChild(card)
+    })
+}
+
+function initHomeModuleSettings() {
+    applyHomeModuleSettings()
+}
+
+function openHomeSettings() {
+    renderHomeSettingsList(loadHomeModuleSettings())
+    document.getElementById('homeSettingsModal').classList.add('active')
+}
+
+function closeHomeSettings() {
+    document.getElementById('homeSettingsModal').classList.remove('active')
+}
+
+function handleHomeSettingsBackdrop(event) {
+    if (event.target && event.target.id === 'homeSettingsModal') {
+        closeHomeSettings()
+    }
+}
+
+function renderHomeSettingsList(settings) {
+    const list = document.getElementById('homeSettingsList')
+    if (!list) return
+
+    list.innerHTML = ''
+    settings.forEach(item => {
+        const row = document.createElement('div')
+        row.className = 'home-settings-item'
+        row.dataset.moduleId = item.id
+        row.innerHTML = `
+            <div class="home-settings-drag" title="拖动排序">☰</div>
+            <label class="home-settings-name">
+                <input type="checkbox" ${item.visible ? 'checked' : ''}>
+                <span>${item.label}</span>
+            </label>
+        `
+        row.addEventListener('pointerdown', handleHomeSettingsPointerDown)
+        list.appendChild(row)
+    })
+}
+
+function handleHomeSettingsPointerDown(event) {
+    if (event.target.closest('input')) return
+
+    const row = event.currentTarget.closest('.home-settings-item')
+    if (!row) return
+    const rect = row.getBoundingClientRect()
+
+    homeSettingsPointerState = {
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        startX: event.clientX,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top,
+        row
+    }
+    clearTimeout(homeSettingsLongPressTimer)
+    homeSettingsLongPressTimer = setTimeout(() => {
+        startHomeSettingsPointerDrag(row)
+    }, 260)
+    document.addEventListener('pointermove', handleHomeSettingsPointerMove)
+    document.addEventListener('pointerup', handleHomeSettingsPointerUp)
+    document.addEventListener('pointercancel', handleHomeSettingsPointerUp)
+}
+
+function startHomeSettingsPointerDrag(row) {
+    if (!homeSettingsPointerState || homeSettingsDraggingItem) return
+
+    const rect = row.getBoundingClientRect()
+    const list = row.parentElement
+
+    homeSettingsPlaceholder = document.createElement('div')
+    homeSettingsPlaceholder.className = 'home-settings-placeholder'
+    homeSettingsPlaceholder.style.height = `${rect.height}px`
+    list.insertBefore(homeSettingsPlaceholder, row.nextSibling)
+
+    homeSettingsDraggingItem = row
+    row.classList.add('dragging')
+    row.style.position = 'fixed'
+    row.style.left = `${rect.left}px`
+    row.style.top = `${rect.top}px`
+    row.style.width = `${rect.width}px`
+    row.style.transform = 'scale(1.035)'
+}
+
+function handleHomeSettingsPointerMove(event) {
+    event.preventDefault()
+    if (!homeSettingsPointerState) return
+
+    const movedX = Math.abs(event.clientX - homeSettingsPointerState.startX)
+    const movedY = Math.abs(event.clientY - homeSettingsPointerState.startY)
+    if (!homeSettingsDraggingItem && (movedX > 8 || movedY > 8)) {
+        clearTimeout(homeSettingsLongPressTimer)
+        return
+    }
+
+    if (!homeSettingsDraggingItem) return
+
+    const list = homeSettingsPlaceholder.parentElement
+    homeSettingsDraggingItem.style.top = `${event.clientY - homeSettingsPointerState.offsetY}px`
+    homeSettingsDraggingItem.style.left = `${event.clientX - homeSettingsPointerState.offsetX}px`
+
+    const target = getHomeSettingsDragTarget(list, event.clientY)
+    if (!target) {
+        if (homeSettingsPlaceholder.nextElementSibling) {
+            moveHomeSettingsPlaceholder(list, null)
+        }
+        return
+    }
+
+    if (target !== homeSettingsPlaceholder) {
+        moveHomeSettingsPlaceholder(list, target)
+    }
+}
+
+function moveHomeSettingsPlaceholder(list, beforeNode) {
+    const items = Array.from(list.querySelectorAll('.home-settings-item'))
+    const firstRects = new Map(items.map(item => [item, item.getBoundingClientRect()]))
+
+    list.insertBefore(homeSettingsPlaceholder, beforeNode)
+
+    items.forEach(item => {
+        if (item === homeSettingsDraggingItem) return
+
+        const firstRect = firstRects.get(item)
+        const lastRect = item.getBoundingClientRect()
+        const deltaY = firstRect.top - lastRect.top
+
+        if (!deltaY) return
+
+        item.classList.remove('sort-animating')
+        item.style.transform = `translateY(${deltaY}px)`
+        item.getBoundingClientRect()
+        item.classList.add('sort-animating')
+        item.style.transform = ''
+
+        item.addEventListener('transitionend', () => {
+            item.classList.remove('sort-animating')
+        }, { once: true })
+    })
+}
+
+function handleHomeSettingsPointerUp(event) {
+    clearTimeout(homeSettingsLongPressTimer)
+    if (homeSettingsDraggingItem) {
+        const list = homeSettingsPlaceholder.parentElement
+        homeSettingsDraggingItem.classList.remove('dragging')
+        homeSettingsDraggingItem.style.position = ''
+        homeSettingsDraggingItem.style.left = ''
+        homeSettingsDraggingItem.style.top = ''
+        homeSettingsDraggingItem.style.width = ''
+        homeSettingsDraggingItem.style.transform = ''
+        list.insertBefore(homeSettingsDraggingItem, homeSettingsPlaceholder)
+        homeSettingsPlaceholder.remove()
+        homeSettingsPlaceholder = null
+    }
+    document.removeEventListener('pointermove', handleHomeSettingsPointerMove)
+    document.removeEventListener('pointerup', handleHomeSettingsPointerUp)
+    document.removeEventListener('pointercancel', handleHomeSettingsPointerUp)
+    homeSettingsDraggingItem = null
+    homeSettingsPointerState = null
+}
+
+function getHomeSettingsDragTarget(list, pointerY) {
+    const items = Array.from(list.children).filter(item => item !== homeSettingsDraggingItem && item !== homeSettingsPlaceholder)
+
+    return items.find(item => {
+        const rect = item.getBoundingClientRect()
+        return pointerY < rect.top + rect.height / 2
+    })
+}
+
+function collectHomeSettingsDraft() {
+    const defaultMap = new Map(getDefaultHomeModules().map(item => [item.id, item]))
+    return Array.from(document.querySelectorAll('#homeSettingsList .home-settings-item')).map(row => {
+        const defaultItem = defaultMap.get(row.dataset.moduleId)
+        return {
+            id: row.dataset.moduleId,
+            label: defaultItem ? defaultItem.label : row.dataset.moduleId,
+            visible: row.querySelector('input[type="checkbox"]').checked
+        }
+    })
+}
+
+function saveHomeSettings() {
+    const settings = collectHomeSettingsDraft()
+    if (!settings.some(item => item.visible)) {
+        showAppToast('至少保留一个首页功能')
+        return
+    }
+
+    localStorage.setItem(HOME_MODULE_SETTINGS_KEY, JSON.stringify(settings.map(item => ({
+        id: item.id,
+        visible: item.visible
+    }))))
+    applyHomeModuleSettings()
+    closeHomeSettings()
+    showAppToast('首页功能设置已保存')
+}
+
+function resetHomeSettingsDraft() {
+    renderHomeSettingsList(getDefaultHomeModules())
+}
 
 // ==================== 应用逻辑 ====================
 

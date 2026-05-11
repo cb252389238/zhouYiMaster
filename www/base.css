@@ -17,9 +17,187 @@ body {
 }
 
 header {
+    position: relative;
     text-align: center;
     color: white;
     margin-bottom: 30px;
+}
+
+.home-settings-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.16);
+    color: white;
+    cursor: pointer;
+    font-size: 1.35em;
+    line-height: 1;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.16);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.home-settings-btn:hover {
+    background: rgba(255,255,255,0.28);
+    transform: rotate(24deg) scale(1.04);
+}
+
+.home-settings-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(18, 24, 52, 0.58);
+}
+
+.home-settings-modal.active {
+    display: flex;
+}
+
+.home-settings-panel {
+    width: min(620px, 100%);
+    max-height: 86vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+}
+
+.home-settings-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid #edf0f7;
+    background: linear-gradient(180deg, #f8f9ff 0%, #fff 100%);
+}
+
+.home-settings-header h2 {
+    color: #2f365f;
+    margin-bottom: 6px;
+    font-size: 1.35em;
+}
+
+.home-settings-header p {
+    color: #667085;
+    line-height: 1.6;
+}
+
+.home-settings-close {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: #eef1ff;
+    color: #5568d3;
+    cursor: pointer;
+    font-size: 1.4em;
+    flex-shrink: 0;
+}
+
+.home-settings-list {
+    display: grid;
+    gap: 10px;
+    padding: 18px 20px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.home-settings-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #e5e8f2;
+    border-radius: 14px;
+    background: #fbfcff;
+    cursor: grab;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.22s ease, background 0.2s ease;
+    touch-action: none;
+}
+
+.home-settings-item.dragging {
+    opacity: 0.92;
+    border-color: #667eea;
+    background: #eef1ff;
+    box-shadow: 0 16px 36px rgba(102,126,234,0.34);
+    transform: scale(1.035);
+    cursor: grabbing;
+    pointer-events: none;
+    z-index: 2;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.home-settings-item.sort-animating {
+    transition: transform 0.22s ease;
+}
+
+.home-settings-placeholder {
+    border: 2px dashed rgba(102,126,234,0.45);
+    border-radius: 14px;
+    background: rgba(102,126,234,0.08);
+    transition: transform 0.22s ease, height 0.18s ease;
+}
+
+.home-settings-drag {
+    color: #9aa3b8;
+    font-size: 1.2em;
+    user-select: none;
+}
+
+.home-settings-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #333;
+    font-weight: bold;
+}
+
+.home-settings-name input {
+    width: 18px;
+    height: 18px;
+    accent-color: #667eea;
+}
+
+.home-settings-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px 20px;
+    border-top: 1px solid #edf0f7;
+}
+
+.home-settings-action-group {
+    display: flex;
+    gap: 10px;
+}
+
+.home-settings-actions button {
+    border: none;
+    border-radius: 999px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.home-settings-reset,
+.home-settings-cancel {
+    background: #f2f4f8;
+    color: #475467;
+}
+
+.home-settings-save {
+    background: #667eea;
+    color: white;
 }
 
 header h1 {
@@ -63,6 +241,33 @@ header p {
 .module-card p {
     color: #666;
     line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .home-settings-btn {
+        top: -4px;
+        right: 0;
+        width: 40px;
+        height: 40px;
+    }
+
+    .home-settings-modal {
+        padding: 12px;
+    }
+
+    .home-settings-header,
+    .home-settings-actions {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .home-settings-actions {
+        flex-direction: column;
+    }
+
+    .home-settings-action-group {
+        justify-content: flex-end;
+    }
 }
 
 .practice-area {

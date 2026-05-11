@@ -240,41 +240,62 @@
 <body>
     <div class="container">
         <header>
+            <button class="home-settings-btn" type="button" onclick="openHomeSettings()" aria-label="首页功能设置" title="首页功能设置">⚙</button>
             <h1>☯ 易师 ☯</h1>
             <p>易经学习与练习工具</p>
         </header>
 
+        <div id="homeSettingsModal" class="home-settings-modal" onclick="handleHomeSettingsBackdrop(event)">
+            <div class="home-settings-panel" role="dialog" aria-modal="true" aria-labelledby="homeSettingsTitle">
+                <div class="home-settings-header">
+                    <div>
+                        <h2 id="homeSettingsTitle">首页功能设置</h2>
+                        <p>拖动调整顺序，勾选控制首页是否显示。</p>
+                    </div>
+                    <button class="home-settings-close" type="button" onclick="closeHomeSettings()" aria-label="关闭设置">×</button>
+                </div>
+                <div id="homeSettingsList" class="home-settings-list"></div>
+                <div class="home-settings-actions">
+                    <button class="home-settings-reset" type="button" onclick="resetHomeSettingsDraft()">恢复默认</button>
+                    <div class="home-settings-action-group">
+                        <button class="home-settings-cancel" type="button" onclick="closeHomeSettings()">取消</button>
+                        <button class="home-settings-save" type="button" onclick="saveHomeSettings()">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 首页模块选择 -->
         <div id="homeModule" class="module-grid">
-            <div class="module-card" onclick="showModule('meihua')">
+            <div class="module-card" data-home-module="meihua" onclick="showModule('meihua')">
                 <h2>🌸 梅花易数</h2>
                 <p>以数起卦，万物皆可占</p>
             </div>
-            <div class="module-card" onclick="showModule('huafu')">
+            <div class="module-card" data-home-module="huafu" onclick="showModule('huafu')">
                 <h2>🖌️ 画符起卦</h2>
                 <p>以符入卦，心诚则灵</p>
             </div>
-            <div class="module-card" onclick="showModule('liuyao')">
+            <div class="module-card" data-home-module="liuyao" onclick="showModule('liuyao')">
                 <h2>🪙 六爻起卦</h2>
                 <p>传统金钱起卦法，投掷六次铜钱得卦</p>
             </div>
-            <div class="module-card" onclick="showModule('guaxiang')">
+            <div class="module-card" data-home-module="guaxiang" onclick="showModule('guaxiang')">
                 <h2>📊 卦象练习</h2>
                 <p>随机显示卦象图，从三个选项中选择正确的卦名</p>
             </div>
-            <div class="module-card" onclick="showModule('guaming')">
+            <div class="module-card" data-home-module="guaming" onclick="showModule('guaming')">
                 <h2>📝 卦名记忆</h2>
                 <p>根据部分卦名，选择正确的八卦组成</p>
             </div>
-            <div class="module-card" onclick="showModule('yaoci')">
+            <div class="module-card" data-home-module="yaoci" onclick="showModule('yaoci')">
                 <h2>📖 爻辞卦辞练习</h2>
                 <p>选择正确的卦辞和爻辞，深入学习经文</p>
             </div>
-            <div class="module-card" onclick="showModule('chaxun')">
+            <div class="module-card" data-home-module="chaxun" onclick="showModule('chaxun')">
                 <h2>📚 六十四卦查询</h2>
                 <p>自由选择八卦组成六十四卦，查看卦象、卦辞、爻辞及变卦</p>
             </div>
-            <div class="module-card" onclick="showModule('yice')">
+            <div class="module-card" data-home-module="yice" onclick="showModule('yice')">
                 <h2>🎯 易策</h2>
                 <p>记录占卜卦象，追踪预测结果，记录复盘总结</p>
             </div>
