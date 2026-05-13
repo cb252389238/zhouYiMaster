@@ -472,15 +472,38 @@ header p {
 }
 
 .related-gua-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin: 20px 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 116px));
+    justify-content: center;
+    gap: 8px;
+    margin: 14px 0 18px;
 }
 
 .related-gua-actions .option-btn {
-    width: min(180px, 100%);
+    width: 100%;
+    min-height: 34px;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 0.88em;
+    box-shadow: 0 6px 14px rgba(31, 41, 55, 0.12);
+}
+
+.related-gua-actions #cxChangeGuaBtn {
+    background: #ef4444;
+}
+
+.related-gua-actions #cxHuguaBtn {
+    background: #3b82f6;
+}
+
+.related-gua-actions #cxZongguaBtn {
+    background: #8b5cf6;
+}
+
+.related-gua-actions #cxCuoguaBtn {
+    background: #f59e0b;
 }
 
 .related-gua-actions .option-btn:disabled,

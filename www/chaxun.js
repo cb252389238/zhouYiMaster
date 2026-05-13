@@ -651,7 +651,7 @@ function updateCxChangeGuaButton() {
         if (cxChangedYaoci.length > 0) {
             const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci)
             if (bianGua) {
-                changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`
+                changeGuaBtn.textContent = `变:${bianGua.shortName}`
                 changeGuaBtn.style.display = 'inline-block'
                 updateChangeGuaButtonState(changeGuaBtn, cxCurrentGua, bianGua)
             }
@@ -838,19 +838,19 @@ function updateGuaButtons(gua) {
     const cuoguaBtn = document.getElementById('cxCuoguaBtn')
 
     if (huguaBtn) {
-        huguaBtn.textContent = `互卦：${hugua.shortName}卦`
+        huguaBtn.textContent = `互:${hugua.shortName}`
         huguaBtn.dataset.guaName = hugua.name
         updateRelatedGuaButtonState(huguaBtn, gua, hugua)
     }
 
     if (zongguaBtn) {
-        zongguaBtn.textContent = `综卦：${zonggua.shortName}卦`
+        zongguaBtn.textContent = `综:${zonggua.shortName}`
         zongguaBtn.dataset.guaName = zonggua.name
         updateRelatedGuaButtonState(zongguaBtn, gua, zonggua)
     }
 
     if (cuoguaBtn) {
-        cuoguaBtn.textContent = `错卦：${cuogua.shortName}卦`
+        cuoguaBtn.textContent = `错:${cuogua.shortName}`
         cuoguaBtn.dataset.guaName = cuogua.name
         updateRelatedGuaButtonState(cuoguaBtn, gua, cuogua)
     }
