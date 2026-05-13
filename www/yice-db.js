@@ -38,6 +38,7 @@ async function initYiceDB() {
                     createTime TEXT,
                     updateTime TEXT,
                     accuracy INTEGER,
+                    verifyStatus TEXT,
                     replays TEXT
                 );
 
@@ -52,6 +53,11 @@ async function initYiceDB() {
                 );
             `
         })
+
+        await sqlite.execute({
+            database: DB_NAME,
+            statements: "ALTER TABLE yice_records ADD COLUMN verifyStatus TEXT DEFAULT 'pending';"
+        }).catch(() => {})
 
         yiceDB = sqlite
         dbInitialized = true
@@ -94,9 +100,10 @@ function escapeSqlString(value) {
 
 function buildYiceRecordInsertSql(record) {
     const accuracy = record.accuracy ?? 70
+    const verifyStatus = normalizeYiceVerifyStatus(record.verifyStatus)
 
-    return "INSERT INTO yice_records (id, category, content, person, upper, lower, dongyao, analysis, createTime, updateTime, accuracy, replays) VALUES ('" +
-        escapeSqlString(record.id) + "', '" + escapeSqlString(record.category) + "', '" + escapeSqlString(record.content) + "', '" + escapeSqlString(record.person) + "', '" + escapeSqlString(record.upper) + "', '" + escapeSqlString(record.lower) + "', '" + escapeSqlString(JSON.stringify(record.dongyao || [])) + "', '" + escapeSqlString(record.analysis) + "', '" + escapeSqlString(record.createTime) + "', '" + escapeSqlString(record.updateTime) + "', " + accuracy + ", '" + escapeSqlString(JSON.stringify(record.replays || [])) + "')"
+    return "INSERT INTO yice_records (id, category, content, person, upper, lower, dongyao, analysis, createTime, updateTime, accuracy, verifyStatus, replays) VALUES ('" +
+        escapeSqlString(record.id) + "', '" + escapeSqlString(record.category) + "', '" + escapeSqlString(record.content) + "', '" + escapeSqlString(record.person) + "', '" + escapeSqlString(record.upper) + "', '" + escapeSqlString(record.lower) + "', '" + escapeSqlString(JSON.stringify(record.dongyao || [])) + "', '" + escapeSqlString(record.analysis) + "', '" + escapeSqlString(record.createTime) + "', '" + escapeSqlString(record.updateTime) + "', " + accuracy + ", '" + escapeSqlString(verifyStatus) + "', '" + escapeSqlString(JSON.stringify(record.replays || [])) + "')"
 }
 
 async function saveYiceDataToDB() {
@@ -142,6 +149,7 @@ async function updateYiceRecordInDB(record) {
     await initYiceDB()
 
     const accuracy = record.accuracy ?? 70
+    const verifyStatus = normalizeYiceVerifyStatus(record.verifyStatus)
 
     const sql = "UPDATE yice_records SET " +
         "category='" + escapeSqlString(record.category) + "', " +
@@ -154,6 +162,7 @@ async function updateYiceRecordInDB(record) {
         "createTime='" + escapeSqlString(record.createTime) + "', " +
         "updateTime='" + escapeSqlString(record.updateTime) + "', " +
         "accuracy=" + accuracy + ", " +
+        "verifyStatus='" + escapeSqlString(verifyStatus) + "', " +
         "replays='" + escapeSqlString(JSON.stringify(record.replays || [])) + "' " +
         "WHERE id='" + escapeSqlString(record.id) + "'"
 

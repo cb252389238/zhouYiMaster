@@ -51,6 +51,28 @@ function normalizeDongyaoList(value) {
     return [...new Set(list)].sort((a, b) => a - b)
 }
 
+function normalizeYiceVerifyStatus(value) {
+    return ['pending', 'fulfilled', 'wrong'].includes(value) ? value : 'pending'
+}
+
+function getYiceVerifyStatusLabel(value) {
+    const labels = {
+        pending: '待',
+        fulfilled: '应',
+        wrong: '失'
+    }
+    return labels[normalizeYiceVerifyStatus(value)]
+}
+
+function getYiceVerifyStatusText(value) {
+    const labels = {
+        pending: '待验',
+        fulfilled: '应验',
+        wrong: '失误'
+    }
+    return labels[normalizeYiceVerifyStatus(value)]
+}
+
 function normalizeYiceReplay(replay) {
     return {
         id: normalizeYiceText(replay?.id) || Date.now().toString(),
@@ -76,6 +98,7 @@ function normalizeYiceRecord(record) {
         createTime: normalizeYiceDate(record?.createTime),
         updateTime: normalizeYiceDate(record?.updateTime, normalizeYiceDate(record?.createTime)),
         accuracy: Math.max(0, Math.min(100, normalizedAccuracy)),
+        verifyStatus: normalizeYiceVerifyStatus(record?.verifyStatus),
         replays: parseYiceJsonArray(record?.replays)
             .map(normalizeYiceReplay)
             .filter(item => item.content || item.diff)

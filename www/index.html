@@ -690,20 +690,30 @@
                     <span>▼</span>
                 </summary>
                 <div style="padding: 20px;">
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <div style="margin-bottom: 10px;">
                         <input type="text" id="ycSearchInput" placeholder="搜索关键词、卦象、测算人、分类..." 
-                               style="flex: 1; min-width: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
-                        <select id="ycSearchCategory" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <select id="ycSearchCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
                             <option value="">全部分类</option>
                         </select>
                     </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px;">
-                        <span style="color: #666;">时间范围：</span>
-                        <input type="date" id="ycSearchStartDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                        <span style="color: #666;">至</span>
-                        <input type="date" id="ycSearchEndDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                        <button class="option-btn" onclick="searchYice()">搜索</button>
-                        <button class="option-btn" onclick="clearYiceSearch()">清空</button>
+                    <div style="margin-bottom: 10px;">
+                        <select id="ycSearchVerifyStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            <option value="">全部状态</option>
+                            <option value="pending">待验</option>
+                            <option value="fulfilled">应验</option>
+                            <option value="wrong">失误</option>
+                        </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px;">
+                        <input type="date" id="ycSearchStartDate" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <input type="date" id="ycSearchEndDate" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+                        <button class="option-btn" onclick="searchYice()" style="background: #667eea;">搜索</button>
+                        <button class="option-btn" onclick="clearYiceSearch()" style="background: #94a3b8;">清空</button>
                     </div>
                 </div>
             </details>
@@ -744,12 +754,13 @@
                     </select>
                 </div>
                 
-                <!-- 准确度选择 -->
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">准确度：<span id="ycAddAccuracyValue" style="color: #3498db; font-weight: bold;">70%</span></label>
-                    <input type="range" id="ycAddAccuracy" min="0" max="100" step="5" value="70" 
-                           oninput="document.getElementById('ycAddAccuracyValue').textContent = this.value + '%'; 
-                                   this.style.background = this.value <= 30 ? '#e74c3c' : (this.value <= 60 ? '#f39c12' : (this.value <= 80 ? '#3498db' : '#27ae60'));">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">状态：</label>
+                    <select id="ycAddVerifyStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                        <option value="pending">待验</option>
+                        <option value="fulfilled">应验</option>
+                        <option value="wrong">失误</option>
+                    </select>
                 </div>
                 
                 <!-- 测算内容 -->
@@ -861,10 +872,12 @@
                 </div>
                 
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">准确度：<span id="ycEditAccuracyValue" style="color: #3498db; font-weight: bold;">70%</span></label>
-                    <input type="range" id="ycEditAccuracy" min="0" max="100" step="5" value="70" 
-                           oninput="document.getElementById('ycEditAccuracyValue').textContent = this.value + '%'; 
-                                   this.style.background = this.value <= 30 ? '#e74c3c' : (this.value <= 60 ? '#f39c12' : (this.value <= 80 ? '#3498db' : '#27ae60'));">
+                    <label style="display: block; margin-bottom: 10px; font-size: 1.1em;">状态：</label>
+                    <select id="ycEditVerifyStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                        <option value="pending">待验</option>
+                        <option value="fulfilled">应验</option>
+                        <option value="wrong">失误</option>
+                    </select>
                 </div>
                 
                 <div style="margin-bottom: 20px;">

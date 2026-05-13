@@ -245,7 +245,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
+        gap: 10px;
+        margin-bottom: 4px;
     }
 
     .yc-record-time {
@@ -262,8 +263,12 @@
     }
 
     .yc-record-content {
-        margin-bottom: 10px;
+        margin-bottom: 0;
         line-height: 1.6;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .yc-record-person {

@@ -62,34 +62,39 @@ function createYiceRecordCard(record) {
     card.ontouchend = () => endLongPress()
     card.ontouchmove = () => cancelLongPress()
 
-    const guaName = getGuaNameBy上下(record.upper, record.lower)
+    const guaName = getShortYiceGuaName(record)
     const time = new Date(record.createTime).toLocaleDateString('zh-CN')
-    const accuracy = record.accuracy ?? 70
-    const accuracyClass = accuracy <= 30 ? 'low' : (accuracy <= 60 ? 'medium' : (accuracy <= 80 ? 'good' : 'high'))
-    const accuracyColor = accuracy <= 30 ? '#e74c3c' : (accuracy <= 60 ? '#f39c12' : (accuracy <= 80 ? '#3498db' : '#27ae60'))
 
     const topRow = document.createElement('div')
     topRow.style.display = 'flex'
     topRow.style.alignItems = 'center'
+    topRow.style.gap = '8px'
     topRow.style.marginBottom = '8px'
 
-    const symbolWrapper = document.createElement('div')
-    symbolWrapper.innerHTML = getGuaSymbolHtml(record.upper, record.lower, 36, record.dongyao || [])
-    topRow.appendChild(symbolWrapper)
+    const contentDiv = document.createElement('div')
+    contentDiv.className = 'yc-record-content'
+    contentDiv.style.flex = '1'
+    contentDiv.style.minWidth = '0'
+    contentDiv.textContent = record.content || '无测算内容'
+    topRow.appendChild(contentDiv)
 
-    const nameSpan = document.createElement('span')
-    nameSpan.style.fontSize = '1.2em'
-    nameSpan.style.fontWeight = 'bold'
-    nameSpan.style.marginLeft = '10px'
-    nameSpan.textContent = guaName
-    topRow.appendChild(nameSpan)
+    const badgeWrap = document.createElement('div')
+    badgeWrap.style.display = 'flex'
+    badgeWrap.style.alignItems = 'center'
+    badgeWrap.style.justifyContent = 'flex-end'
+    badgeWrap.style.gap = '6px'
+    badgeWrap.style.flexShrink = '0'
 
-    const accuracySpan = document.createElement('span')
-    accuracySpan.className = 'accuracy-badge ' + accuracyClass
-    accuracySpan.style.marginLeft = 'auto'
-    accuracySpan.style.color = accuracyColor
-    accuracySpan.textContent = accuracy + '%'
-    topRow.appendChild(accuracySpan)
+    const verifySpan = document.createElement('span')
+    verifySpan.className = `yc-verify-badge ${normalizeYiceVerifyStatus(record.verifyStatus)}`
+    verifySpan.textContent = getYiceVerifyStatusLabel(record.verifyStatus)
+    badgeWrap.appendChild(verifySpan)
+
+    const categorySpan = document.createElement('span')
+    categorySpan.className = 'yc-record-category'
+    categorySpan.textContent = record.category || '未分类'
+    badgeWrap.appendChild(categorySpan)
+    topRow.appendChild(badgeWrap)
 
     const header = document.createElement('div')
     header.className = 'yc-record-header'
@@ -99,14 +104,12 @@ function createYiceRecordCard(record) {
     timeSpan.textContent = time
     header.appendChild(timeSpan)
 
-    const categorySpan = document.createElement('span')
-    categorySpan.className = 'yc-record-category'
-    categorySpan.textContent = record.category || '未分类'
-    header.appendChild(categorySpan)
-
-    const contentDiv = document.createElement('div')
-    contentDiv.className = 'yc-record-content'
-    contentDiv.textContent = record.content || '无测算内容'
+    const nameSpan = document.createElement('span')
+    nameSpan.style.fontWeight = 'bold'
+    nameSpan.style.color = '#667eea'
+    nameSpan.style.marginLeft = 'auto'
+    nameSpan.textContent = guaName
+    header.appendChild(nameSpan)
 
     const tip = document.createElement('div')
     tip.style.color = '#999'
@@ -114,7 +117,7 @@ function createYiceRecordCard(record) {
     tip.style.marginTop = '4px'
     tip.textContent = '长按删除'
 
-    card.append(topRow, header, contentDiv, tip)
+    card.append(topRow, header, tip)
     return card
 }
 
@@ -122,6 +125,7 @@ async function renderYiceList(isLoadMore = false) {
     let records = [...ycRecords]
     const searchKeyword = document.getElementById('ycSearchInput')?.value || ''
     const searchCategory = document.getElementById('ycSearchCategory')?.value || ''
+    const searchVerifyStatus = document.getElementById('ycSearchVerifyStatus')?.value || ''
     const startDate = document.getElementById('ycSearchStartDate')?.value || ''
     const endDate = document.getElementById('ycSearchEndDate')?.value || ''
 
@@ -138,6 +142,10 @@ async function renderYiceList(isLoadMore = false) {
 
     if (searchCategory) {
         records = records.filter(r => r.category === searchCategory)
+    }
+
+    if (searchVerifyStatus) {
+        records = records.filter(r => normalizeYiceVerifyStatus(r.verifyStatus) === searchVerifyStatus)
     }
 
     if (startDate || endDate) {
@@ -242,6 +250,8 @@ function clearYiceSearch() {
     document.getElementById('ycSearchInput').value = ''
     const searchCat = document.getElementById('ycSearchCategory')
     if (searchCat) searchCat.value = ''
+    const searchVerifyStatus = document.getElementById('ycSearchVerifyStatus')
+    if (searchVerifyStatus) searchVerifyStatus.value = ''
     const startDate = document.getElementById('ycSearchStartDate')
     const endDate = document.getElementById('ycSearchEndDate')
     if (startDate) startDate.value = ''
@@ -255,22 +265,61 @@ function toggleYcActions() {
     const btn = document.getElementById('ycFloatingBtn')
     if (menu.style.display === 'none') {
         menu.style.display = 'block'
-        btn.style.transform = 'rotate(45deg)'
+        btn.classList.add('active')
+        positionYcActionMenu()
     } else {
         menu.style.display = 'none'
-        btn.style.transform = 'rotate(0)'
+        btn.classList.remove('active')
     }
 }
 
+function getShortYiceGuaName(record) {
+    const gua = liushisiGua.find(item => item.upper === record.upper && item.lower === record.lower)
+    if (gua && gua.shortName) return gua.shortName
+
+    const fullName = getGuaNameBy上下(record.upper, record.lower)
+    if (fullName.includes('为')) return fullName.split('为')[0]
+    return fullName.slice(-2)
+}
+
+function closeYcActions() {
+    const menu = document.getElementById('ycActionMenu')
+    const btn = document.getElementById('ycFloatingBtn')
+    if (menu) menu.style.display = 'none'
+    if (btn) btn.classList.remove('active')
+}
+
+function positionYcActionMenu() {
+    const menu = document.getElementById('ycActionMenu')
+    const btn = document.getElementById('ycFloatingBtn')
+    if (!menu || !btn || menu.style.display === 'none') return
+
+    const rect = btn.getBoundingClientRect()
+    const menuWidth = menu.offsetWidth || 160
+    const menuHeight = menu.offsetHeight || 220
+    const gap = 10
+    let left = rect.left
+    let top = rect.top - menuHeight - gap
+
+    if (top < 8) top = rect.bottom + gap
+    if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8
+    if (left < 8) left = 8
+
+    menu.style.left = `${left}px`
+    menu.style.top = `${top}px`
+    menu.style.right = 'auto'
+    menu.style.bottom = 'auto'
+}
+
 function showAddYice(keepData = false) {
-    document.getElementById('ycActionMenu').style.display = 'none'
-    document.getElementById('ycFloatingBtn').style.transform = 'rotate(0)'
+    closeYcActions()
 
     if (!keepData) {
         document.getElementById('ycAddCategory').value = ''
         document.getElementById('ycAddContent').value = ''
         document.getElementById('ycAddPerson').value = ''
         document.getElementById('ycAddAnalysis').value = ''
+        document.getElementById('ycAddVerifyStatus').value = 'pending'
         document.getElementById('ycSelectedGuaText').style.display = 'block'
         document.getElementById('ycSelectedGuaDisplay').style.display = 'none'
         document.getElementById('ycDongyaoSelect').style.display = 'none'
@@ -449,11 +498,6 @@ function closeGuaModal() {
     document.getElementById('ycConfirmGuaBtn').style.display = 'none'
 }
 
-function getAccuracyValue(inputId) {
-    const accuracy = parseInt(document.getElementById(inputId).value, 10)
-    return Number.isNaN(accuracy) ? 70 : accuracy
-}
-
 async function saveYiceRecord() {
     await runYiceAction('saveYiceRecord', async () => {
         if (!ycSelectedUpper || !ycSelectedLower) {
@@ -472,7 +516,7 @@ async function saveYiceRecord() {
             analysis: document.getElementById('ycAddAnalysis').value,
             createTime: document.getElementById('ycAddCreateTime').value,
             updateTime: new Date().toISOString(),
-            accuracy: getAccuracyValue('ycAddAccuracy'),
+            verifyStatus: document.getElementById('ycAddVerifyStatus').value,
             replays: []
         })
 
@@ -536,8 +580,7 @@ function createCategoryItem(cat, index) {
 }
 
 function showCategoryManage() {
-    document.getElementById('ycActionMenu').style.display = 'none'
-    document.getElementById('ycFloatingBtn').style.transform = 'rotate(0)'
+    closeYcActions()
     renderCategoryList()
     document.getElementById('yiceModule').classList.remove('active')
     document.getElementById('yiceCategoryModule').classList.add('active')
@@ -722,6 +765,11 @@ function buildYiceDetailContent(record) {
     categoryNode.textContent = normalizeYiceText(record.category) || '未分类'
     wrapper.appendChild(createYiceDetailSection('分类', categoryNode))
 
+    const verifyNode = document.createElement('span')
+    verifyNode.className = `yc-verify-badge ${normalizeYiceVerifyStatus(record.verifyStatus)}`
+    verifyNode.textContent = getYiceVerifyStatusLabel(record.verifyStatus)
+    wrapper.appendChild(createYiceDetailSection('状态', verifyNode))
+
     const contentNode = document.createElement('span')
     contentNode.textContent = normalizeYiceText(record.content) || '无'
     wrapper.appendChild(createYiceDetailSection('测算内容', contentNode))
@@ -804,12 +852,7 @@ function editYiceRecord() {
     document.getElementById('ycEditContent').value = ycCurrentRecord.content || ''
     document.getElementById('ycEditPerson').value = ycCurrentRecord.person || ''
     document.getElementById('ycEditAnalysis').value = ycCurrentRecord.analysis || ''
-
-    const accuracy = ycCurrentRecord.accuracy ?? 70
-    const accuracyInput = document.getElementById('ycEditAccuracy')
-    accuracyInput.value = accuracy
-    document.getElementById('ycEditAccuracyValue').textContent = accuracy + '%'
-    accuracyInput.style.background = accuracy <= 30 ? '#e74c3c' : (accuracy <= 60 ? '#f39c12' : (accuracy <= 80 ? '#3498db' : '#27ae60'))
+    document.getElementById('ycEditVerifyStatus').value = normalizeYiceVerifyStatus(ycCurrentRecord.verifyStatus)
 
     ycEditUpper = ycCurrentRecord.upper
     ycEditLower = ycCurrentRecord.lower
@@ -881,7 +924,7 @@ async function updateYiceRecord() {
             lower: ycEditLower,
             dongyao: [...ycEditDongyao],
             updateTime: new Date().toISOString(),
-            accuracy: getAccuracyValue('ycEditAccuracy')
+            verifyStatus: document.getElementById('ycEditVerifyStatus').value
         })
 
         await queueYiceWrite(async () => {

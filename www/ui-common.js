@@ -61,6 +61,7 @@ function showAppConfirm(message, onConfirm, onCancel) {
     content.appendChild(document.createElement('br'))
 
     const buttonRow = document.createElement('div')
+    buttonRow.className = 'toast-confirm-actions'
     buttonRow.style.display = 'flex'
     buttonRow.style.gap = '10px'
     buttonRow.style.justifyContent = 'center'
