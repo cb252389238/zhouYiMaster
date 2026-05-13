@@ -213,8 +213,7 @@ function refreshCxNajiaBySelectedTime() {
 
     const cxSymbolEl = document.getElementById('cxSymbol')
     if (cxSymbolEl) {
-        cxSymbolEl.innerHTML = ''
-        cxSymbolEl.appendChild(createCxNajiaGuaElement(cxCurrentGua, cxChangedYaoci || []))
+        renderCxNajiaGuaSymbol(cxCurrentGua)
     }
 
     renderCxNajiaInfo(cxCurrentGua)
@@ -401,6 +400,14 @@ function createCxNajiaGuaElement(gua, changedIndices = []) {
 
     container.append(leftList, guaElement, rightList)
     return container
+}
+
+function renderCxNajiaGuaSymbol(gua) {
+    const cxSymbolEl = document.getElementById('cxSymbol')
+    if (!cxSymbolEl) return
+
+    cxSymbolEl.innerHTML = ''
+    cxSymbolEl.appendChild(createCxNajiaGuaElement(gua, cxChangedYaoci || []))
 }
 
 function renderCxNajiaInfo(gua) {

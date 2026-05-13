@@ -527,6 +527,46 @@ function buildYaociItem(yaoci, yaoNum) {
     return yaoItem
 }
 
+function bindCxSymbolYaoClick() {
+    const cxSymbolEl = document.getElementById('cxSymbol')
+    if (!cxSymbolEl || cxSymbolEl.dataset.yaoClickBound === 'true') return
+
+    cxSymbolEl.addEventListener('click', event => {
+        const yaoLine = event.target.closest('.yao-line[data-yao-num]')
+        if (!yaoLine || !cxSymbolEl.contains(yaoLine)) return
+
+
+        toggleYaociChange(Number(yaoLine.dataset.yaoNum))
+    })
+    cxSymbolEl.dataset.yaoClickBound = 'true'
+}
+
+function updateCxChangeGuaButton() {
+    const changeGuaBtn = document.getElementById('cxChangeGuaBtn')
+    if (!changeGuaBtn) return
+
+    if (cxChangedYaoci.length > 0) {
+        const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci)
+        if (bianGua) {
+            changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`
+            changeGuaBtn.style.display = 'inline-block'
+            updateChangeGuaButtonState(changeGuaBtn, cxCurrentGua, bianGua)
+        }
+    } else {
+        changeGuaBtn.style.display = 'none'
+        changeGuaBtn.disabled = false
+        changeGuaBtn.classList.remove('disabled')
+        changeGuaBtn.title = ''
+    }
+}
+
+function updateCxYaociChangeState(yaoNum, isChanged) {
+    const yaoItem = document.querySelector(`.yaoci-item[data-yao-num="${yaoNum}"]`)
+    if (yaoItem) {
+        yaoItem.classList.toggle('changed', isChanged)
+    }
+}
+
 function showGuaDetail(gua, isRootGua = false) {
     cxCurrentGua = gua
     bindCxInterpretationModalEvents()
@@ -602,9 +642,8 @@ function showGuaDetail(gua, isRootGua = false) {
     document.getElementById('cxBaguaSelect').style.display = 'none'
     document.getElementById('cxGuaDetail').style.display = 'block'
 
-    const cxSymbolEl = document.getElementById('cxSymbol')
-    cxSymbolEl.innerHTML = ''
-    cxSymbolEl.appendChild(createCxNajiaGuaElement(gua, cxChangedYaoci || []))
+    bindCxSymbolYaoClick()
+    renderCxNajiaGuaSymbol(gua)
     renderCxNajiaInfo(gua)
 
     const upperElement = baguaElement[gua.upper]
@@ -632,16 +671,11 @@ function showGuaDetail(gua, isRootGua = false) {
         relatedGuaActions.style.display = isRootGua ? 'flex' : 'none'
     }
 
-    const changeGuaBtn = document.getElementById('cxChangeGuaBtn')
-    if (changeGuaBtn) {
-        if (isRootGua && cxChangedYaoci.length > 0) {
-            const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci)
-            if (bianGua) {
-                changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`
-                changeGuaBtn.style.display = 'inline-block'
-                updateChangeGuaButtonState(changeGuaBtn, cxCurrentGua, bianGua)
-            }
-        } else {
+    if (isRootGua) {
+        updateCxChangeGuaButton()
+    } else {
+        const changeGuaBtn = document.getElementById('cxChangeGuaBtn')
+        if (changeGuaBtn) {
             changeGuaBtn.style.display = 'none'
             changeGuaBtn.disabled = false
             changeGuaBtn.classList.remove('disabled')
@@ -673,34 +707,17 @@ function toggleYaociChange(yaoNum) {
     }
 
     const index = cxChangedYaoci.indexOf(yaoNum)
-    const yaoItem = document.querySelector(`.yaoci-item[data-yao-num="${yaoNum}"]`)
 
     if (index > -1) {
         cxChangedYaoci.splice(index, 1)
-        yaoItem.classList.remove('changed')
+        updateCxYaociChangeState(yaoNum, false)
     } else {
         cxChangedYaoci.push(yaoNum)
-        yaoItem.classList.add('changed')
+        updateCxYaociChangeState(yaoNum, true)
     }
 
-    const changeGuaBtn = document.getElementById('cxChangeGuaBtn')
-    if (cxChangedYaoci.length > 0) {
-        const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci)
-        if (bianGua) {
-            changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`
-            changeGuaBtn.style.display = 'inline-block'
-            updateChangeGuaButtonState(changeGuaBtn, cxCurrentGua, bianGua)
-        }
-    } else {
-        changeGuaBtn.style.display = 'none'
-        changeGuaBtn.disabled = false
-        changeGuaBtn.classList.remove('disabled')
-        changeGuaBtn.title = ''
-    }
-
-    const cxSymbolEl = document.getElementById('cxSymbol')
-    cxSymbolEl.innerHTML = ''
-    cxSymbolEl.appendChild(createCxNajiaGuaElement(cxCurrentGua, cxChangedYaoci))
+    updateCxChangeGuaButton()
+    renderCxNajiaGuaSymbol(cxCurrentGua)
     renderCxNajiaInfo(cxCurrentGua)
 }
 

@@ -11,6 +11,12 @@ function createYaoElement(isYang, isOld = false) {
     return div
 }
 
+function createIndexedYaoElement(isYang, isOld, yaoNum) {
+    const yaoElement = createYaoElement(isYang, isOld)
+    yaoElement.dataset.yaoNum = yaoNum
+    return yaoElement
+}
+
 function createGuaElement(upper, lower, changedIndices = []) {
     const container = document.createElement('div')
     container.className = 'gua-symbol-container'
@@ -23,14 +29,14 @@ function createGuaElement(upper, lower, changedIndices = []) {
         const isYang = lowerYao[i] === 1
         const yaoNum = i + 1
         const isOld = changedIndices.includes(yaoNum)
-        container.appendChild(createYaoElement(isYang, isOld))
+        container.appendChild(createIndexedYaoElement(isYang, isOld, yaoNum))
     }
 
     for (let i = 0; i <= 2; i++) {
         const isYang = upperYao[i] === 1
         const yaoNum = 4 + i
         const isOld = changedIndices.includes(yaoNum)
-        container.appendChild(createYaoElement(isYang, isOld))
+        container.appendChild(createIndexedYaoElement(isYang, isOld, yaoNum))
     }
 
     return container
