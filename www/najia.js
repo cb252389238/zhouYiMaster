@@ -15,6 +15,9 @@ const zhiWuxing = {
     '午': '火', '未': '土', '申': '金', '酉': '金', '戌': '土', '亥': '水'
 }
 
+const zhiLiuhePairs = new Set(['子丑', '寅亥', '卯戌', '辰酉', '巳申', '午未'])
+const zhiLiuchongPairs = new Set(['子午', '丑未', '寅申', '卯酉', '辰戌', '巳亥'])
+
 const baguaGongWuxing = {
     '乾': '金', '兑': '金', '离': '火', '震': '木',
     '巽': '木', '坎': '水', '艮': '土', '坤': '土'
@@ -327,6 +330,27 @@ function getWuxingStateByMonthBranch(monthBranch) {
     }
 }
 
+function hasZhiRelation(firstZhi, secondZhi, relationPairs) {
+    return relationPairs.has(`${firstZhi}${secondZhi}`) || relationPairs.has(`${secondZhi}${firstZhi}`)
+}
+
+function getGuaLiuheLiuchong(gua) {
+    const lowerNajia = baguaNajia[gua.lower]?.inner || []
+    const upperNajia = baguaNajia[gua.upper]?.outer || []
+    const allZhi = [...lowerNajia, ...upperNajia].map(item => item[1])
+    const yaoPairs = [[0, 3], [1, 4], [2, 5]]
+
+    if (yaoPairs.every(([first, second]) => hasZhiRelation(allZhi[first], allZhi[second], zhiLiuhePairs))) {
+        return '六合'
+    }
+
+    if (yaoPairs.every(([first, second]) => hasZhiRelation(allZhi[first], allZhi[second], zhiLiuchongPairs))) {
+        return '六冲'
+    }
+
+    return ''
+}
+
 function formatCxCurrentTime(date) {
     return date.toLocaleString('zh-CN', {
         year: 'numeric', month: '2-digit', day: '2-digit',
@@ -390,6 +414,7 @@ function renderCxNajiaInfo(gua) {
     const state = getWuxingStateByMonthBranch(monthBranch)
     const gongInfo = getGuaGongInfo(gua)
     const xunKong = getXunKong(ganzhiTime.day)
+    const guaRelation = getGuaLiuheLiuchong(gua)
 
     timeEl.innerHTML = `
         <div class="cx-ganzhi-now">测算时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
@@ -402,6 +427,7 @@ function renderCxNajiaInfo(gua) {
             <span class="cx-ganzhi-pill-gong">${gongInfo.gong}宫${gongInfo.element}</span>
             <span class="cx-ganzhi-pill-stage">${gongInfo.stage}</span>
             <span class="cx-ganzhi-pill-xunkong">旬空：${xunKong}</span>
+            ${guaRelation ? `<span class="cx-ganzhi-pill-relation">${guaRelation}</span>` : ''}
         </div>
     `
 
