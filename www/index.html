@@ -924,6 +924,37 @@
         </div>
     </div>
 
+    <aside id="cxToolSidebar" class="cx-tool-sidebar cx-tool-dock-left" aria-label="辅助工具栏">
+        <button type="button" class="cx-tool-sidebar-tab" id="cxToolSidebarTab">工具</button>
+    </aside>
+
+    <div id="cxToolModal" class="cx-tool-modal" aria-hidden="true">
+        <div class="cx-tool-modal-panel" role="dialog" aria-modal="true" aria-labelledby="cxToolModalTitle">
+            <div class="cx-tool-modal-header">
+                <button type="button" class="cx-tool-modal-back" id="cxToolModalBack" onclick="backCxToolModal()" style="display: none;">‹</button>
+                <div>
+                    <div class="cx-tool-modal-title" id="cxToolModalTitle">辅助工具</div>
+                    <div class="cx-tool-modal-subtitle" id="cxToolModalSubtitle"></div>
+                </div>
+                <button type="button" class="cx-tool-modal-close" onclick="closeCxToolModal()" aria-label="关闭辅助工具">✕</button>
+            </div>
+            <div class="cx-tool-modal-content" id="cxToolModalContent"></div>
+        </div>
+    </div>
+
+    <div id="cxToolGuaModal" class="cx-tool-gua-modal" aria-hidden="true">
+        <div class="cx-tool-gua-panel" role="dialog" aria-modal="true" aria-labelledby="cxToolGuaTitle">
+            <div class="cx-tool-gua-header">
+                <div>
+                    <div class="cx-tool-gua-title" id="cxToolGuaTitle">卦象</div>
+                    <div class="cx-tool-gua-subtitle" id="cxToolGuaSubtitle"></div>
+                </div>
+                <button type="button" class="cx-tool-modal-close" onclick="closeCxToolGuaModal()" aria-label="关闭卦象内容">✕</button>
+            </div>
+            <div class="cx-tool-gua-content" id="cxToolGuaContent"></div>
+        </div>
+    </div>
+
     <script src="yizhou-data.js"></script>
     <script src="gua-interpretation-data.js"></script>
     <script src="gua-interpretation-overrides.js"></script>

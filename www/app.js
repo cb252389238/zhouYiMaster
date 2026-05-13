@@ -10,6 +10,7 @@ function initApp() {
     console.log('八卦数据:', Object.keys(baguaData).length, '卦')
 
     initCharacterPanel()
+    bindCxToolSidebarEvents()
     initHomeModuleSettings()
 }
 

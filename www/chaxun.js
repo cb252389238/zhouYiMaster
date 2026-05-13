@@ -4,10 +4,12 @@ let cxChangedYaoci = []
 let cxRootGua = null
 let cxActiveCharacter = null
 let cxInterpretationModalBound = false
+let cxToolSidebarBound = false
 
 function initChaXun() {
     cxCurrentGua = {}
     cxChangedYaoci = []
+    bindCxToolSidebarEvents()
     closeCharacterPanel()
     document.getElementById('cxBaguaSelect').style.display = 'block'
     document.getElementById('cxGuaDetail').style.display = 'none'
@@ -471,6 +473,436 @@ function bindCxInterpretationModalEvents() {
     })
 
     cxInterpretationModalBound = true
+}
+
+function toggleCxToolSidebar() {
+    setTimeout(openCxToolHome, 0)
+}
+
+function closeCxToolSidebar() {
+}
+
+function closeCxToolModal() {
+    const modal = document.getElementById('cxToolModal')
+    if (!modal) return
+
+    closeCxToolGuaModal()
+    modal.style.display = 'none'
+    modal.setAttribute('aria-hidden', 'true')
+    modal.classList.remove('from-sidebar')
+    document.body.style.overflow = ''
+    closeCxToolSidebar()
+}
+
+function closeCxToolGuaModal() {
+    const modal = document.getElementById('cxToolGuaModal')
+    if (!modal) return
+
+    modal.style.display = 'none'
+    modal.setAttribute('aria-hidden', 'true')
+}
+
+function bindCxToolSidebarEvents() {
+    if (cxToolSidebarBound) return
+
+    const sidebar = document.getElementById('cxToolSidebar')
+    const tab = document.getElementById('cxToolSidebarTab')
+    if (!sidebar || !tab) return
+
+    let longPressTimer = null
+    let pointerDown = false
+    let dragging = false
+    let downX = 0
+    let downY = 0
+    let startLeft = 0
+    let startTop = 0
+    let lastX = 0
+    let lastY = 0
+    let suppressNextClick = false
+
+    const clearLongPressTimer = () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer)
+            longPressTimer = null
+        }
+    }
+
+    const undockSidebar = () => {
+        const rect = sidebar.getBoundingClientRect()
+        sidebar.classList.remove('cx-tool-dock-left', 'cx-tool-dock-right', 'cx-tool-dock-top', 'cx-tool-dock-bottom')
+        sidebar.style.width = ''
+        sidebar.style.height = ''
+        sidebar.style.left = `${rect.left}px`
+        sidebar.style.top = `${rect.top}px`
+        sidebar.style.bottom = 'auto'
+    }
+
+    const dockSidebar = () => {
+        const threshold = 42
+        const dockShortSize = 24
+        const dockLongSize = 54
+        const left = sidebar.offsetLeft
+        const top = sidebar.offsetTop
+        const right = window.innerWidth - left - sidebar.offsetWidth
+        const bottom = window.innerHeight - top - sidebar.offsetHeight
+        const minDistance = Math.min(left, right, top, bottom)
+
+        sidebar.classList.remove('cx-tool-dock-left', 'cx-tool-dock-right', 'cx-tool-dock-top', 'cx-tool-dock-bottom')
+        if (minDistance > threshold) return
+
+        if (minDistance === left) {
+            sidebar.classList.add('cx-tool-dock-left')
+            sidebar.style.left = '0px'
+            sidebar.style.top = `${Math.min(Math.max(top, 0), Math.max(0, window.innerHeight - dockLongSize))}px`
+        } else if (minDistance === right) {
+            sidebar.classList.add('cx-tool-dock-right')
+            sidebar.style.left = `${window.innerWidth - dockShortSize}px`
+            sidebar.style.top = `${Math.min(Math.max(top, 0), Math.max(0, window.innerHeight - dockLongSize))}px`
+        } else if (minDistance === top) {
+            sidebar.classList.add('cx-tool-dock-top')
+            sidebar.style.top = '0px'
+            sidebar.style.left = `${Math.min(Math.max(left, 0), Math.max(0, window.innerWidth - dockLongSize))}px`
+        } else {
+            sidebar.classList.add('cx-tool-dock-bottom')
+            sidebar.style.top = `${window.innerHeight - dockShortSize}px`
+            sidebar.style.left = `${Math.min(Math.max(left, 0), Math.max(0, window.innerWidth - dockLongSize))}px`
+        }
+    }
+
+    const startDrag = () => {
+        if (!pointerDown) return
+
+        dragging = true
+        downX = lastX
+        downY = lastY
+        undockSidebar()
+        startLeft = sidebar.offsetLeft
+        startTop = sidebar.offsetTop
+        sidebar.classList.add('dragging')
+        sidebar.style.left = `${startLeft}px`
+        sidebar.style.top = `${startTop}px`
+        sidebar.style.bottom = 'auto'
+    }
+
+    const moveSidebar = (clientX, clientY) => {
+        if (!dragging) return
+
+        const dx = clientX - downX
+        const dy = clientY - downY
+        const maxLeft = Math.max(0, window.innerWidth - sidebar.offsetWidth)
+        const maxTop = Math.max(0, window.innerHeight - sidebar.offsetHeight)
+        const nextLeft = Math.min(Math.max(startLeft + dx, 0), maxLeft)
+        const nextTop = Math.min(Math.max(startTop + dy, 0), maxTop)
+
+        sidebar.style.left = `${nextLeft}px`
+        sidebar.style.top = `${nextTop}px`
+    }
+
+    const stopDrag = () => {
+        clearLongPressTimer()
+        pointerDown = false
+        if (dragging) {
+            dragging = false
+            sidebar.classList.remove('dragging')
+            dockSidebar()
+        }
+    }
+
+    tab.addEventListener('pointerdown', event => {
+        pointerDown = true
+        dragging = false
+        downX = event.clientX
+        downY = event.clientY
+        lastX = event.clientX
+        lastY = event.clientY
+        clearLongPressTimer()
+        longPressTimer = setTimeout(startDrag, 450)
+    })
+
+    window.addEventListener('pointermove', event => {
+        if (!pointerDown) return
+        lastX = event.clientX
+        lastY = event.clientY
+        if (dragging) {
+            event.preventDefault()
+        }
+        moveSidebar(event.clientX, event.clientY)
+    }, { passive: false })
+
+    window.addEventListener('pointerup', event => {
+        if (!pointerDown) return
+
+        const wasDragging = dragging
+        clearLongPressTimer()
+        if (!wasDragging) {
+            pointerDown = false
+            return
+        }
+        suppressNextClick = true
+        stopDrag()
+        setTimeout(() => {
+            suppressNextClick = false
+        }, 250)
+    })
+
+    window.addEventListener('pointercancel', stopDrag)
+    tab.addEventListener('click', event => {
+        event.preventDefault()
+        event.stopPropagation()
+        if (suppressNextClick) return
+
+        toggleCxToolSidebar()
+    })
+    tab.addEventListener('contextmenu', event => event.preventDefault())
+
+    const toolModal = document.getElementById('cxToolModal')
+    const guaModal = document.getElementById('cxToolGuaModal')
+    if (toolModal) {
+        toolModal.addEventListener('click', event => {
+            if (event.target === toolModal) {
+                closeCxToolModal()
+            }
+        })
+    }
+    if (guaModal) {
+        guaModal.addEventListener('click', event => {
+            if (event.target === guaModal) {
+                closeCxToolGuaModal()
+            }
+        })
+    }
+
+    document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape') return
+
+        if (guaModal && guaModal.style.display === 'flex') {
+            closeCxToolGuaModal()
+            return
+        }
+        if (toolModal && toolModal.style.display === 'flex') {
+            closeCxToolModal()
+        }
+    })
+
+    cxToolSidebarBound = true
+}
+
+function openCxToolModal(toolName) {
+    const modal = document.getElementById('cxToolModal')
+    const titleEl = document.getElementById('cxToolModalTitle')
+    const subtitleEl = document.getElementById('cxToolModalSubtitle')
+    const contentEl = document.getElementById('cxToolModalContent')
+    const backBtn = document.getElementById('cxToolModalBack')
+    if (!modal || !titleEl || !subtitleEl || !contentEl || !backBtn) return
+
+    const sidebar = document.getElementById('cxToolSidebar')
+    if (sidebar) {
+        const rect = sidebar.getBoundingClientRect()
+        modal.style.setProperty('--cx-tool-origin-x', `${rect.left + rect.width / 2}px`)
+        modal.style.setProperty('--cx-tool-origin-y', `${rect.top + rect.height / 2}px`)
+    }
+
+    modal.classList.add('from-sidebar')
+    modal.style.display = 'flex'
+    modal.setAttribute('aria-hidden', 'false')
+    document.body.style.overflow = 'hidden'
+
+    if (toolName === 'home') {
+        renderCxToolHome(contentEl)
+    } else if (toolName === 'bagong') {
+        renderCxBagongTool(contentEl)
+    } else if (cxRelationToolData[toolName]) {
+        renderCxRelationTool(contentEl, cxRelationToolData[toolName])
+    }
+}
+
+function openCxToolHome() {
+    openCxToolModal('home')
+}
+
+function backCxToolModal() {
+    closeCxToolGuaModal()
+    openCxToolModal('home')
+}
+
+function setCxToolModalHeader(title, subtitle, showBack) {
+    const titleEl = document.getElementById('cxToolModalTitle')
+    const subtitleEl = document.getElementById('cxToolModalSubtitle')
+    const backBtn = document.getElementById('cxToolModalBack')
+    if (titleEl) titleEl.textContent = title
+    if (subtitleEl) subtitleEl.textContent = subtitle
+    if (backBtn) backBtn.style.display = showBack ? 'inline-flex' : 'none'
+}
+
+function renderCxToolHome(container) {
+    setCxToolModalHeader('辅助工具', '选择常用小工具，逐层进入具体功能。', false)
+    container.innerHTML = `
+        <div class="cx-tool-home-grid">
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('bagong')">
+                <strong>八宫</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiLiuchong')">
+                <strong>地支六冲</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiHuiju')">
+                <strong>地支会局</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiLiuhai')">
+                <strong>地支六害</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiLiuhe')">
+                <strong>地支六合</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiSanhe')">
+                <strong>地支三合</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiSixing')">
+                <strong>地支四刑</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('tianganXiangchong')">
+                <strong>天干相冲</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('tianganXianghe')">
+                <strong>天干相合</strong>
+            </button>
+        </div>
+    `
+}
+
+const cxRelationToolData = {
+    dizhiLiuchong: {
+        title: '地支六冲', subtitle: '六冲是十二地支两两相对冲动的关系。', joiner: '冲',
+        groups: [['子', '午'], ['丑', '未'], ['寅', '申'], ['卯', '酉'], ['辰', '戌'], ['巳', '亥']], type: 'zhi'
+    },
+    dizhiHuiju: {
+        title: '地支会局', subtitle: '三会局按方位之气聚合。', joiner: '会',
+        groups: [['寅', '卯', '辰', '东方木'], ['巳', '午', '未', '南方火'], ['申', '酉', '戌', '西方金'], ['亥', '子', '丑', '北方水']], type: 'zhi'
+    },
+    dizhiLiuhai: {
+        title: '地支六害', subtitle: '六害又称六穿，表示相害牵制。', joiner: '害',
+        groups: [['子', '未'], ['丑', '午'], ['寅', '巳'], ['卯', '辰'], ['申', '亥'], ['酉', '戌']], type: 'zhi'
+    },
+    dizhiLiuhe: {
+        title: '地支六合', subtitle: '六合是地支两两相合的关系。', joiner: '合',
+        groups: [['子', '丑', '土'], ['寅', '亥', '木'], ['卯', '戌', '火'], ['辰', '酉', '金'], ['巳', '申', '水'], ['午', '未', '土']], type: 'zhi'
+    },
+    dizhiSanhe: {
+        title: '地支三合', subtitle: '三合局由长生、帝旺、墓库三支成局。', joiner: '合',
+        groups: [['申', '子', '辰', '水局'], ['亥', '卯', '未', '木局'], ['寅', '午', '戌', '火局'], ['巳', '酉', '丑', '金局']], type: 'zhi'
+    },
+    dizhiSixing: {
+        title: '地支四刑', subtitle: '四刑用于查看地支之间的刑伤关系。', joiner: '刑',
+        groups: [['寅', '巳', '申', '无恩之刑'], ['丑', '未', '戌', '恃势之刑'], ['子', '卯', '无礼之刑'], ['辰', '午', '酉', '亥', '自刑']], type: 'zhi'
+    },
+    tianganXiangchong: {
+        title: '天干相冲', subtitle: '天干相冲表示五行和方位气机相对。', joiner: '冲',
+        groups: [['甲', '庚'], ['乙', '辛'], ['丙', '壬'], ['丁', '癸']], type: 'gan'
+    },
+    tianganXianghe: {
+        title: '天干相合', subtitle: '天干五合表示两干相合及其化气。', joiner: '合',
+        groups: [['甲', '己', '土'], ['乙', '庚', '金'], ['丙', '辛', '水'], ['丁', '壬', '木'], ['戊', '癸', '火']], type: 'gan'
+    }
+}
+
+function renderCxRelationTool(container, data) {
+    setCxToolModalHeader(data.title, data.subtitle, true)
+    container.innerHTML = `
+        <div class="cx-relation-tool-grid">
+            ${data.groups.map(group => `
+                <div class="cx-relation-tool-card">
+                    <div class="cx-relation-tool-pair">
+                        ${getCxRelationItems(group, data).map((item, index, arr) => `
+                            <span>${item}</span>${index < arr.length - 1 ? `<strong>${data.joiner}</strong>` : ''}
+                        `).join('')}
+                    </div>
+                    <div class="cx-relation-tool-meta">${buildCxRelationMeta(group, data)}</div>
+                </div>
+            `).join('')}
+        </div>
+    `
+}
+
+function getCxRelationItems(group, data) {
+    const wuxingMap = data.type === 'gan' ? ganWuxing : zhiWuxing
+    return group.filter(item => wuxingMap[item])
+}
+
+function buildCxRelationMeta(group, data) {
+    const label = group.find(item => item.includes('局') || item.includes('刑') || naJiaWuxing.includes(item))
+    const wuxingMap = data.type === 'gan' ? ganWuxing : zhiWuxing
+    const itemText = group.filter(item => wuxingMap[item]).map(item => `${item}属${wuxingMap[item]}`).join('，')
+    return label ? `${itemText}；${label}` : itemText
+}
+
+function getCxBagongGroups() {
+    const groups = ['乾', '兑', '离', '震', '巽', '坎', '艮', '坤'].map(gong => ({ gong, items: [] }))
+    const groupMap = Object.fromEntries(groups.map(group => [group.gong, group]))
+
+    liushisiGua.forEach(gua => {
+        const gongInfo = getGuaGongInfo(gua)
+        if (groupMap[gongInfo.gong]) {
+            groupMap[gongInfo.gong].items.push({ gua, stage: gongInfo.stage })
+        }
+    })
+
+    return groups
+}
+
+function renderCxBagongTool(container) {
+    setCxToolModalHeader('八宫', '按本宫、一世、二世、三世、四世、五世、游魂、归魂查看六十四卦。', true)
+    container.innerHTML = ''
+
+    const stageOrder = ['本宫', '一世', '二世', '三世', '四世', '五世', '游魂', '归魂']
+    const table = document.createElement('table')
+    table.className = 'cx-bagong-table'
+
+    const thead = document.createElement('thead')
+    const headerRow = document.createElement('tr')
+    headerRow.innerHTML = '<th>八宫</th>' + stageOrder.map(stage => `<th>${stage}</th>`).join('')
+    thead.appendChild(headerRow)
+
+    const tbody = document.createElement('tbody')
+    getCxBagongGroups().forEach(group => {
+        const row = document.createElement('tr')
+        const gongCell = document.createElement('th')
+        gongCell.textContent = `${group.gong}宫`
+        row.appendChild(gongCell)
+
+        stageOrder.forEach(stage => {
+            const cell = document.createElement('td')
+            const item = group.items.find(groupItem => groupItem.stage === stage)
+            if (item) {
+                const { gua } = item
+            const button = document.createElement('button')
+            button.type = 'button'
+                button.className = 'cx-bagong-table-btn'
+                button.textContent = gua.shortName
+                button.onclick = () => openCxToolGuaModal(gua, stage)
+                cell.appendChild(button)
+            }
+            row.appendChild(cell)
+        })
+
+        tbody.appendChild(row)
+    })
+
+    table.append(thead, tbody)
+    container.appendChild(table)
+}
+
+function openCxToolGuaModal(gua, stage) {
+    const modal = document.getElementById('cxToolGuaModal')
+    const titleEl = document.getElementById('cxToolGuaTitle')
+    const subtitleEl = document.getElementById('cxToolGuaSubtitle')
+    const contentEl = document.getElementById('cxToolGuaContent')
+    if (!modal || !titleEl || !subtitleEl || !contentEl) return
+
+    titleEl.textContent = `第${gua.number}卦 ${gua.name}`
+    subtitleEl.textContent = `${getGuaGongInfo(gua).gong}宫 · ${stage}`
+    contentEl.innerHTML = ''
+    contentEl.appendChild(createCxNajiaGuaElement(gua, []))
+    modal.style.display = 'flex'
+    modal.setAttribute('aria-hidden', 'false')
 }
 
 function renderCxGuaName(guaNameDisplay, gua) {
