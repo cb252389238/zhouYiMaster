@@ -448,7 +448,75 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .cx-najia-image {
-    margin: 18px 0;
+    position: relative;
+    margin: 18px 0 34px;
+}
+
+.cx-related-fold {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    z-index: 8;
+    display: none;
+    gap: 6px;
+    transform: translate(-50%, 50%);
+}
+
+.cx-related-fold-btn {
+    width: 34px;
+    height: 28px;
+    border: 1px solid rgba(102, 126, 234, 0.36);
+    border-radius: 999px;
+    background: #fff;
+    color: #4f46e5;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.16);
+    transition: all 0.2s ease;
+}
+
+.cx-related-fold-btn:hover,
+.cx-related-fold-btn.active {
+    background: #667eea;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.cx-related-panel {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 18px);
+    z-index: 7;
+    width: max-content;
+    max-width: min(92vw, 520px);
+    padding: 14px 16px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 44px rgba(31, 41, 55, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -10px) scaleY(0.86);
+    transform-origin: top center;
+    transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.cx-related-panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0) scaleY(1);
+}
+
+.cx-related-panel-title {
+    margin-bottom: 10px;
+    color: #4f46e5;
+    font-weight: 700;
+    text-align: center;
+}
+
+.cx-related-panel-symbol .cx-najia-gua {
+    padding: 12px;
+    box-shadow: none;
 }
 
 .cx-najia-gua {

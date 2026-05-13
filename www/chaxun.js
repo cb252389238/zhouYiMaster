@@ -541,23 +541,129 @@ function bindCxSymbolYaoClick() {
     cxSymbolEl.dataset.yaoClickBound = 'true'
 }
 
-function updateCxChangeGuaButton() {
-    const changeGuaBtn = document.getElementById('cxChangeGuaBtn')
-    if (!changeGuaBtn) return
+function getCxRelatedGuaItems(gua) {
+    const items = []
 
     if (cxChangedYaoci.length > 0) {
-        const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci)
-        if (bianGua) {
-            changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`
-            changeGuaBtn.style.display = 'inline-block'
-            updateChangeGuaButtonState(changeGuaBtn, cxCurrentGua, bianGua)
+        const bianGua = getBianGua(gua, cxChangedYaoci)
+        if (bianGua && bianGua.number !== gua.number) {
+            items.push({ type: 'bian', label: '变', title: `变卦：${bianGua.shortName}卦`, gua: bianGua })
         }
-    } else {
-        changeGuaBtn.style.display = 'none'
-        changeGuaBtn.disabled = false
-        changeGuaBtn.classList.remove('disabled')
-        changeGuaBtn.title = ''
     }
+
+    const relatedConfigs = [
+        { type: 'hugua', label: '互', title: '互卦', getter: getHuGua },
+        { type: 'zonggua', label: '综', title: '综卦', getter: getZongGua },
+        { type: 'cuogua', label: '错', title: '错卦', getter: getCuoGua }
+    ]
+
+    relatedConfigs.forEach(config => {
+        const relatedGua = config.getter(gua)
+        if (relatedGua && relatedGua.number !== gua.number) {
+            items.push({
+                type: config.type,
+                label: config.label,
+                title: `${config.title}：${relatedGua.shortName}卦`,
+                gua: relatedGua
+            })
+        }
+    })
+
+    return items
+}
+
+function closeCxRelatedPanel() {
+    const foldEl = document.getElementById('cxRelatedFold')
+    const panelEl = document.getElementById('cxRelatedPanel')
+    if (foldEl) {
+        foldEl.querySelectorAll('.cx-related-fold-btn').forEach(btn => btn.classList.remove('active'))
+    }
+    if (panelEl) {
+        panelEl.classList.remove('open')
+        panelEl.dataset.activeType = ''
+        panelEl.innerHTML = ''
+    }
+}
+
+function openCxRelatedPanel(item) {
+    const foldEl = document.getElementById('cxRelatedFold')
+    const panelEl = document.getElementById('cxRelatedPanel')
+    if (!foldEl || !panelEl) return
+
+    foldEl.querySelectorAll('.cx-related-fold-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === item.type)
+    })
+
+    panelEl.innerHTML = ''
+    const titleEl = document.createElement('div')
+    titleEl.className = 'cx-related-panel-title'
+    titleEl.textContent = item.title
+
+    const symbolEl = document.createElement('div')
+    symbolEl.className = 'cx-related-panel-symbol'
+    symbolEl.appendChild(createCxNajiaGuaElement(item.gua, []))
+
+    panelEl.append(titleEl, symbolEl)
+    panelEl.dataset.activeType = item.type
+    panelEl.classList.add('open')
+}
+
+function toggleCxRelatedPanel(item) {
+    const panelEl = document.getElementById('cxRelatedPanel')
+    if (panelEl && panelEl.classList.contains('open') && panelEl.dataset.activeType === item.type) {
+        closeCxRelatedPanel()
+        return
+    }
+
+    openCxRelatedPanel(item)
+}
+
+function renderCxRelatedFold(gua) {
+    const foldEl = document.getElementById('cxRelatedFold')
+    const panelEl = document.getElementById('cxRelatedPanel')
+    if (!foldEl || !panelEl) return
+
+    const items = getCxRelatedGuaItems(gua)
+    foldEl.innerHTML = ''
+    closeCxRelatedPanel()
+
+    if (items.length === 0) {
+        foldEl.style.display = 'none'
+        return
+    }
+
+    foldEl.style.display = 'flex'
+    items.forEach(item => {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.className = 'cx-related-fold-btn'
+        button.dataset.type = item.type
+        button.textContent = item.label
+        button.title = item.title
+        button.onclick = () => toggleCxRelatedPanel(item)
+        foldEl.appendChild(button)
+    })
+}
+
+function updateCxChangeGuaButton() {
+    const changeGuaBtn = document.getElementById('cxChangeGuaBtn')
+    if (changeGuaBtn) {
+        if (cxChangedYaoci.length > 0) {
+            const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci)
+            if (bianGua) {
+                changeGuaBtn.textContent = `变卦：${bianGua.shortName}卦`
+                changeGuaBtn.style.display = 'inline-block'
+                updateChangeGuaButtonState(changeGuaBtn, cxCurrentGua, bianGua)
+            }
+        } else {
+            changeGuaBtn.style.display = 'none'
+            changeGuaBtn.disabled = false
+            changeGuaBtn.classList.remove('disabled')
+            changeGuaBtn.title = ''
+        }
+    }
+
+    renderCxRelatedFold(cxCurrentGua)
 }
 
 function updateCxYaociChangeState(yaoNum, isChanged) {
@@ -681,6 +787,7 @@ function showGuaDetail(gua, isRootGua = false) {
             changeGuaBtn.classList.remove('disabled')
             changeGuaBtn.title = ''
         }
+        renderCxRelatedFold(gua)
     }
 }
 
@@ -730,17 +837,25 @@ function updateGuaButtons(gua) {
     const zongguaBtn = document.getElementById('cxZongguaBtn')
     const cuoguaBtn = document.getElementById('cxCuoguaBtn')
 
-    huguaBtn.textContent = `互卦：${hugua.shortName}卦`
-    zongguaBtn.textContent = `综卦：${zonggua.shortName}卦`
-    cuoguaBtn.textContent = `错卦：${cuogua.shortName}卦`
+    if (huguaBtn) {
+        huguaBtn.textContent = `互卦：${hugua.shortName}卦`
+        huguaBtn.dataset.guaName = hugua.name
+        updateRelatedGuaButtonState(huguaBtn, gua, hugua)
+    }
 
-    huguaBtn.dataset.guaName = hugua.name
-    zongguaBtn.dataset.guaName = zonggua.name
-    cuoguaBtn.dataset.guaName = cuogua.name
+    if (zongguaBtn) {
+        zongguaBtn.textContent = `综卦：${zonggua.shortName}卦`
+        zongguaBtn.dataset.guaName = zonggua.name
+        updateRelatedGuaButtonState(zongguaBtn, gua, zonggua)
+    }
 
-    updateRelatedGuaButtonState(huguaBtn, gua, hugua)
-    updateRelatedGuaButtonState(zongguaBtn, gua, zonggua)
-    updateRelatedGuaButtonState(cuoguaBtn, gua, cuogua)
+    if (cuoguaBtn) {
+        cuoguaBtn.textContent = `错卦：${cuogua.shortName}卦`
+        cuoguaBtn.dataset.guaName = cuogua.name
+        updateRelatedGuaButtonState(cuoguaBtn, gua, cuogua)
+    }
+
+    renderCxRelatedFold(gua)
 }
 
 function updateRelatedGuaButtonState(button, currentGua, targetGua) {
