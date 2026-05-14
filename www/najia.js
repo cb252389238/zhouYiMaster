@@ -459,14 +459,18 @@ function renderCxNajiaInfo(gua) {
         <div class="cx-ganzhi-now">测算时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
         ${buildCxNajiaTimeControl(selectedDate)}
         <div class="cx-ganzhi-pill-list">
-            <span class="cx-ganzhi-pill-year">年柱：${ganzhiTime.year}</span>
-            <span class="cx-ganzhi-pill-month">月柱：${ganzhiTime.month}</span>
-            <span class="cx-ganzhi-pill-day">日柱：${ganzhiTime.day}</span>
-            <span class="cx-ganzhi-pill-hour">时柱：${ganzhiTime.hour}</span>
-            <span class="cx-ganzhi-pill-gong">${gongInfo.gong}宫${gongInfo.element}</span>
-            <span class="cx-ganzhi-pill-stage">${gongInfo.stage}</span>
-            <span class="cx-ganzhi-pill-xunkong">旬空：${xunKong}</span>
-            ${guaRelation ? `<span class="cx-ganzhi-pill-relation">${guaRelation}</span>` : ''}
+            <div class="cx-ganzhi-pill-row cx-ganzhi-pill-row-main">
+                <span class="cx-ganzhi-pill-year">年:${ganzhiTime.year}</span>
+                <span class="cx-ganzhi-pill-month">月:${ganzhiTime.month}</span>
+                <span class="cx-ganzhi-pill-day">日:${ganzhiTime.day}</span>
+                <span class="cx-ganzhi-pill-hour">时:${ganzhiTime.hour}</span>
+            </div>
+            <div class="cx-ganzhi-pill-row cx-ganzhi-pill-row-meta">
+                <span class="cx-ganzhi-pill-gong">宫:${gongInfo.gong}${gongInfo.element}</span>
+                <span class="cx-ganzhi-pill-stage">世:${gongInfo.stage}</span>
+                <span class="cx-ganzhi-pill-xunkong">旬空:${xunKong}</span>
+                ${guaRelation ? `<span class="cx-ganzhi-pill-relation">${guaRelation}</span>` : ''}
+            </div>
         </div>
     `
 
