@@ -1072,7 +1072,10 @@ function renderCxRelatedFold(gua) {
         button.dataset.type = item.type
         button.textContent = item.label
         button.title = item.title
-        button.onclick = () => toggleCxRelatedPanel(item)
+        button.onclick = () => {
+            button.blur()
+            toggleCxRelatedPanel(item)
+        }
         foldEl.appendChild(button)
     })
 }

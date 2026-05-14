@@ -507,11 +507,18 @@ input[type="range"]::-webkit-slider-thumb {
     transition: all 0.2s ease;
 }
 
-.cx-related-fold-btn:hover,
 .cx-related-fold-btn.active {
     background: #667eea;
     color: #fff;
     transform: translateY(-2px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .cx-related-fold-btn:hover {
+        background: #667eea;
+        color: #fff;
+        transform: translateY(-2px);
+    }
 }
 
 .cx-related-panel {
@@ -973,6 +980,69 @@ input[type="range"]::-webkit-slider-thumb {
 .cx-najia-side-row .cx-najia-ganzhi {
     background: #fef9c3;
     color: #854d0e;
+}
+
+.cx-najia-side-row .cx-najia-ganzhi .cx-najia-gan,
+.cx-najia-side-row .cx-najia-ganzhi .cx-najia-zhi {
+    padding: 0;
+    border-radius: 0;
+    font-size: 1em;
+}
+
+.cx-najia-zhi-an-dong {
+    display: inline-block;
+    color: #f97316;
+    font-weight: 800;
+    animation: cxNajiaAnDong 1.35s ease-in-out infinite;
+    text-shadow: 0 0 7px rgba(249, 115, 22, 0.5), 0 0 12px rgba(251, 191, 36, 0.32);
+}
+
+.cx-najia-zhi-ri-po {
+    position: relative;
+    display: inline-block;
+    color: #111827;
+    opacity: 1;
+    font-weight: 900;
+    filter: grayscale(1);
+    text-shadow: 0 0 1px #111827;
+}
+
+.cx-najia-zhi-ri-po::before,
+.cx-najia-zhi-ri-po::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    width: 1px;
+    height: calc(100% + 6px);
+    background: linear-gradient(180deg, transparent 0%, #4b5563 18%, transparent 30%, #4b5563 50%, transparent 64%, #4b5563 82%, transparent 100%);
+    opacity: 0.72;
+    pointer-events: none;
+    filter: none;
+}
+
+.cx-najia-zhi-ri-po::before {
+    left: 24%;
+    transform: rotate(18deg);
+}
+
+.cx-najia-zhi-ri-po::after {
+    left: 76%;
+    transform: rotate(-16deg);
+}
+
+@keyframes cxNajiaAnDong {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-1px) rotate(-4deg);
+    }
+    50% {
+        transform: translateY(1px) rotate(4deg);
+    }
+    75% {
+        transform: translateY(-1px) rotate(-2deg);
+    }
 }
 
 .cx-najia-side-row .cx-najia-liuqin {

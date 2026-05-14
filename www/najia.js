@@ -329,6 +329,32 @@ function getWuxingStateByMonthBranch(monthBranch) {
     }
 }
 
+function getWuxingStateName(wuxing, state) {
+    if (wuxing === state.wang) return 'wang'
+    if (wuxing === state.xiang) return 'xiang'
+    if (wuxing === state.xiu) return 'xiu'
+    if (wuxing === state.qiu) return 'qiu'
+    if (wuxing === state.si) return 'si'
+    return ''
+}
+
+function getNajiaZhiEffect(row, context) {
+    const isStaticYao = !context.changedIndices.includes(row.yaoNum)
+    if (!isStaticYao || !hasZhiRelation(context.dayBranch, row.zhi, zhiLiuchongPairs)) return ''
+
+    const isXunKong = context.xunKong.includes(row.zhi)
+    const stateName = getWuxingStateName(row.wuxing, context.wuxingState)
+    if (isXunKong || stateName === 'wang' || stateName === 'xiang') return 'an-dong'
+    if (['xiu', 'qiu', 'si'].includes(stateName)) return 'ri-po'
+
+    return ''
+}
+
+function getNajiaZhiClass(row, context) {
+    const effect = getNajiaZhiEffect(row, context)
+    return effect ? ` cx-najia-zhi-${effect}` : ''
+}
+
 function hasZhiRelation(firstZhi, secondZhi, relationPairs) {
     return relationPairs.has(`${firstZhi}${secondZhi}`) || relationPairs.has(`${secondZhi}${firstZhi}`)
 }
@@ -365,6 +391,12 @@ function createNajiaYaoLine(isYang, isOld = false) {
 function createCxNajiaGuaElement(gua, changedIndices = []) {
     const ganzhiTime = getCurrentGanzhiTime(getCxNajiaSelectedDate())
     const rows = getNajiaRows(gua, ganzhiTime)
+    const context = {
+        changedIndices,
+        dayBranch: ganzhiTime.day[1],
+        xunKong: getXunKong(ganzhiTime.day),
+        wuxingState: getWuxingStateByMonthBranch(ganzhiTime.month[1])
+    }
     const container = document.createElement('div')
     container.className = 'cx-najia-gua'
 
@@ -390,7 +422,7 @@ function createCxNajiaGuaElement(gua, changedIndices = []) {
         const rightRow = document.createElement('div')
         rightRow.className = `cx-najia-side-row cx-najia-right-row${isChanged ? ' changed' : ''}`
         rightRow.innerHTML = `
-            <span class="cx-najia-ganzhi">${row.gan}${row.zhi}</span>
+            <span class="cx-najia-ganzhi"><span class="cx-najia-gan">${row.gan}</span><span class="cx-najia-zhi${getNajiaZhiClass(row, context)}">${row.zhi}</span></span>
             <span class="cx-najia-liuqin">${row.liuqin}</span>
         `
 
