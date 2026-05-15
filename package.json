@@ -1,6 +1,6 @@
 {
     "name": "zhouyimaster",
-    "version": "1.0.0.4",
+    "version": "1.0.0.5",
     "description": "易经学习与占测记录工具",
     "main": "app.js",
     "scripts": {
