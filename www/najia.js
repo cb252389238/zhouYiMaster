@@ -344,7 +344,7 @@ function getNajiaZhiEffect(row, context) {
 
     const isXunKong = context.xunKong.includes(row.zhi)
     const stateName = getWuxingStateName(row.wuxing, context.wuxingState)
-    if (isXunKong || stateName === 'wang' || stateName === 'xiang') return 'an-dong'
+    if (!isXunKong && (stateName === 'wang' || stateName === 'xiang')) return 'an-dong'
     if (['xiu', 'qiu', 'si'].includes(stateName)) return 'ri-po'
 
     return ''
