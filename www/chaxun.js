@@ -711,6 +711,8 @@ function openCxToolModal(toolName) {
         renderCxToolHome(contentEl)
     } else if (toolName === 'bagong') {
         renderCxBagongTool(contentEl)
+    } else if (toolName === 'changshengShiErGong') {
+        renderCxChangshengTool(contentEl)
     } else if (cxRelationToolData[toolName]) {
         renderCxRelationTool(contentEl, cxRelationToolData[toolName])
     }
@@ -761,6 +763,9 @@ function renderCxToolHome(container) {
             </button>
             <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiMuku')">
                 <strong>地支墓库</strong>
+            </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('changshengShiErGong')">
+                <strong>长生十二宫</strong>
             </button>
             <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('tianganXiangchong')">
                 <strong>天干相冲</strong>
@@ -839,6 +844,30 @@ function buildCxRelationMeta(group, data) {
     const wuxingMap = data.type === 'gan' ? ganWuxing : zhiWuxing
     const itemText = group.filter(item => wuxingMap[item]).map(item => `${item}属${wuxingMap[item]}`).join('，')
     return label ? `${itemText}；${label}` : itemText
+}
+
+function renderCxChangshengTool(container) {
+    setCxToolModalHeader('长生十二宫', '按五行展示长生、帝旺、墓、绝对应地支。', true)
+    const stages = ['长生', '帝旺', '墓', '绝']
+    const rows = [
+        ['木', '亥', '卯', '未', '申'],
+        ['火', '寅', '午', '戌', '亥'],
+        ['金', '巳', '酉', '丑', '寅'],
+        ['水土', '申', '子', '辰', '巳']
+    ]
+
+    container.innerHTML = `
+        <div class="cx-tool-table-wrap">
+            <table class="cx-changsheng-table">
+                <thead>
+                    <tr><th>五行</th>${stages.map(stage => `<th>${stage}</th>`).join('')}</tr>
+                </thead>
+                <tbody>
+                    ${rows.map(row => `<tr><th>${row[0]}</th>${row.slice(1).map(zhi => `<td>${zhi}</td>`).join('')}</tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+    `
 }
 
 function getCxBagongGroups() {
