@@ -1058,27 +1058,15 @@ input[type="range"]::-webkit-slider-thumb {
 
 .cx-najia-zhi-ri-po {
     display: inline-block;
-    animation: cxNajiaRiPo 2.2s ease-in-out infinite;
+    animation: cxNajiaRiPo 3s ease-in-out infinite;
 }
 
 @keyframes cxNajiaRiPo {
     0% {
         opacity: 1;
-        color: inherit;
-        font-weight: 400;
-        text-shadow: none;
-    }
-    42% {
-        opacity: 1;
-        color: #111827;
-        font-weight: 900;
-        text-shadow: 0 0 2px rgba(17, 24, 39, 0.45);
     }
     100% {
         opacity: 0;
-        color: #111827;
-        font-weight: 400;
-        text-shadow: none;
     }
 }
 
