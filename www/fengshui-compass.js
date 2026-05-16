@@ -1,6 +1,13 @@
 // 风水罗盘模块
 let fsCompassHeading = 0
 let fsCompassActive = false
+let fsCompassHasHeading = false
+let fsCompassHasAbsoluteHeading = false
+let fsCompassLastUpdateTime = 0
+
+const fsCompassMinMoveDegrees = 0.5
+const fsCompassUpdateInterval = 10
+const fsCompassSmoothFactor = 0.45
 
 const fsCompassDirections = [
     { label: '北', angle: 0 },
@@ -61,6 +68,9 @@ async function startFengshuiCompass() {
         }
 
         stopFengshuiCompass()
+        fsCompassHasHeading = false
+        fsCompassHasAbsoluteHeading = false
+        fsCompassLastUpdateTime = 0
         window.addEventListener('deviceorientationabsolute', handleFengshuiCompassOrientation, true)
         window.addEventListener('deviceorientation', handleFengshuiCompassOrientation, true)
         fsCompassActive = true
@@ -77,10 +87,20 @@ function stopFengshuiCompass() {
 }
 
 function handleFengshuiCompassOrientation(event) {
+    const isAbsoluteEvent = event.type === 'deviceorientationabsolute' || event.absolute === true || typeof event.webkitCompassHeading === 'number'
+    if (fsCompassHasAbsoluteHeading && !isAbsoluteEvent) return
+
     const rawHeading = getFengshuiCompassHeading(event)
     if (rawHeading === null) return
+    if (isAbsoluteEvent) fsCompassHasAbsoluteHeading = true
+
+    const now = Date.now()
+    if (now - fsCompassLastUpdateTime < fsCompassUpdateInterval) return
 
     const heading = smoothFengshuiCompassHeading(rawHeading)
+    if (heading === null) return
+
+    fsCompassLastUpdateTime = now
     updateFengshuiCompass(heading, true)
 }
 
@@ -97,9 +117,17 @@ function getFengshuiCompassHeading(event) {
 }
 
 function smoothFengshuiCompassHeading(nextHeading) {
+    if (!fsCompassHasHeading) {
+        fsCompassHeading = nextHeading
+        fsCompassHasHeading = true
+        return fsCompassHeading
+    }
+
     const current = fsCompassHeading
     const diff = ((nextHeading - current + 540) % 360) - 180
-    fsCompassHeading = normalizeFengshuiCompassAngle(current + diff * 0.18)
+    if (Math.abs(diff) < fsCompassMinMoveDegrees) return null
+
+    fsCompassHeading = normalizeFengshuiCompassAngle(current + diff * fsCompassSmoothFactor)
     return fsCompassHeading
 }
 
