@@ -4370,6 +4370,9 @@ function showHome() {
     if (currentModule === 'meihua') {
         stopMeihuaAnimation()
     }
+    if (currentModule === 'fengshuiCompass') {
+        stopFengshuiCompass()
+    }
     hideAllModules();
     document.getElementById('homeModule').style.display = 'grid';
     currentModule = null;
@@ -4388,6 +4391,9 @@ function hideAllModules() {
 function showModule(moduleName) {
     if (currentModule === 'meihua') {
         stopMeihuaAnimation()
+    }
+    if (currentModule === 'fengshuiCompass') {
+        stopFengshuiCompass()
     }
     hideAllModules();
     currentModule = moduleName;
@@ -4448,6 +4454,9 @@ function showModule(moduleName) {
         } else {
             initHuafu();
         }
+    } else if (moduleName === 'fengshuiCompass') {
+        document.getElementById('fengshuiCompassModule').classList.add('active');
+        initFengshuiCompass();
     }
 }
 

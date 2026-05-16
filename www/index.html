@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="yice.css">
     <link rel="stylesheet" href="meihua.css">
     <link rel="stylesheet" href="huafu.css">
+    <link rel="stylesheet" href="fengshui-compass.css">
     <style>
         .cx-section-header {
             position: relative;
@@ -298,6 +299,10 @@
             <div class="module-card" data-home-module="yice" onclick="showModule('yice')">
                 <h2>🎯 易策</h2>
                 <p>记录占卜卦象，追踪预测结果，记录复盘总结</p>
+            </div>
+            <div class="module-card" data-home-module="fengshuiCompass" onclick="showModule('fengshuiCompass')">
+                <h2>🧭 风水罗盘</h2>
+                <p>实时读取手机方位，查看八方、八卦与二十四山</p>
             </div>
         </div>
 
@@ -734,6 +739,53 @@
             </div>
         </div>
 
+        <!-- 风水罗盘模块 -->
+        <div id="fengshuiCompassModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <div class="fs-compass-page">
+                <div class="fs-compass-header">
+                    <h2>风水罗盘</h2>
+                    <p>点击开始后转动手机，罗盘会根据当前朝向显示方位、八卦与二十四山。</p>
+                </div>
+
+                <div class="fs-compass-card">
+                    <div class="fs-compass-stage">
+                        <div class="fs-compass-dial" id="fsCompassDial">
+                            <div class="fs-ring fs-ring-ticks" id="fsCompassTicks"></div>
+                            <div class="fs-ring fs-ring-degrees" id="fsCompassDegrees"></div>
+                            <div class="fs-ring fs-ring-mountains" id="fsCompassMountains"></div>
+                            <div class="fs-ring fs-ring-bagua" id="fsCompassBagua"></div>
+                            <div class="fs-ring fs-ring-directions" id="fsCompassDirections"></div>
+                            <div class="fs-compass-pointer"></div>
+                            <div class="fs-compass-center">
+                                <div class="fs-compass-degree" id="fsCompassDegree">--°</div>
+                                <div class="fs-compass-direction" id="fsCompassDirection">未启动</div>
+                                <div class="fs-compass-detail" id="fsCompassDetail">点击下方按钮开始</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fs-compass-info">
+                        <div class="fs-info-item">
+                            <span>方位</span>
+                            <strong id="fsCurrentDirection">--</strong>
+                        </div>
+                        <div class="fs-info-item">
+                            <span>八卦</span>
+                            <strong id="fsCurrentBagua">--</strong>
+                        </div>
+                        <div class="fs-info-item">
+                            <span>二十四山</span>
+                            <strong id="fsCurrentMountain">--</strong>
+                        </div>
+                    </div>
+
+                    <button type="button" class="fs-compass-start" id="fsCompassStartBtn" onclick="startFengshuiCompass()">开始使用罗盘</button>
+                    <div class="fs-compass-status" id="fsCompassStatus">需要设备方向传感器支持。</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 新增卦象记录页面 -->
         <div id="yiceAddModule" class="practice-area">
             <button id="yiceAddBackBtn" class="back-btn" onclick="showYiceList()">← 返回列表</button>
@@ -985,6 +1037,7 @@
     <script src="liuyao.js"></script>
     <script src="meihua.js"></script>
     <script src="huafu.js"></script>
+    <script src="fengshui-compass.js"></script>
     <script src="yice-state.js"></script>
     <script src="yice-db.js"></script>
     <script src="yice-ui.js"></script>
