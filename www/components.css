@@ -1057,36 +1057,29 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .cx-najia-zhi-ri-po {
-    position: relative;
     display: inline-block;
-    color: #111827;
-    opacity: 1;
-    font-weight: 900;
-    filter: grayscale(1);
-    text-shadow: 0 0 1px #111827;
+    animation: cxNajiaRiPo 2.2s ease-in-out infinite;
 }
 
-.cx-najia-zhi-ri-po::before,
-.cx-najia-zhi-ri-po::after {
-    content: '';
-    position: absolute;
-    top: -3px;
-    width: 1px;
-    height: calc(100% + 6px);
-    background: linear-gradient(180deg, transparent 0%, #4b5563 18%, transparent 30%, #4b5563 50%, transparent 64%, #4b5563 82%, transparent 100%);
-    opacity: 0.72;
-    pointer-events: none;
-    filter: none;
-}
-
-.cx-najia-zhi-ri-po::before {
-    left: 24%;
-    transform: rotate(18deg);
-}
-
-.cx-najia-zhi-ri-po::after {
-    left: 76%;
-    transform: rotate(-16deg);
+@keyframes cxNajiaRiPo {
+    0% {
+        opacity: 1;
+        color: inherit;
+        font-weight: 400;
+        text-shadow: none;
+    }
+    42% {
+        opacity: 1;
+        color: #111827;
+        font-weight: 900;
+        text-shadow: 0 0 2px rgba(17, 24, 39, 0.45);
+    }
+    100% {
+        opacity: 0;
+        color: #111827;
+        font-weight: 400;
+        text-shadow: none;
+    }
 }
 
 @keyframes cxNajiaAnDong {

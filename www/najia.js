@@ -355,6 +355,11 @@ function getNajiaZhiClass(row, context) {
     return effect ? ` cx-najia-zhi-${effect}` : ''
 }
 
+function renderNajiaZhi(row, context) {
+    const effect = getNajiaZhiEffect(row, context)
+    return `<span class="cx-najia-zhi${effect ? ` cx-najia-zhi-${effect}` : ''}">${row.zhi}</span>`
+}
+
 function hasZhiRelation(firstZhi, secondZhi, relationPairs) {
     return relationPairs.has(`${firstZhi}${secondZhi}`) || relationPairs.has(`${secondZhi}${firstZhi}`)
 }
@@ -422,7 +427,7 @@ function createCxNajiaGuaElement(gua, changedIndices = []) {
         const rightRow = document.createElement('div')
         rightRow.className = `cx-najia-side-row cx-najia-right-row${isChanged ? ' changed' : ''}`
         rightRow.innerHTML = `
-            <span class="cx-najia-ganzhi"><span class="cx-najia-gan">${row.gan}</span><span class="cx-najia-zhi${getNajiaZhiClass(row, context)}">${row.zhi}</span></span>
+            <span class="cx-najia-ganzhi"><span class="cx-najia-gan">${row.gan}</span>${renderNajiaZhi(row, context)}</span>
             <span class="cx-najia-liuqin">${row.liuqin}</span>
         `
 
