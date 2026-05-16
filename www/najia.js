@@ -463,6 +463,9 @@ function renderCxNajiaInfo(gua) {
     timeEl.innerHTML = `
         <div class="cx-ganzhi-now">测算时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
         ${buildCxNajiaTimeControl(selectedDate)}
+    `
+
+    stateEl.innerHTML = `
         <div class="cx-ganzhi-pill-list">
             <div class="cx-ganzhi-pill-row cx-ganzhi-pill-row-main">
                 <span class="cx-ganzhi-pill-year">年:${ganzhiTime.year}</span>
@@ -477,10 +480,6 @@ function renderCxNajiaInfo(gua) {
                 ${guaRelation ? `<span class="cx-ganzhi-pill-relation">${guaRelation}</span>` : ''}
             </div>
         </div>
-    `
-
-    stateEl.innerHTML = `
-        <h3>五行旺衰</h3>
         <div class="cx-wuxing-state-grid">
             <span class="cx-wuxing-state-wang">旺：${state.wang}</span>
             <span class="cx-wuxing-state-xiang">相：${state.xiang}</span>
