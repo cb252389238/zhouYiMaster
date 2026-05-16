@@ -759,6 +759,9 @@ function renderCxToolHome(container) {
             <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiSixing')">
                 <strong>地支四刑</strong>
             </button>
+            <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('dizhiMuku')">
+                <strong>地支墓库</strong>
+            </button>
             <button type="button" class="cx-tool-home-card" onclick="openCxToolModal('tianganXiangchong')">
                 <strong>天干相冲</strong>
             </button>
@@ -794,6 +797,10 @@ const cxRelationToolData = {
         title: '地支四刑', subtitle: '四刑用于查看地支之间的刑伤关系。', joiner: '刑',
         groups: [['寅', '巳', '申', '无恩之刑'], ['丑', '未', '戌', '恃势之刑'], ['子', '卯', '无礼之刑'], ['辰', '午', '酉', '亥', '自刑']], type: 'zhi'
     },
+    dizhiMuku: {
+        title: '地支墓库', subtitle: '四墓库对应五行收藏归藏之地。', joiner: '库',
+        groups: [['辰', '水库'], ['戌', '火库'], ['丑', '金库'], ['未', '木库']], type: 'zhi'
+    },
     tianganXiangchong: {
         title: '天干相冲', subtitle: '天干相冲表示五行和方位气机相对。', joiner: '冲',
         groups: [['甲', '庚'], ['乙', '辛'], ['丙', '壬'], ['丁', '癸']], type: 'gan'
@@ -828,7 +835,7 @@ function getCxRelationItems(group, data) {
 }
 
 function buildCxRelationMeta(group, data) {
-    const label = group.find(item => item.includes('局') || item.includes('刑') || naJiaWuxing.includes(item))
+    const label = group.find(item => item.includes('局') || item.includes('刑') || item.includes('库') || naJiaWuxing.includes(item))
     const wuxingMap = data.type === 'gan' ? ganWuxing : zhiWuxing
     const itemText = group.filter(item => wuxingMap[item]).map(item => `${item}属${wuxingMap[item]}`).join('，')
     return label ? `${itemText}；${label}` : itemText
