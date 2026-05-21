@@ -4,6 +4,8 @@ let fsCompassActive = false
 let fsCompassHasHeading = false
 let fsCompassHasAbsoluteHeading = false
 let fsCompassLastUpdateTime = 0
+let fsCompassDialRotation = 0
+let fsCompassHasDialRotation = false
 
 const fsCompassMinMoveDegrees = 0.5
 const fsCompassUpdateInterval = 10
@@ -70,6 +72,7 @@ async function startFengshuiCompass() {
         stopFengshuiCompass()
         fsCompassHasHeading = false
         fsCompassHasAbsoluteHeading = false
+        fsCompassHasDialRotation = false
         fsCompassLastUpdateTime = 0
         window.addEventListener('deviceorientationabsolute', handleFengshuiCompassOrientation, true)
         window.addEventListener('deviceorientation', handleFengshuiCompassOrientation, true)
@@ -132,14 +135,14 @@ function smoothFengshuiCompassHeading(nextHeading) {
 }
 
 function updateFengshuiCompass(heading, isActive) {
-    const degree = Math.round(normalizeFengshuiCompassAngle(heading))
+    const degree = normalizeFengshuiCompassDisplayDegree(heading)
     const direction = getFengshuiCompassSector(fsCompassDirections, degree, 45)
     const bagua = getFengshuiCompassSector(fsCompassBagua, degree, 45)
     const mountain = getFengshuiCompassMountain(degree)
     const dial = document.getElementById('fsCompassDial')
 
     if (dial) {
-        dial.style.setProperty('--fs-compass-rotate', `${-degree}deg`)
+        dial.style.setProperty('--fs-compass-rotate', `${getFengshuiCompassDialRotation(heading)}deg`)
     }
 
     setText('fsCompassDegree', isActive ? `${degree}°` : '--°')
@@ -163,6 +166,24 @@ function getFengshuiCompassMountain(heading) {
 
 function normalizeFengshuiCompassAngle(angle) {
     return ((angle % 360) + 360) % 360
+}
+
+function normalizeFengshuiCompassDisplayDegree(angle) {
+    return Math.round(normalizeFengshuiCompassAngle(angle)) % 360
+}
+
+function getFengshuiCompassDialRotation(heading) {
+    const targetRotation = -normalizeFengshuiCompassAngle(heading)
+
+    if (!fsCompassHasDialRotation) {
+        fsCompassDialRotation = targetRotation
+        fsCompassHasDialRotation = true
+        return fsCompassDialRotation
+    }
+
+    const diff = ((targetRotation - fsCompassDialRotation + 540) % 360) - 180
+    fsCompassDialRotation += diff
+    return fsCompassDialRotation
 }
 
 function renderFengshuiCompassMarks() {

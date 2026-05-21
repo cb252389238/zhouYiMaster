@@ -53,7 +53,10 @@ function getGuaSymbolHtml(upper, lower, size = 35, dongyao = []) {
 function createYiceRecordCard(record) {
     const card = document.createElement('div')
     card.className = 'yc-record-card'
-    card.onclick = () => showYiceDetailById(record.id)
+    card.onclick = () => {
+        saveYiceListRestoreState()
+        showYiceDetailById(record.id)
+    }
     card.oncontextmenu = event => {
         event.preventDefault()
         confirmDeleteYice(record.id)
@@ -121,7 +124,7 @@ function createYiceRecordCard(record) {
     return card
 }
 
-async function renderYiceList(isLoadMore = false) {
+async function renderYiceList(isLoadMore = false, keepCurrentPage = false) {
     let records = [...ycRecords]
     const searchKeyword = document.getElementById('ycSearchInput')?.value || ''
     const searchCategory = document.getElementById('ycSearchCategory')?.value || ''
@@ -163,7 +166,7 @@ async function renderYiceList(isLoadMore = false) {
 
     records.sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
     ycFilteredRecords = records
-    if (!isLoadMore) ycCurrentPage = 1
+    if (!isLoadMore && !keepCurrentPage) ycCurrentPage = 1
 
     const displayRecords = records.slice(0, ycCurrentPage * ycPageSize)
     const listArea = document.getElementById('ycListArea')
@@ -258,6 +261,14 @@ function clearYiceSearch() {
     if (endDate) endDate.value = ''
     ycSearchKeyword = ''
     renderYiceList()
+}
+
+function saveYiceListRestoreState() {
+    const listArea = document.getElementById('ycListArea')
+    ycListRestoreState = {
+        page: ycCurrentPage,
+        scrollTop: listArea ? listArea.scrollTop : 0
+    }
 }
 
 function toggleYcActions() {
@@ -550,6 +561,15 @@ function showYiceList() {
     document.getElementById('yiceModule').classList.add('active')
     const details = document.getElementById('yiceSearchDetails')
     if (details) details.removeAttribute('open')
+    if (ycListRestoreState) {
+        ycCurrentPage = ycListRestoreState.page
+        renderYiceList(false, true).then(() => {
+            const listArea = document.getElementById('ycListArea')
+            if (listArea) listArea.scrollTop = ycListRestoreState.scrollTop
+            ycListRestoreState = null
+        })
+        return
+    }
     renderYiceList()
 }
 

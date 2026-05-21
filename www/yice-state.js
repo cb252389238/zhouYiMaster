@@ -14,6 +14,7 @@ let ycCurrentPage = 1
 let ycPageSize = 10
 let ycFilteredRecords = []
 let ycIsLoadingMore = false
+let ycListRestoreState = null
 
 let ycWriteQueue = Promise.resolve()
 const ycPendingActions = new Set()
