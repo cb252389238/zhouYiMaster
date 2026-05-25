@@ -12387,27 +12387,35 @@ function buildRefinedYaociOverride(gua, yaoNum) {
     )
 }
 
-liushisiGua.forEach(gua => {
-    if (!guaInterpretationOverrides[gua.name]) {
-        guaInterpretationOverrides[gua.name] = {}
-    }
-
-    if (!guaInterpretationOverrides[gua.name].guaName) {
-        guaInterpretationOverrides[gua.name].guaName = buildRefinedGuaNameOverride(gua)
-    }
-
-    if (!guaInterpretationOverrides[gua.name].tuanshi) {
-        guaInterpretationOverrides[gua.name].tuanshi = buildRefinedTuanshiOverride(gua)
-    }
-
-    if (!guaInterpretationOverrides[gua.name].yaoci) {
-        guaInterpretationOverrides[gua.name].yaoci = {}
-    }
-
-    gua.yaoci.forEach((_, index) => {
-        const yaoNum = index + 1
-        if (!guaInterpretationOverrides[gua.name].yaoci[yaoNum]) {
-            guaInterpretationOverrides[gua.name].yaoci[yaoNum] = buildRefinedYaociOverride(gua, yaoNum)
+function fillGuaInterpretationOverrides() {
+    liushisiGua.forEach(gua => {
+        if (!guaInterpretationOverrides[gua.name]) {
+            guaInterpretationOverrides[gua.name] = {}
         }
+
+        if (!guaInterpretationOverrides[gua.name].guaName) {
+            guaInterpretationOverrides[gua.name].guaName = buildRefinedGuaNameOverride(gua)
+        }
+
+        if (!guaInterpretationOverrides[gua.name].tuanshi) {
+            guaInterpretationOverrides[gua.name].tuanshi = buildRefinedTuanshiOverride(gua)
+        }
+
+        if (!guaInterpretationOverrides[gua.name].yaoci) {
+            guaInterpretationOverrides[gua.name].yaoci = {}
+        }
+
+        gua.yaoci.forEach((_, index) => {
+            const yaoNum = index + 1
+            if (!guaInterpretationOverrides[gua.name].yaoci[yaoNum]) {
+                guaInterpretationOverrides[gua.name].yaoci[yaoNum] = buildRefinedYaociOverride(gua, yaoNum)
+            }
+        })
     })
-})
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fillGuaInterpretationOverrides)
+} else {
+    fillGuaInterpretationOverrides()
+}
