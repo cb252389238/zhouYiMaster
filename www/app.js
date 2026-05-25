@@ -4457,6 +4457,9 @@ function showModule(moduleName) {
     } else if (moduleName === 'fengshuiCompass') {
         document.getElementById('fengshuiCompassModule').classList.add('active');
         initFengshuiCompass();
+    } else if (moduleName === 'huangdao') {
+        document.getElementById('huangdaoModule').classList.add('active');
+        initHuangdao();
     }
 }
 

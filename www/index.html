@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="meihua.css">
     <link rel="stylesheet" href="huafu.css">
     <link rel="stylesheet" href="fengshui-compass.css">
+    <link rel="stylesheet" href="huangdao.css">
     <style>
         .cx-section-header {
             position: relative;
@@ -303,6 +304,10 @@
             <div class="module-card" data-home-module="fengshuiCompass" onclick="showModule('fengshuiCompass')">
                 <h2>🧭 风水罗盘</h2>
                 <p>实时读取手机方位，查看八方、八卦与二十四山</p>
+            </div>
+            <div class="module-card" data-home-module="huangdao" onclick="showModule('huangdao')">
+                <h2>📅 黄道吉日</h2>
+                <p>按日期范围、宜忌事项与类型筛选本地推算的吉日</p>
             </div>
         </div>
 
@@ -786,6 +791,68 @@
             </div>
         </div>
 
+        <!-- 黄道吉日模块 -->
+        <div id="huangdaoModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <div class="hd-page">
+                <div class="hd-header">
+                    <h2>黄道吉日</h2>
+                    <p>根据日期范围、宜忌事项和类型筛选本地规则推算的黄道吉日。</p>
+                </div>
+
+                <div class="hd-filter-card">
+                    <div class="hd-form-grid">
+                        <label class="hd-field">
+                            <span>开始时间 <strong>*</strong></span>
+                            <input type="date" id="hdStartDate">
+                        </label>
+                        <label class="hd-field">
+                            <span>结束时间 <strong>*</strong></span>
+                            <input type="date" id="hdEndDate">
+                        </label>
+                        <label class="hd-field">
+                            <span>类型 <strong>*</strong></span>
+                            <select id="hdTypeSelect"></select>
+                        </label>
+                        <div class="hd-field hd-suit-field">
+                            <span>宜忌 <strong>*</strong></span>
+                            <div class="hd-radio-group">
+                                <label class="hd-radio-option">
+                                    <input type="radio" name="hdSuitType" value="yi" checked>
+                                    <span>宜</span>
+                                </label>
+                                <label class="hd-radio-option">
+                                    <input type="radio" name="hdSuitType" value="ji">
+                                    <span>忌</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hd-actions">
+                        <button type="button" class="option-btn hd-search-btn" onclick="searchHuangdaoDays()">查询吉日</button>
+                        <button type="button" class="option-btn hd-reset-btn" onclick="resetHuangdaoForm()">重置</button>
+                    </div>
+                    <p class="hd-note">黄历结果由本地规则推算，仅供参考。</p>
+                </div>
+
+                <div id="hdResultSummary" class="hd-result-summary"></div>
+                <div id="hdResultList" class="hd-result-list"></div>
+            </div>
+        </div>
+
+        <div id="hdHourModal" class="hd-hour-modal" aria-hidden="true" onclick="handleHuangdaoHourBackdrop(event)">
+            <div class="hd-hour-panel" role="dialog" aria-modal="true" aria-labelledby="hdHourTitle">
+                <div class="hd-hour-header">
+                    <div>
+                        <h3 id="hdHourTitle">今日吉时</h3>
+                        <p id="hdHourSubtitle"></p>
+                    </div>
+                    <button type="button" class="hd-hour-close" onclick="closeHuangdaoHourModal()" aria-label="关闭吉时弹窗">×</button>
+                </div>
+                <div id="hdHourList" class="hd-hour-list"></div>
+            </div>
+        </div>
+
         <!-- 新增卦象记录页面 -->
         <div id="yiceAddModule" class="practice-area">
             <button id="yiceAddBackBtn" class="back-btn" onclick="showYiceList()">← 返回列表</button>
@@ -1038,6 +1105,7 @@
     <script src="meihua.js"></script>
     <script src="huafu.js"></script>
     <script src="fengshui-compass.js"></script>
+    <script src="huangdao.js"></script>
     <script src="yice-state.js"></script>
     <script src="yice-db.js"></script>
     <script src="yice-ui.js"></script>
