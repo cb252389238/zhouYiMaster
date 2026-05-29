@@ -1036,6 +1036,17 @@ input[type="range"]::-webkit-slider-thumb {
     color: #15803d;
 }
 
+.cx-najia-side-row .cx-najia-fushen {
+    min-width: 76px;
+    background: #fff7ed;
+    color: #c2410c;
+    text-align: center;
+}
+
+.cx-najia-side-row .cx-najia-fushen:empty {
+    background: transparent;
+}
+
 .cx-najia-shiying {
     background: #fff7ed;
     color: #c2410c;
@@ -1381,14 +1392,44 @@ input[type="range"]::-webkit-slider-thumb {
 
     .cx-najia-gua {
         width: 100%;
-        padding: 12px;
-        gap: 12px;
+        padding: 8px 6px;
+        gap: 6px;
         overflow-x: auto;
     }
 
     .cx-najia-side-row {
-        gap: 6px;
-        font-size: 13px;
+        gap: 3px;
+        font-size: 12px;
+    }
+
+    .cx-najia-left-row {
+        gap: 1px;
+    }
+
+    .cx-najia-side-row span {
+        padding: 2px 4px;
+        border-radius: 6px;
+    }
+
+    .cx-najia-left-row span {
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+
+    .cx-najia-side-row .cx-najia-fushen {
+        min-width: 52px;
+        padding-left: 3px;
+        padding-right: 3px;
+    }
+
+    .cx-najia-shiying {
+        min-width: 20px;
+        height: 20px;
+        font-size: 0.78em;
+    }
+
+    .gua-symbol-container .yao-line {
+        width: 68px;
     }
 
     .cx-tool-sidebar {

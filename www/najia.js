@@ -317,6 +317,49 @@ function getNajiaRows(gua, ganzhiTime = getCurrentGanzhiTime()) {
     })
 }
 
+function getGongGua(gong) {
+    return liushisiGua.find(item => item.upper === gong && item.lower === gong)
+}
+
+function getNajiaRowsBase(gua) {
+    const lowerNajia = baguaNajia[gua.lower]?.inner || []
+    const upperNajia = baguaNajia[gua.upper]?.outer || []
+    const allNajia = [...lowerNajia, ...upperNajia]
+    const gongInfo = getGuaGongInfo(gua)
+
+    return allNajia.map(([gan, zhi], index) => {
+        const wuxing = zhiWuxing[zhi]
+        return {
+            yaoNum: index + 1,
+            gan,
+            zhi,
+            wuxing,
+            liuqin: getRelationByWuxing(gongInfo.element, wuxing)
+        }
+    })
+}
+
+function getFuShenByYao(gua, rows) {
+    const gongInfo = getGuaGongInfo(gua)
+    const gongGua = getGongGua(gongInfo.gong)
+    if (!gongGua) return new Map()
+
+    const currentLiuqin = new Set(rows.map(row => row.liuqin))
+    const gongRows = getNajiaRowsBase(gongGua)
+    const missingLiuqin = new Set(
+        ['兄弟', '子孙', '妻财', '官鬼', '父母'].filter(liuqin => !currentLiuqin.has(liuqin))
+    )
+
+    const fuShenByYao = new Map()
+    gongRows.forEach(row => {
+        if (missingLiuqin.has(row.liuqin)) {
+            fuShenByYao.set(row.yaoNum, row)
+        }
+    })
+
+    return fuShenByYao
+}
+
 function getWuxingStateByMonthBranch(monthBranch) {
     const monthWuxing = zhiWuxing[monthBranch]
     const monthIndex = naJiaWuxing.indexOf(monthWuxing)
@@ -360,6 +403,12 @@ function renderNajiaZhi(row, context) {
     return `<span class="cx-najia-zhi${effect ? ` cx-najia-zhi-${effect}` : ''}">${row.zhi}</span>`
 }
 
+function renderFuShen(row) {
+    if (!row) return '<span class="cx-najia-fushen"></span>'
+
+    return `<span class="cx-najia-fushen">${row.liuqin}${row.gan}${row.zhi}</span>`
+}
+
 function hasZhiRelation(firstZhi, secondZhi, relationPairs) {
     return relationPairs.has(`${firstZhi}${secondZhi}`) || relationPairs.has(`${secondZhi}${firstZhi}`)
 }
@@ -396,6 +445,7 @@ function createNajiaYaoLine(isYang, isOld = false) {
 function createCxNajiaGuaElement(gua, changedIndices = []) {
     const ganzhiTime = getCurrentGanzhiTime(getCxNajiaSelectedDate())
     const rows = getNajiaRows(gua, ganzhiTime)
+    const fuShenByYao = getFuShenByYao(gua, rows)
     const context = {
         changedIndices,
         dayBranch: ganzhiTime.day[1],
@@ -421,14 +471,15 @@ function createCxNajiaGuaElement(gua, changedIndices = []) {
         leftRow.innerHTML = `
             <span class="cx-najia-liushen">${row.liushen}</span>
             <span class="cx-najia-wuxing">${row.wuxing}</span>
-            <strong class="cx-najia-shiying">${row.shiYing}</strong>
+            ${renderFuShen(fuShenByYao.get(row.yaoNum))}
         `
 
         const rightRow = document.createElement('div')
         rightRow.className = `cx-najia-side-row cx-najia-right-row${isChanged ? ' changed' : ''}`
         rightRow.innerHTML = `
-            <span class="cx-najia-ganzhi"><span class="cx-najia-gan">${row.gan}</span>${renderNajiaZhi(row, context)}</span>
+            <strong class="cx-najia-shiying">${row.shiYing}</strong>
             <span class="cx-najia-liuqin">${row.liuqin}</span>
+            <span class="cx-najia-ganzhi"><span class="cx-najia-gan">${row.gan}</span>${renderNajiaZhi(row, context)}</span>
         `
 
         leftList.appendChild(leftRow)
