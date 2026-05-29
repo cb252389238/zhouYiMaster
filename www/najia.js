@@ -4,6 +4,10 @@ const naJiaDiZhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申
 const naJiaWuxing = ['木', '火', '土', '金', '水']
 const ganzhiDayEpochOffset = 77
 let cxNajiaSelectedDate = null
+let cxNajiaCustomGanzhiTime = null
+let cxNajiaEditingPillar = null
+let cxNajiaEditingGan = ''
+let cxNajiaEditingZhi = ''
 
 const ganWuxing = {
     '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
@@ -219,16 +223,36 @@ function refreshCxNajiaBySelectedTime() {
     renderCxNajiaInfo(cxCurrentGua)
 }
 
+function getCxNajiaBaseGanzhiTime() {
+    const selectedDate = getCxNajiaSelectedDate()
+    return getCurrentGanzhiTime(selectedDate)
+}
+
+function getCxNajiaEffectiveGanzhiTime() {
+    const baseTime = getCxNajiaBaseGanzhiTime()
+    if (!cxNajiaCustomGanzhiTime) return baseTime
+
+    return {
+        date: baseTime.date,
+        year: cxNajiaCustomGanzhiTime.year,
+        month: cxNajiaCustomGanzhiTime.month,
+        day: cxNajiaCustomGanzhiTime.day,
+        hour: cxNajiaCustomGanzhiTime.hour
+    }
+}
+
 function handleCxNajiaTimeChange(input) {
     if (!input || !input.value) return
 
     const nextDate = new Date(input.value)
     if (setCxNajiaSelectedDate(nextDate)) {
+        cxNajiaCustomGanzhiTime = null
         refreshCxNajiaBySelectedTime()
     }
 }
 
 function useCxNajiaCurrentTime() {
+    cxNajiaCustomGanzhiTime = null
     setCxNajiaSelectedDate(new Date())
     refreshCxNajiaBySelectedTime()
 }
@@ -240,6 +264,118 @@ function buildCxNajiaTimeControl(selectedDate) {
             <button type="button" onclick="useCxNajiaCurrentTime()">当前时间</button>
         </div>
     `
+}
+
+function ensureCxGanzhiPickerModal() {
+    let modal = document.getElementById('cxGanzhiPickerModal')
+    if (modal) return modal
+
+    modal = document.createElement('div')
+    modal.id = 'cxGanzhiPickerModal'
+    modal.className = 'cx-ganzhi-picker-modal'
+    modal.setAttribute('aria-hidden', 'true')
+    modal.innerHTML = `
+        <div class="cx-ganzhi-picker-panel" role="dialog" aria-modal="true" aria-labelledby="cxGanzhiPickerTitle">
+            <div class="cx-ganzhi-picker-header">
+                <div>
+                    <div class="cx-ganzhi-picker-title" id="cxGanzhiPickerTitle">选择干支</div>
+                    <div class="cx-ganzhi-picker-subtitle" id="cxGanzhiPickerSubtitle">请选择天干和地支</div>
+                </div>
+                <button type="button" class="cx-ganzhi-picker-close" onclick="closeCxGanzhiPicker()" aria-label="关闭干支选择">✕</button>
+            </div>
+            <div class="cx-ganzhi-picker-body">
+                <div class="cx-ganzhi-picker-section">
+                    <h4>天干</h4>
+                    <div class="cx-ganzhi-picker-grid" id="cxGanzhiPickerGan"></div>
+                </div>
+                <div class="cx-ganzhi-picker-section">
+                    <h4>地支</h4>
+                    <div class="cx-ganzhi-picker-grid" id="cxGanzhiPickerZhi"></div>
+                </div>
+            </div>
+            <div class="cx-ganzhi-picker-actions">
+                <button type="button" onclick="closeCxGanzhiPicker()">取消</button>
+                <button type="button" class="primary" onclick="applyCxGanzhiPicker()">确定</button>
+            </div>
+        </div>
+    `
+    modal.addEventListener('click', event => {
+        if (event.target === modal) {
+            closeCxGanzhiPicker()
+        }
+    })
+    document.body.appendChild(modal)
+    return modal
+}
+
+function renderCxGanzhiPickerOptions() {
+    const ganEl = document.getElementById('cxGanzhiPickerGan')
+    const zhiEl = document.getElementById('cxGanzhiPickerZhi')
+    if (!ganEl || !zhiEl) return
+
+    ganEl.innerHTML = naJiaTianGan.map(gan => `
+        <button type="button" class="cx-ganzhi-picker-option${gan === cxNajiaEditingGan ? ' selected' : ''}" onclick="selectCxGanzhiGan('${gan}')">${gan}</button>
+    `).join('')
+    zhiEl.innerHTML = naJiaDiZhi.map(zhi => `
+        <button type="button" class="cx-ganzhi-picker-option${zhi === cxNajiaEditingZhi ? ' selected' : ''}" onclick="selectCxGanzhiZhi('${zhi}')">${zhi}</button>
+    `).join('')
+}
+
+function openCxGanzhiPicker(pillar) {
+    const labels = { year: '年柱', month: '月柱', day: '日柱', hour: '时柱' }
+    const ganzhiTime = getCxNajiaEffectiveGanzhiTime()
+    const currentGanzhi = ganzhiTime[pillar]
+    if (!currentGanzhi) return
+
+    cxNajiaEditingPillar = pillar
+    cxNajiaEditingGan = currentGanzhi[0]
+    cxNajiaEditingZhi = currentGanzhi[1]
+
+    const modal = ensureCxGanzhiPickerModal()
+    const titleEl = document.getElementById('cxGanzhiPickerTitle')
+    const subtitleEl = document.getElementById('cxGanzhiPickerSubtitle')
+    if (titleEl) titleEl.textContent = `选择${labels[pillar] || '干支'}`
+    if (subtitleEl) subtitleEl.textContent = `当前${labels[pillar] || '四柱'}：${currentGanzhi}`
+    renderCxGanzhiPickerOptions()
+    modal.classList.add('active')
+    modal.setAttribute('aria-hidden', 'false')
+}
+
+function closeCxGanzhiPicker() {
+    const modal = document.getElementById('cxGanzhiPickerModal')
+    if (!modal) return
+
+    modal.classList.remove('active')
+    modal.setAttribute('aria-hidden', 'true')
+}
+
+function selectCxGanzhiGan(gan) {
+    cxNajiaEditingGan = gan
+    renderCxGanzhiPickerOptions()
+}
+
+function selectCxGanzhiZhi(zhi) {
+    cxNajiaEditingZhi = zhi
+    renderCxGanzhiPickerOptions()
+}
+
+function applyCxGanzhiPicker() {
+    if (!cxNajiaEditingPillar || !cxNajiaEditingGan || !cxNajiaEditingZhi) return
+
+    const effectiveTime = getCxNajiaEffectiveGanzhiTime()
+    cxNajiaCustomGanzhiTime = {
+        year: effectiveTime.year,
+        month: effectiveTime.month,
+        day: effectiveTime.day,
+        hour: effectiveTime.hour
+    }
+    cxNajiaCustomGanzhiTime[cxNajiaEditingPillar] = `${cxNajiaEditingGan}${cxNajiaEditingZhi}`
+    closeCxGanzhiPicker()
+    refreshCxNajiaBySelectedTime()
+}
+
+function renderCxGanzhiPillar(pillar, label, value, extraHtml = '') {
+    return `<button type="button" class="cx-ganzhi-pillar-btn cx-ganzhi-pill-${pillar}" onclick="openCxGanzhiPicker('${pillar}')">${label}:${value}${extraHtml}</button>`
 }
 
 function getXunKong(ganzhi) {
@@ -466,7 +602,7 @@ function createNajiaYaoLine(isYang, isOld = false) {
 }
 
 function createCxNajiaGuaElement(gua, changedIndices = []) {
-    const ganzhiTime = getCurrentGanzhiTime(getCxNajiaSelectedDate())
+    const ganzhiTime = getCxNajiaEffectiveGanzhiTime()
     const rows = getNajiaRows(gua, ganzhiTime)
     const fuShenByYao = getFuShenByYao(gua, rows)
     const context = {
@@ -527,7 +663,7 @@ function renderCxNajiaInfo(gua) {
     if (!timeEl || !stateEl) return
 
     const selectedDate = getCxNajiaSelectedDate()
-    const ganzhiTime = getCurrentGanzhiTime(selectedDate)
+    const ganzhiTime = getCxNajiaEffectiveGanzhiTime()
     const monthBranch = ganzhiTime.month[1]
     const state = getWuxingStateByMonthBranch(monthBranch)
     const gongInfo = getGuaGongInfo(gua)
@@ -535,19 +671,21 @@ function renderCxNajiaInfo(gua) {
     const guaRelation = getGuaLiuheLiuchong(gua)
     const missingPillarLiuqin = getMissingLiuqinByGanzhiPillar(gua, ganzhiTime)
     const renderMissingLiuqin = liuqin => liuqin ? `<span class="cx-ganzhi-missing-liuqin">(${liuqin})</span>` : ''
+    timeEl.classList.toggle('custom', Boolean(cxNajiaCustomGanzhiTime))
+    stateEl.classList.toggle('custom', Boolean(cxNajiaCustomGanzhiTime))
 
     timeEl.innerHTML = `
-        <div class="cx-ganzhi-now">测算时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
+        <div class="cx-ganzhi-now">测算时间：${formatCxCurrentTime(selectedDate)}${cxNajiaCustomGanzhiTime ? '（当前为自定义干支）' : ''}</div>
         ${buildCxNajiaTimeControl(selectedDate)}
     `
 
     stateEl.innerHTML = `
         <div class="cx-ganzhi-pill-list">
             <div class="cx-ganzhi-pill-row cx-ganzhi-pill-row-main">
-                <span class="cx-ganzhi-pill-year">年:${ganzhiTime.year}</span>
-                <span class="cx-ganzhi-pill-month">月:${ganzhiTime.month}${renderMissingLiuqin(missingPillarLiuqin.month)}</span>
-                <span class="cx-ganzhi-pill-day">日:${ganzhiTime.day}${renderMissingLiuqin(missingPillarLiuqin.day)}</span>
-                <span class="cx-ganzhi-pill-hour">时:${ganzhiTime.hour}</span>
+                ${renderCxGanzhiPillar('year', '年', ganzhiTime.year)}
+                ${renderCxGanzhiPillar('month', '月', ganzhiTime.month, renderMissingLiuqin(missingPillarLiuqin.month))}
+                ${renderCxGanzhiPillar('day', '日', ganzhiTime.day, renderMissingLiuqin(missingPillarLiuqin.day))}
+                ${renderCxGanzhiPillar('hour', '时', ganzhiTime.hour)}
             </div>
             <div class="cx-ganzhi-pill-row cx-ganzhi-pill-row-meta">
                 <span class="cx-ganzhi-pill-gong">宫:${gongInfo.gong}${gongInfo.element}</span>
