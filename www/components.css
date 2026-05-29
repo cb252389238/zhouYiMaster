@@ -438,7 +438,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .cx-ganzhi-pill-row-main {
     justify-content: flex-start;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 }
 
 .cx-ganzhi-pill-row-meta {
@@ -502,6 +502,17 @@ input[type="range"]::-webkit-slider-thumb {
     background: #fff7ed;
     border-color: #fdba74;
     color: #9a3412;
+}
+
+.cx-ganzhi-pill-list .cx-ganzhi-missing-liuqin {
+    display: inline;
+    padding: 0;
+    margin-left: 2px;
+    border: 0;
+    background: transparent;
+    color: #dc2626;
+    font-size: 1em;
+    font-weight: 800;
 }
 
 .cx-najia-image {

@@ -360,6 +360,29 @@ function getFuShenByYao(gua, rows) {
     return fuShenByYao
 }
 
+function getMissingLiuqinByGanzhiPillar(gua, ganzhiTime) {
+    const rows = getNajiaRows(gua, ganzhiTime)
+    const currentLiuqin = new Set(rows.map(row => row.liuqin))
+    const missingLiuqin = new Set(
+        ['兄弟', '子孙', '妻财', '官鬼', '父母'].filter(liuqin => !currentLiuqin.has(liuqin))
+    )
+    const gongInfo = getGuaGongInfo(gua)
+
+    const getPillarMissingLiuqin = ganzhi => {
+        const zhi = ganzhi[1]
+        const wuxing = zhiWuxing[zhi]
+        if (!wuxing) return ''
+
+        const liuqin = getRelationByWuxing(gongInfo.element, wuxing)
+        return missingLiuqin.has(liuqin) ? liuqin : ''
+    }
+
+    return {
+        month: getPillarMissingLiuqin(ganzhiTime.month),
+        day: getPillarMissingLiuqin(ganzhiTime.day)
+    }
+}
+
 function getWuxingStateByMonthBranch(monthBranch) {
     const monthWuxing = zhiWuxing[monthBranch]
     const monthIndex = naJiaWuxing.indexOf(monthWuxing)
@@ -510,6 +533,8 @@ function renderCxNajiaInfo(gua) {
     const gongInfo = getGuaGongInfo(gua)
     const xunKong = getXunKong(ganzhiTime.day)
     const guaRelation = getGuaLiuheLiuchong(gua)
+    const missingPillarLiuqin = getMissingLiuqinByGanzhiPillar(gua, ganzhiTime)
+    const renderMissingLiuqin = liuqin => liuqin ? `<span class="cx-ganzhi-missing-liuqin">(${liuqin})</span>` : ''
 
     timeEl.innerHTML = `
         <div class="cx-ganzhi-now">测算时间：${formatCxCurrentTime(ganzhiTime.date)}</div>
@@ -520,8 +545,8 @@ function renderCxNajiaInfo(gua) {
         <div class="cx-ganzhi-pill-list">
             <div class="cx-ganzhi-pill-row cx-ganzhi-pill-row-main">
                 <span class="cx-ganzhi-pill-year">年:${ganzhiTime.year}</span>
-                <span class="cx-ganzhi-pill-month">月:${ganzhiTime.month}</span>
-                <span class="cx-ganzhi-pill-day">日:${ganzhiTime.day}</span>
+                <span class="cx-ganzhi-pill-month">月:${ganzhiTime.month}${renderMissingLiuqin(missingPillarLiuqin.month)}</span>
+                <span class="cx-ganzhi-pill-day">日:${ganzhiTime.day}${renderMissingLiuqin(missingPillarLiuqin.day)}</span>
                 <span class="cx-ganzhi-pill-hour">时:${ganzhiTime.hour}</span>
             </div>
             <div class="cx-ganzhi-pill-row cx-ganzhi-pill-row-meta">
