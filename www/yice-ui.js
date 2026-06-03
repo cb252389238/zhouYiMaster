@@ -129,6 +129,7 @@ async function renderYiceList(isLoadMore = false, keepCurrentPage = false) {
     const searchKeyword = document.getElementById('ycSearchInput')?.value || ''
     const searchCategory = document.getElementById('ycSearchCategory')?.value || ''
     const searchVerifyStatus = document.getElementById('ycSearchVerifyStatus')?.value || ''
+    const searchDongyaoCount = document.getElementById('ycSearchDongyaoCount')?.value || ''
     const startDate = document.getElementById('ycSearchStartDate')?.value || ''
     const endDate = document.getElementById('ycSearchEndDate')?.value || ''
 
@@ -149,6 +150,11 @@ async function renderYiceList(isLoadMore = false, keepCurrentPage = false) {
 
     if (searchVerifyStatus) {
         records = records.filter(r => normalizeYiceVerifyStatus(r.verifyStatus) === searchVerifyStatus)
+    }
+
+    if (searchDongyaoCount !== '') {
+        const targetCount = Number(searchDongyaoCount)
+        records = records.filter(r => normalizeDongyaoList(r.dongyao).length === targetCount)
     }
 
     if (startDate || endDate) {
@@ -255,6 +261,8 @@ function clearYiceSearch() {
     if (searchCat) searchCat.value = ''
     const searchVerifyStatus = document.getElementById('ycSearchVerifyStatus')
     if (searchVerifyStatus) searchVerifyStatus.value = ''
+    const searchDongyaoCount = document.getElementById('ycSearchDongyaoCount')
+    if (searchDongyaoCount) searchDongyaoCount.value = ''
     const startDate = document.getElementById('ycSearchStartDate')
     const endDate = document.getElementById('ycSearchEndDate')
     if (startDate) startDate.value = ''
