@@ -1077,6 +1077,7 @@ function getCxRelatedGuaItems(gua) {
 function closeCxRelatedPanel() {
     const foldEl = document.getElementById('cxRelatedFold')
     const panelEl = document.getElementById('cxRelatedPanel')
+    closeCxRelatedInfoPopup()
     if (foldEl) {
         foldEl.querySelectorAll('.cx-related-fold-btn').forEach(btn => btn.classList.remove('active'))
     }
@@ -1085,6 +1086,72 @@ function closeCxRelatedPanel() {
         panelEl.dataset.activeType = ''
         panelEl.innerHTML = ''
     }
+}
+
+function closeCxRelatedInfoPopup() {
+    const popup = document.getElementById('cxRelatedInfoPopup')
+    if (popup) {
+        popup.remove()
+    }
+}
+
+function getCxRelatedInfoPopupPosition(event, popup) {
+    const margin = 10
+    const offset = 12
+    const rect = popup.getBoundingClientRect()
+    let left = event.clientX + offset
+    let top = event.clientY + offset
+
+    if (left + rect.width + margin > window.innerWidth) {
+        left = event.clientX - rect.width - offset
+    }
+    if (top + rect.height + margin > window.innerHeight) {
+        top = event.clientY - rect.height - offset
+    }
+
+    return {
+        left: Math.max(margin, left),
+        top: Math.max(margin, top)
+    }
+}
+
+function showCxRelatedInfoPopup(event, title, content) {
+    closeCxRelatedInfoPopup()
+
+    const popup = document.createElement('div')
+    popup.id = 'cxRelatedInfoPopup'
+    popup.className = 'cx-related-info-popup'
+    popup.innerHTML = `
+        <button type="button" class="cx-related-info-close" aria-label="关闭">×</button>
+        <div class="cx-related-info-title">${escapeHtml(title)}</div>
+        <div class="cx-related-info-content">${escapeHtml(content)}</div>
+    `
+
+    popup.querySelector('.cx-related-info-close').onclick = closeCxRelatedInfoPopup
+    document.body.appendChild(popup)
+
+    const position = getCxRelatedInfoPopupPosition(event, popup)
+    popup.style.left = `${position.left}px`
+    popup.style.top = `${position.top}px`
+}
+
+function bindCxRelatedPanelInfoEvents(panelEl, item) {
+    const titleEl = panelEl.querySelector('.cx-related-panel-title')
+    if (titleEl) {
+        titleEl.onclick = event => {
+            event.stopPropagation()
+            showCxRelatedInfoPopup(event, `${item.gua.shortName}卦卦辞`, item.gua.tuanshi)
+        }
+    }
+
+    panelEl.querySelectorAll('.yao-line[data-yao-num]').forEach(line => {
+        line.onclick = event => {
+            event.stopPropagation()
+            const yaoNum = Number(line.dataset.yaoNum)
+            const yaoci = item.gua.yaoci[yaoNum - 1] || ''
+            showCxRelatedInfoPopup(event, `${item.gua.shortName}卦第${yaoNum}爻`, yaoci)
+        }
+    })
 }
 
 function openCxRelatedPanel(item) {
@@ -1097,6 +1164,7 @@ function openCxRelatedPanel(item) {
     })
 
     panelEl.innerHTML = ''
+    closeCxRelatedInfoPopup()
     const titleEl = document.createElement('div')
     titleEl.className = 'cx-related-panel-title'
     titleEl.textContent = item.title
@@ -1108,6 +1176,7 @@ function openCxRelatedPanel(item) {
     panelEl.append(titleEl, symbolEl)
     panelEl.dataset.activeType = item.type
     panelEl.classList.add('open')
+    bindCxRelatedPanelInfoEvents(panelEl, item)
 }
 
 function toggleCxRelatedPanel(item) {

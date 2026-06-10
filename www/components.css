@@ -732,11 +732,61 @@ input[type="range"]::-webkit-slider-thumb {
     color: #4f46e5;
     font-weight: 700;
     text-align: center;
+    cursor: pointer;
+}
+
+.cx-related-panel-title:hover {
+    text-decoration: underline;
 }
 
 .cx-related-panel-symbol .cx-najia-gua {
     padding: 12px;
     box-shadow: none;
+}
+
+.cx-related-panel-symbol .yao-line {
+    cursor: pointer;
+}
+
+.cx-related-info-popup {
+    position: fixed;
+    z-index: 1400;
+    width: min(320px, calc(100vw - 20px));
+    padding: 14px 16px 16px;
+    border: 1px solid rgba(102, 126, 234, 0.22);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 44px rgba(31, 41, 55, 0.2);
+    color: #344054;
+    text-align: left;
+}
+
+.cx-related-info-title {
+    padding-right: 28px;
+    margin-bottom: 8px;
+    color: #4f46e5;
+    font-weight: 800;
+}
+
+.cx-related-info-content {
+    max-height: min(260px, 48vh);
+    overflow: auto;
+    line-height: 1.8;
+    font-size: 0.95em;
+}
+
+.cx-related-info-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(102, 126, 234, 0.12);
+    color: #5060c8;
+    cursor: pointer;
+    line-height: 1;
 }
 
 .cx-tool-sidebar {
