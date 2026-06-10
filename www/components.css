@@ -662,13 +662,13 @@ input[type="range"]::-webkit-slider-thumb {
 
 .cx-najia-image {
     position: relative;
-    margin: 18px 0 34px;
+    margin: 18px 0 52px;
 }
 
 .cx-related-fold {
     position: absolute;
     left: 50%;
-    bottom: 0;
+    bottom: -16px;
     z-index: 8;
     display: none;
     gap: 6px;
