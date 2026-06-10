@@ -628,7 +628,6 @@ function createCxNajiaGuaElement(gua, changedIndices = []) {
         leftRow.className = `cx-najia-side-row cx-najia-left-row${isChanged ? ' changed' : ''}`
         leftRow.innerHTML = `
             <span class="cx-najia-liushen">${row.liushen}</span>
-            <span class="cx-najia-wuxing">${row.wuxing}</span>
             ${renderFuShen(fuShenByYao.get(row.yaoNum))}
         `
 
@@ -638,6 +637,7 @@ function createCxNajiaGuaElement(gua, changedIndices = []) {
             <strong class="cx-najia-shiying">${row.shiYing}</strong>
             <span class="cx-najia-liuqin">${row.liuqin}</span>
             <span class="cx-najia-ganzhi"><span class="cx-najia-gan">${row.gan}</span>${renderNajiaZhi(row, context)}</span>
+            <span class="cx-najia-wuxing">${row.wuxing}</span>
         `
 
         leftList.appendChild(leftRow)
