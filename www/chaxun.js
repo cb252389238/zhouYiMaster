@@ -1000,13 +1000,47 @@ function bindCxSymbolYaoClick() {
     if (!cxSymbolEl || cxSymbolEl.dataset.yaoClickBound === 'true') return
 
     cxSymbolEl.addEventListener('click', event => {
-        const yaoLine = event.target.closest('.yao-line[data-yao-num]')
+        const yaoLine = event.target.closest('.yao-line[data-yao-num]') || getCxNearbyYaoLine(event, cxSymbolEl)
         if (!yaoLine || !cxSymbolEl.contains(yaoLine)) return
 
 
         toggleYaociChange(Number(yaoLine.dataset.yaoNum))
     })
     cxSymbolEl.dataset.yaoClickBound = 'true'
+}
+
+function getCxNearbyYaoLine(event, container) {
+    const yaoLines = Array.from(container.querySelectorAll('.yao-line[data-yao-num]'))
+    let nearestLine = null
+    let nearestDistance = Infinity
+
+    yaoLines.forEach(line => {
+        const rect = line.getBoundingClientRect()
+        const expandedRect = {
+            left: rect.left - 24,
+            right: rect.right + 24,
+            top: rect.top - 12,
+            bottom: rect.bottom + 12
+        }
+
+        if (
+            event.clientX < expandedRect.left ||
+            event.clientX > expandedRect.right ||
+            event.clientY < expandedRect.top ||
+            event.clientY > expandedRect.bottom
+        ) {
+            return
+        }
+
+        const centerY = rect.top + rect.height / 2
+        const distance = Math.abs(event.clientY - centerY)
+        if (distance < nearestDistance) {
+            nearestDistance = distance
+            nearestLine = line
+        }
+    })
+
+    return nearestLine
 }
 
 function getCxRelatedGuaItems(gua) {
