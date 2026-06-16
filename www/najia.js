@@ -648,6 +648,114 @@ function createCxNajiaGuaElement(gua, changedIndices = []) {
     return container
 }
 
+function getCxYaoName(row) {
+    const positions = ['初', '二', '三', '四', '五', '六']
+    const yinYangName = row.isYang ? '九' : '六'
+    const positionName = positions[row.yaoNum - 1] || row.yaoNum
+    return row.yaoNum === 1 ? `${positionName}${yinYangName}` : `${yinYangName}${positionName}`
+}
+
+function getChangedNajiaRow(row, changedIndices) {
+    const changedGua = getBianGua(cxCurrentGua, changedIndices)
+    if (!changedGua) return null
+
+    const changedRows = getNajiaRows(changedGua, getCxNajiaEffectiveGanzhiTime())
+    return changedRows.find(item => item.yaoNum === row.yaoNum) || null
+}
+
+function buildCxGuaDescriptionText(gua) {
+    const ganzhiTime = getCxNajiaEffectiveGanzhiTime()
+    const gongInfo = getGuaGongInfo(gua)
+    const rows = getNajiaRows(gua, ganzhiTime)
+    const fuShenByYao = getFuShenByYao(gua, rows)
+    const xunKong = getXunKong(ganzhiTime.day)
+    const guaRelation = getGuaLiuheLiuchong(gua)
+    const missingPillarLiuqin = getMissingLiuqinByGanzhiPillar(gua, ganzhiTime)
+    const changedIndices = cxChangedYaoci || []
+    const formatPillar = (value, liuqin = '') => `${value}${liuqin ? `(${liuqin})` : ''}`
+
+    const lines = [
+        `年:${ganzhiTime.year}`,
+        `月:${formatPillar(ganzhiTime.month, missingPillarLiuqin.month)}`,
+        `日:${formatPillar(ganzhiTime.day, missingPillarLiuqin.day)}`,
+        `宫:${gongInfo.gong}${gongInfo.element}`,
+        `世:${gongInfo.stage}`,
+        `旬空:${xunKong}`,
+        `六合:${guaRelation === '六合' ? '是' : '否'}`,
+        `六冲:${guaRelation === '六冲' ? '是' : '否'}`,
+        `主卦名称：${gua.name}`
+    ]
+
+    rows.forEach(row => {
+        const fuShen = fuShenByYao.get(row.yaoNum)
+        const isChanged = changedIndices.includes(row.yaoNum)
+        let line = `${getCxYaoName(row)}${row.liuqin}${row.gan}${row.zhi}${row.wuxing}`
+
+        if (row.shiYing) {
+            line += `(${row.shiYing}爻)`
+        }
+
+        if (fuShen) {
+            line += `(伏神:${fuShen.liuqin}${fuShen.gan}${fuShen.zhi})`
+        }
+
+        line += `(六神:${row.liushen})`
+
+        if (isChanged) {
+            const changedRow = getChangedNajiaRow(row, changedIndices)
+            line += '(动爻)'
+            if (changedRow) {
+                line += `变爻:${changedRow.liuqin}${changedRow.gan}${changedRow.zhi}${changedRow.wuxing}`
+            }
+        }
+
+        lines.push(line)
+    })
+
+    return lines.join('\n')
+}
+
+function fallbackCopyText(text) {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'fixed'
+    textarea.style.left = '-9999px'
+    textarea.style.top = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    textarea.setSelectionRange(0, textarea.value.length)
+
+    try {
+        return document.execCommand('copy')
+    } finally {
+        document.body.removeChild(textarea)
+    }
+}
+
+async function copyCxGuaDescription() {
+    if (!cxCurrentGua || !cxCurrentGua.name) {
+        showAppToast('当前没有可复制的卦象详情')
+        return
+    }
+
+    const text = buildCxGuaDescriptionText(cxCurrentGua)
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text)
+        } else if (!fallbackCopyText(text)) {
+            throw new Error('复制命令执行失败')
+        }
+        showAppToast('卦文描述已复制')
+    } catch (error) {
+        if (fallbackCopyText(text)) {
+            showAppToast('卦文描述已复制')
+            return
+        }
+        showAppToast('复制失败，请手动选择卦文描述')
+    }
+}
+
 function renderCxNajiaGuaSymbol(gua) {
     const cxSymbolEl = document.getElementById('cxSymbol')
     if (!cxSymbolEl) return
