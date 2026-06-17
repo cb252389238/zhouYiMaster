@@ -30,12 +30,37 @@ function buildGenericCharacterOriginInfo(char) {
     return { origin, originalMeaning, evolution }
 }
 
+function buildCharacterScriptNotes(info) {
+    const origin = String(info.origin || '')
+    const oracleBone = info.oracleBone || (/甲骨/.test(origin) ? origin : '')
+    const bronzeScript = info.bronzeScript || (/金文/.test(origin) ? origin : '')
+
+    return { oracleBone, bronzeScript }
+}
+
 function getCharacterOriginInfo(char) {
     const data = cxCharacterOriginMap[char]
     if (data) {
-        return data
+        return {
+            ...data,
+            ...buildCharacterScriptNotes(data)
+        }
     }
     return buildGenericCharacterOriginInfo(char)
+}
+
+function setCharacterPanelOptionalField(panel, fieldName, text) {
+    const section = panel.querySelector(`[data-section="${fieldName}"]`)
+    const field = panel.querySelector(`[data-field="${fieldName}"]`)
+    if (!section || !field) return
+
+    if (text) {
+        field.textContent = text
+        section.hidden = false
+    } else {
+        field.textContent = ''
+        section.hidden = true
+    }
 }
 
 function closeCharacterPanel() {
@@ -130,6 +155,8 @@ function openCharacterPanel(char, triggerElement) {
     bigChar.textContent = char
     title.textContent = `“${char}”字释义`
     origin.textContent = info.origin
+    setCharacterPanelOptionalField(panel, 'oracleBone', info.oracleBone)
+    setCharacterPanelOptionalField(panel, 'bronzeScript', info.bronzeScript)
     originalMeaning.textContent = info.originalMeaning
     evolution.textContent = info.evolution
     panel.classList.add('active')

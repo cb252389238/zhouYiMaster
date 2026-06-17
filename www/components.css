@@ -244,6 +244,10 @@ input[type="range"]::-webkit-slider-thumb {
     border: 1px solid rgba(102, 126, 234, 0.08);
 }
 
+.cx-char-panel-section[hidden] {
+    display: none;
+}
+
 .cx-char-panel-section h4 {
     color: #5060c8;
     margin-bottom: 8px;
