@@ -716,7 +716,11 @@
         <div id="gualibraryModule" class="practice-area">
             <button class="back-btn" onclick="showHome()">← 返回首页</button>
             <h2 style="text-align: center; margin-bottom: 20px;">六十四卦卦库</h2>
-            <div id="guaLibraryList" style="max-width: 800px; margin: 0 auto;"></div>
+            <div style="max-width: 800px; margin: 0 auto 15px;">
+                <input type="text" id="guaLibrarySearch" placeholder="输入卦名搜索..."
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em; box-sizing: border-box;">
+            </div>
+            <div id="guaLibraryList" style="max-width: 800px; margin: 0 auto; display: flex; flex-wrap: wrap;"></div>
         </div>
 
         <!-- 易策模块 -->

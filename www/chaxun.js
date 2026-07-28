@@ -1273,7 +1273,7 @@ function showGuaDetail(gua, isRootGua = false) {
         cxChangedYaoci = yiceDongyao
     }
 
-    if (fromYice && isRootGua && typeof setCxNajiaSelectedDate === 'function') {
+    if (fromYice && isRootGua && !window.fromGuaLibrary && typeof setCxNajiaSelectedDate === 'function') {
         setCxNajiaSelectedDate(new Date(window.yiceMeasureTime))
     }
 

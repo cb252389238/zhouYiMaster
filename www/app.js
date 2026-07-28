@@ -116,6 +116,7 @@ function renderHomeSettingsList(settings) {
 
 function handleHomeSettingsPointerDown(event) {
     if (event.target.closest('input')) return
+    if (!event.target.closest('.home-settings-drag')) return
 
     const row = event.currentTarget.closest('.home-settings-item')
     if (!row) return
@@ -4508,17 +4509,36 @@ function cancelLiuYaoInlineYice() {
 function initGuaLibrary() {
     const container = document.getElementById('guaLibraryList')
     container.innerHTML = ''
+
     liushisiGua.forEach(gua => {
         const row = document.createElement('div')
         row.className = 'gua-library-row'
-        row.innerHTML = `<span class="gua-library-name">${gua.number}.${gua.name}</span>`
+        row.dataset.keywords = `${gua.number} ${gua.name} ${gua.shortName} ${gua.upper}${gua.lower}`
+
         const symbolDiv = document.createElement('div')
         symbolDiv.className = 'gua-library-symbol'
         symbolDiv.appendChild(createGuaElement(gua.upper, gua.lower))
         row.appendChild(symbolDiv)
+
+        const nameSpan = document.createElement('span')
+        nameSpan.className = 'gua-library-name'
+        nameSpan.textContent = `${gua.number}.${gua.name}`
+        row.appendChild(nameSpan)
+
         row.addEventListener('click', () => showGuaFromLibrary(gua))
         container.appendChild(row)
     })
+
+    const searchInput = document.getElementById('guaLibrarySearch')
+    if (searchInput) {
+        searchInput.oninput = function () {
+            const keyword = this.value.trim().toLowerCase()
+            document.querySelectorAll('#guaLibraryList .gua-library-row').forEach(row => {
+                const match = row.dataset.keywords.toLowerCase().includes(keyword)
+                row.style.display = !keyword || match ? '' : 'none'
+            })
+        }
+    }
 }
 
 function showGuaFromLibrary(gua) {
