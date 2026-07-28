@@ -9,6 +9,8 @@ let cxToolSidebarBound = false
 function initChaXun() {
     cxCurrentGua = {}
     cxChangedYaoci = []
+    cxNajiaSelectedDate = null
+    cxNajiaCustomGanzhiTime = null
     bindCxToolSidebarEvents()
     closeCharacterPanel()
     document.getElementById('cxBaguaSelect').style.display = 'block'
@@ -1282,12 +1284,20 @@ function showGuaDetail(gua, isRootGua = false) {
     const backToLiuYaoBtn = document.getElementById('cxBackToLiuYaoBtn')
     const backToMeihuaBtn = document.getElementById('cxBackToMeihuaBtn')
     const backToHuafuBtn = document.getElementById('cxBackToHuafuBtn')
+    const backToGuaLibraryBtn = document.getElementById('cxBackToGuaLibraryBtn')
+    const fromGuaLibrary = window.fromGuaLibrary
 
     if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'none'
     if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'none'
     if (backToHuafuBtn) backToHuafuBtn.style.display = 'none'
 
-    if (fromYice && isRootGua) {
+    if (fromGuaLibrary && isRootGua) {
+        if (backToGuaLibraryBtn) backToGuaLibraryBtn.style.display = 'inline-block'
+        if (backToYiceBtn) backToYiceBtn.style.display = 'none'
+        if (backToPrevBtn) backToPrevBtn.style.display = 'none'
+        if (backToRootBtn) backToRootBtn.style.display = 'none'
+        if (backToHomeBtn) backToHomeBtn.style.display = 'none'
+    } else if (fromYice && isRootGua) {
         if (backToYiceBtn) backToYiceBtn.style.display = 'inline-block'
         if (backToPrevBtn) backToPrevBtn.style.display = 'none'
         if (backToRootBtn) backToRootBtn.style.display = 'none'
@@ -1562,6 +1572,8 @@ function backToBaguaSelect() {
     cxChangedYaoci = []
     cxCurrentGua = {}
     cxRootGua = null
+    cxNajiaSelectedDate = null
+    cxNajiaCustomGanzhiTime = null
 
     document.querySelectorAll('#cxUpperBagua .bagua-btn, #cxLowerBagua .bagua-btn').forEach(btn => btn.classList.remove('selected'))
 
@@ -1569,9 +1581,12 @@ function backToBaguaSelect() {
     window.yiceDongyao = null
     window.yiceMeasureTime = null
     window.yiceRecordId = null
+    window.fromGuaLibrary = false
 
     const backToYiceBtn = document.getElementById('cxBackToYiceBtn')
     if (backToYiceBtn) backToYiceBtn.style.display = 'none'
+    const backToGuaLibraryBtn = document.getElementById('cxBackToGuaLibraryBtn')
+    if (backToGuaLibraryBtn) backToGuaLibraryBtn.style.display = 'none'
 }
 
 function backToRootGua() {

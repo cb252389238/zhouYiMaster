@@ -399,6 +399,23 @@ function loadCategoriesToSelect(selectId) {
     }
 }
 
+function refreshAllCategorySelects() {
+    const ids = ['lyYiceCategory', 'mhYiceCategory', 'hfYiceCategory', 'ycAddCategory', 'ycEditCategory']
+    ids.forEach(id => {
+        const select = document.getElementById(id)
+        if (select) {
+            const isYcSearch = id === 'ycSearchCategory'
+            resetSelectOptions(select, isYcSearch ? '全部分类' : '请选择分类')
+            appendCategoryOptions(select, ycCategories)
+        }
+    })
+    const searchSelect = document.getElementById('ycSearchCategory')
+    if (searchSelect) {
+        resetSelectOptions(searchSelect, '全部分类')
+        appendCategoryOptions(searchSelect, ycCategories)
+    }
+}
+
 function appendGuaDisplay(container, guaName, guaElement, nameSize, symbolSize) {
     container.innerHTML = ''
     const nameDiv = document.createElement('div')
@@ -652,6 +669,7 @@ async function addCategory() {
 
         document.getElementById('ycNewCategory').value = ''
         renderCategoryList()
+        refreshAllCategorySelects()
     })
 }
 
@@ -662,6 +680,7 @@ function editCategory(index) {
             ycCategories[index] = newName.trim()
             await saveYiceCategoriesToDB()
             renderCategoryList()
+            refreshAllCategorySelects()
         }
     })
 }
@@ -672,6 +691,7 @@ function deleteCategory(index) {
         ycCategories.splice(index, 1)
         await saveYiceCategoriesToDB()
         renderCategoryList()
+        refreshAllCategorySelects()
     })
 }
 

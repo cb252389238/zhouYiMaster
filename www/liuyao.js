@@ -196,8 +196,7 @@ function addToYiceFromLiuYao() {
     document.getElementById('lyYiceContent').value = ''
     document.getElementById('lyYicePerson').value = ''
     document.getElementById('lyYiceAnalysis').value = ''
-    document.getElementById('lyYiceAccuracy').value = 70
-    document.getElementById('lyYiceAccuracyVal').textContent = '70%'
+    document.getElementById('lyYiceVerifyStatus').value = 'pending'
 
     loadCategoriesToSelect('lyYiceCategory')
     appendInlineGuaDisplay('lyYiceGuaDisplay', gua, dongyao)

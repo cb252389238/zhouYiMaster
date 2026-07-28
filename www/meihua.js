@@ -382,8 +382,7 @@ function addMeihuaToYice() {
     document.getElementById('mhYiceContent').value = ''
     document.getElementById('mhYicePerson').value = ''
     document.getElementById('mhYiceAnalysis').value = ''
-    document.getElementById('mhYiceAccuracy').value = 70
-    document.getElementById('mhYiceAccuracyVal').textContent = '70%'
+    document.getElementById('mhYiceVerifyStatus').value = 'pending'
 
     loadCategoriesToSelect('mhYiceCategory')
     appendInlineGuaDisplay('mhYiceGuaDisplay', mhCurrentGua, [mhCurrentDongyao])
@@ -410,10 +409,7 @@ async function saveMeihuaInlineYice() {
             analysis: document.getElementById('mhYiceAnalysis').value,
             createTime: document.getElementById('mhYiceTime').value,
             updateTime: new Date().toISOString(),
-            accuracy: (() => {
-                const accuracy = parseInt(document.getElementById('mhYiceAccuracy').value, 10)
-                return Number.isNaN(accuracy) ? 70 : accuracy
-            })(),
+            verifyStatus: document.getElementById('mhYiceVerifyStatus').value,
             replays: []
         })
 

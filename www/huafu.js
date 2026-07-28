@@ -279,8 +279,7 @@ function addHuafuToYice() {
     document.getElementById('hfYiceContent').value = ''
     document.getElementById('hfYicePerson').value = ''
     document.getElementById('hfYiceAnalysis').value = ''
-    document.getElementById('hfYiceAccuracy').value = 70
-    document.getElementById('hfYiceAccuracyVal').textContent = '70%'
+    document.getElementById('hfYiceVerifyStatus').value = 'pending'
 
     loadCategoriesToSelect('hfYiceCategory')
     appendInlineGuaDisplay('hfYiceGuaDisplay', hfCurrentGua, [hfCurrentDongyao])
@@ -307,10 +306,7 @@ async function saveHuafuInlineYice() {
             analysis: document.getElementById('hfYiceAnalysis').value,
             createTime: document.getElementById('hfYiceTime').value,
             updateTime: new Date().toISOString(),
-            accuracy: (() => {
-                const accuracy = parseInt(document.getElementById('hfYiceAccuracy').value, 10)
-                return Number.isNaN(accuracy) ? 70 : accuracy
-            })(),
+            verifyStatus: document.getElementById('hfYiceVerifyStatus').value,
             replays: []
         })
 

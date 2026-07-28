@@ -297,6 +297,42 @@ header p {
     background: #5568d3;
 }
 
+.gua-library-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background 0.2s;
+}
+
+.gua-library-row:hover {
+    background: #f0f0ff;
+}
+
+.gua-library-row:last-child {
+    border-bottom: none;
+}
+
+.gua-library-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.gua-library-symbol {
+    font-size: 1.5em;
+    display: flex;
+    gap: 2px;
+}
+
+.gua-library-symbol .yao-line {
+    width: 24px;
+    height: 4px;
+    margin: 2px 0;
+}
+
 .gua-image {
     text-align: center;
     margin: 30px 0;

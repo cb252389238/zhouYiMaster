@@ -297,6 +297,10 @@
                 <h2>📚 六十四卦查询</h2>
                 <p>自由选择八卦组成六十四卦，查看卦象、卦辞、爻辞及变卦</p>
             </div>
+            <div class="module-card" data-home-module="gualibrary" onclick="showModule('gualibrary')">
+                <h2>📖 六十四卦卦库</h2>
+                <p>按通行本顺序浏览全部六十四卦</p>
+            </div>
             <div class="module-card" data-home-module="yice" onclick="showModule('yice')">
                 <h2>🎯 易策</h2>
                 <p>记录占卜卦象，追踪预测结果，记录复盘总结</p>
@@ -402,9 +406,12 @@
                         </select>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">准确度：<span id="lyYiceAccuracyVal" style="color: #3498db; font-weight: bold;">70%</span></label>
-                        <input type="range" id="lyYiceAccuracy" min="0" max="100" step="5" value="70"
-                               oninput="document.getElementById('lyYiceAccuracyVal').textContent = this.value + '%';">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">状态：</label>
+                        <select id="lyYiceVerifyStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                            <option value="pending">待验</option>
+                            <option value="fulfilled">应验</option>
+                            <option value="wrong">失误</option>
+                        </select>
                     </div>
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 8px; font-size: 1em;">测算内容：</label>
@@ -461,9 +468,12 @@
                         </select>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">准确度：<span id="mhYiceAccuracyVal" style="color: #3498db; font-weight: bold;">70%</span></label>
-                        <input type="range" id="mhYiceAccuracy" min="0" max="100" step="5" value="70"
-                               oninput="document.getElementById('mhYiceAccuracyVal').textContent = this.value + '%';">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">状态：</label>
+                        <select id="mhYiceVerifyStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                            <option value="pending">待验</option>
+                            <option value="fulfilled">应验</option>
+                            <option value="wrong">失误</option>
+                        </select>
                     </div>
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 8px; font-size: 1em;">测算内容：</label>
@@ -544,9 +554,12 @@
                         </select>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">准确度：<span id="hfYiceAccuracyVal" style="color: #3498db; font-weight: bold;">70%</span></label>
-                        <input type="range" id="hfYiceAccuracy" min="0" max="100" step="5" value="70"
-                               oninput="document.getElementById('hfYiceAccuracyVal').textContent = this.value + '%';">
+                        <label style="display: block; margin-bottom: 8px; font-size: 1em;">状态：</label>
+                        <select id="hfYiceVerifyStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                            <option value="pending">待验</option>
+                            <option value="fulfilled">应验</option>
+                            <option value="wrong">失误</option>
+                        </select>
                     </div>
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 8px; font-size: 1em;">测算内容：</label>
@@ -611,6 +624,7 @@
                             <button class="back-btn" onclick="backToLiuYaoFromCx()" id="cxBackToLiuYaoBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回六爻起卦</button>
                             <button class="back-btn" onclick="backToMeihuaFromCx()" id="cxBackToMeihuaBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回梅花易数</button>
                             <button class="back-btn" onclick="backToHuafuFromCx()" id="cxBackToHuafuBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回画符起卦</button>
+                            <button class="back-btn" onclick="backToGuaLibrary()" id="cxBackToGuaLibraryBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回卦库</button>
                         </div>
                         <button class="back-btn" onclick="copyCxGuaDescription()" id="cxCopyGuaDescriptionBtn" style="margin-bottom: 15px; background: #38a169;">复制卦文描述</button>
 
@@ -696,6 +710,13 @@
 
             
             <div id="cxResult"></div>
+        </div>
+
+        <!-- 六十四卦卦库模块 -->
+        <div id="gualibraryModule" class="practice-area">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <h2 style="text-align: center; margin-bottom: 20px;">六十四卦卦库</h2>
+            <div id="guaLibraryList" style="max-width: 800px; margin: 0 auto;"></div>
         </div>
 
         <!-- 易策模块 -->

@@ -4426,6 +4426,9 @@ function showModule(moduleName) {
             // 正常重置
             window.fromYiceDetail = false;
         }
+    } else if (moduleName === 'gualibrary') {
+        document.getElementById('gualibraryModule').classList.add('active');
+        initGuaLibrary();
     } else if (moduleName === 'liuyao') {
         document.getElementById('liuyaoModule').classList.add('active');
         if (window.fromLiuYaoDetail) {
@@ -4482,10 +4485,7 @@ async function saveLiuYaoInlineYice() {
             analysis: document.getElementById('lyYiceAnalysis').value,
             createTime: document.getElementById('lyYiceTime').value,
             updateTime: new Date().toISOString(),
-            accuracy: (() => {
-                const accuracy = parseInt(document.getElementById('lyYiceAccuracy').value, 10)
-                return Number.isNaN(accuracy) ? 70 : accuracy
-            })(),
+            verifyStatus: document.getElementById('lyYiceVerifyStatus').value,
             replays: []
         })
 
@@ -4502,6 +4502,40 @@ async function saveLiuYaoInlineYice() {
 
 function cancelLiuYaoInlineYice() {
     document.getElementById('lyInlineYice').style.display = 'none'
+}
+
+// ==================== 六十四卦卦库模块 ====================
+function initGuaLibrary() {
+    const container = document.getElementById('guaLibraryList')
+    container.innerHTML = ''
+    liushisiGua.forEach(gua => {
+        const row = document.createElement('div')
+        row.className = 'gua-library-row'
+        row.innerHTML = `<span class="gua-library-name">${gua.number}.${gua.name}</span>`
+        const symbolDiv = document.createElement('div')
+        symbolDiv.className = 'gua-library-symbol'
+        symbolDiv.appendChild(createGuaElement(gua.upper, gua.lower))
+        row.appendChild(symbolDiv)
+        row.addEventListener('click', () => showGuaFromLibrary(gua))
+        container.appendChild(row)
+    })
+}
+
+function showGuaFromLibrary(gua) {
+    window.fromGuaLibrary = true
+    window.fromYiceDetail = true
+    window.yiceDongyao = []
+    window.yiceMeasureTime = null
+    window.yiceRecordId = null
+    showModule('chaxun')
+    showGuaDetail(gua, true)
+}
+
+function backToGuaLibrary() {
+    document.getElementById('cxBackToGuaLibraryBtn').style.display = 'none'
+    window.fromGuaLibrary = false
+    window.fromYiceDetail = false
+    showModule('gualibrary')
 }
 
 
