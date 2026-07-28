@@ -16,6 +16,14 @@ body {
     margin: 0 auto;
 }
 
+.nav-toolbar {
+    margin-bottom: 20px;
+}
+
+.nav-toolbar .back-btn {
+    display: inline-block;
+}
+
 header {
     position: relative;
     text-align: center;

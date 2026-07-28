@@ -253,6 +253,7 @@ function closeHuafuResult() {
 function showHuafuDetail() {
     if (!hfCurrentGua) return
 
+    pushModuleStack(currentModule)
     window.fromHuafuDetail = true
     document.getElementById('hfResultModal').style.display = 'none'
     showModule('chaxun')

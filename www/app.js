@@ -274,6 +274,73 @@ function resetHomeSettingsDraft() {
     renderHomeSettingsList(getDefaultHomeModules())
 }
 
+// ==================== 导航栈系统 ====================
+let navModuleStack = []
+
+function pushModuleStack(moduleName) {
+    if (moduleName && moduleName !== currentModule) {
+        navModuleStack.push(moduleName)
+    }
+}
+
+function clearNavFlags() {
+    window.fromYiceDetail = false
+    window.fromGuaLibrary = false
+    window.fromLiuYaoDetail = false
+    window.fromMeihuaDetail = false
+    window.fromHuafuDetail = false
+    window.yiceDongyao = null
+    window.yiceMeasureTime = null
+    window.yiceRecordId = null
+}
+
+function goHome() {
+    clearNavFlags()
+    navModuleStack = []
+    showHome()
+}
+
+function goBack() {
+    // 优先检查是否在查询卦象详情页
+    if (currentModule === 'chaxun') {
+        const guaDetail = document.getElementById('cxGuaDetail')
+        const inDetail = guaDetail && guaDetail.style.display !== 'none'
+        if (inDetail) {
+            // 在卦象详情页：先弹卦象栈（变卦/互卦内部导航）
+            if (typeof cxGuaPageStack !== 'undefined' && cxGuaPageStack.length > 0) {
+                const prev = cxGuaPageStack.pop()
+                showGuaDetail(prev.gua, prev.isRoot)
+                return
+            }
+            // 没有卦象栈 → 根据进入来源决定
+            if (window.fromLiuYaoDetail) { backToLiuYaoFromCx(); return }
+            if (window.fromMeihuaDetail) { backToMeihuaFromCx(); return }
+            if (window.fromHuafuDetail) { backToHuafuFromCx(); return }
+            if (window.fromGuaLibrary) { backToGuaLibrary(); return }
+            if (window.fromYiceDetail) { backToYiceDetail(); return }
+            // 从首页进入 → 退到八卦选择
+            backToBaguaSelect()
+            return
+        }
+        // 在八卦选择页 → 根据来源决定
+        if (window.fromLiuYaoDetail) { backToLiuYaoFromCx(); return }
+        if (window.fromMeihuaDetail) { backToMeihuaFromCx(); return }
+        if (window.fromHuafuDetail) { backToHuafuFromCx(); return }
+        if (window.fromGuaLibrary) { backToGuaLibrary(); return }
+        if (window.fromYiceDetail) { backToYiceDetail(); return }
+    }
+
+    // 弹模块栈
+    if (navModuleStack.length > 0) {
+        const prev = navModuleStack.pop()
+        clearNavFlags()
+        showModule(prev)
+        return
+    }
+
+    showHome()
+}
+
 // ==================== 应用逻辑 ====================
 
 // 六十四卦查询模块变量
@@ -301,6 +368,8 @@ function showHome() {
     hideAllModules();
     document.getElementById('homeModule').style.display = 'grid';
     currentModule = null;
+    const toolbar = document.getElementById('navToolbar')
+    if (toolbar) toolbar.style.display = 'none'
 }
 
 
@@ -389,6 +458,8 @@ function showModule(moduleName) {
         document.getElementById('huangdaoModule').classList.add('active');
         initHuangdao();
     }
+    const toolbar = document.getElementById('navToolbar')
+    if (toolbar) toolbar.style.display = 'block'
 }
 
 async function saveLiuYaoInlineYice() {
@@ -466,6 +537,7 @@ function initGuaLibrary() {
 }
 
 function showGuaFromLibrary(gua) {
+    pushModuleStack(currentModule)
     window.fromGuaLibrary = true
     window.fromYiceDetail = true
     window.yiceDongyao = []
@@ -476,9 +548,9 @@ function showGuaFromLibrary(gua) {
 }
 
 function backToGuaLibrary() {
-    document.getElementById('cxBackToGuaLibraryBtn').style.display = 'none'
     window.fromGuaLibrary = false
     window.fromYiceDetail = false
+    clearNavFlags()
     showModule('gualibrary')
 }
 

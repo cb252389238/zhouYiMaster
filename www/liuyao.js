@@ -245,6 +245,7 @@ function findGuaByYaoci(yaoci) {
 function showLiuYaoDetail() {
     if (!window.lyCurrentGua) return
 
+    pushModuleStack(currentModule)
     window.fromLiuYaoDetail = true
     showModule('chaxun')
     showGuaDetail(window.lyCurrentGua, true)

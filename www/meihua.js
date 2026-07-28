@@ -355,6 +355,7 @@ function resetMeihuaState() {
 function showMeihuaDetail() {
     if (!mhCurrentGua) return
 
+    pushModuleStack(currentModule)
     window.fromMeihuaDetail = true
     document.getElementById('mhResultModal').style.display = 'none'
     stopMeihuaAnimation()

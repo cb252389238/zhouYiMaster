@@ -714,6 +714,7 @@ function jumpToGuaDetailFromYice() {
     if (!ycCurrentRecord) return
     const gua = liushisiGua.find(g => g.upper === ycCurrentRecord.upper && g.lower === ycCurrentRecord.lower)
     if (!gua) return
+    pushModuleStack(currentModule)
     window.fromYiceDetail = true
     window.yiceDongyao = ycCurrentRecord.dongyao || []
     window.yiceRecordId = ycCurrentRecord.id
@@ -723,14 +724,15 @@ function jumpToGuaDetailFromYice() {
 }
 
 async function backToYiceDetail() {
-    const backToYiceBtn = document.getElementById('cxBackToYiceBtn')
-    if (backToYiceBtn) backToYiceBtn.style.display = 'none'
     window.fromYiceDetail = false
     window.yiceDongyao = null
     window.yiceMeasureTime = null
     const recordIdToShow = window.yiceRecordId
     window.yiceRecordId = null
     document.getElementById('chaxunModule').classList.remove('active')
+
+    const toolbar = document.getElementById('navToolbar')
+    if (toolbar) toolbar.style.display = 'block'
 
     await loadYiceData()
     if (recordIdToShow) {
@@ -746,20 +748,14 @@ async function backToYiceDetail() {
 }
 
 function backToLiuYaoFromCx() {
-    const backToLiuYaoBtn = document.getElementById('cxBackToLiuYaoBtn')
-    if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'none'
     showModule('liuyao')
 }
 
 function backToMeihuaFromCx() {
-    const backToMeihuaBtn = document.getElementById('cxBackToMeihuaBtn')
-    if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'none'
     showModule('meihua')
 }
 
 function backToHuafuFromCx() {
-    const backToHuafuBtn = document.getElementById('cxBackToHuafuBtn')
-    if (backToHuafuBtn) backToHuafuBtn.style.display = 'none'
     showModule('huafu')
 }
 

@@ -5,10 +5,12 @@ let cxRootGua = null
 let cxActiveCharacter = null
 let cxInterpretationModalBound = false
 let cxToolSidebarBound = false
+let cxGuaPageStack = []
 
 function initChaXun() {
     cxCurrentGua = {}
     cxChangedYaoci = []
+    cxGuaPageStack = []
     cxNajiaSelectedDate = null
     cxNajiaCustomGanzhiTime = null
     bindCxToolSidebarEvents()
@@ -19,21 +21,6 @@ function initChaXun() {
 
     const allButtons = document.querySelectorAll('#cxUpperBagua .bagua-btn, #cxLowerBagua .bagua-btn')
     allButtons.forEach(btn => btn.classList.remove('selected'))
-
-    const backToYiceBtn = document.getElementById('cxBackToYiceBtn')
-    const backToPrevBtn = document.getElementById('cxBackToPrevBtn')
-    const backToRootBtn = document.getElementById('cxBackToRootBtn')
-    const backToHomeBtn = document.getElementById('cxBackToHomeBtn')
-    const backToLiuYaoBtn = document.getElementById('cxBackToLiuYaoBtn')
-    const backToMeihuaBtn = document.getElementById('cxBackToMeihuaBtn')
-    const backToHuafuBtn = document.getElementById('cxBackToHuafuBtn')
-    if (backToYiceBtn) backToYiceBtn.style.display = 'none'
-    if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'none'
-    if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'none'
-    if (backToHuafuBtn) backToHuafuBtn.style.display = 'none'
-    if (backToPrevBtn) backToPrevBtn.style.display = 'inline-block'
-    if (backToRootBtn) backToRootBtn.style.display = 'none'
-    if (backToHomeBtn) backToHomeBtn.style.display = 'inline-block'
 
     renderBaguaSelect('cxUpperBagua', 'upper')
     renderBaguaSelect('cxLowerBagua', 'lower')
@@ -1268,58 +1255,6 @@ function showGuaDetail(gua, isRootGua = false) {
         setCxNajiaSelectedDate(new Date(window.yiceMeasureTime))
     }
 
-    const backToYiceBtn = document.getElementById('cxBackToYiceBtn')
-    const backToPrevBtn = document.getElementById('cxBackToPrevBtn')
-    const backToRootBtn = document.getElementById('cxBackToRootBtn')
-    const backToHomeBtn = document.getElementById('cxBackToHomeBtn')
-    const backToLiuYaoBtn = document.getElementById('cxBackToLiuYaoBtn')
-    const backToMeihuaBtn = document.getElementById('cxBackToMeihuaBtn')
-    const backToHuafuBtn = document.getElementById('cxBackToHuafuBtn')
-    const backToGuaLibraryBtn = document.getElementById('cxBackToGuaLibraryBtn')
-    const fromGuaLibrary = window.fromGuaLibrary
-
-    if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'none'
-    if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'none'
-    if (backToHuafuBtn) backToHuafuBtn.style.display = 'none'
-
-    if (fromGuaLibrary && isRootGua) {
-        if (backToGuaLibraryBtn) backToGuaLibraryBtn.style.display = 'inline-block'
-        if (backToYiceBtn) backToYiceBtn.style.display = 'none'
-        if (backToPrevBtn) backToPrevBtn.style.display = 'none'
-        if (backToRootBtn) backToRootBtn.style.display = 'none'
-        if (backToHomeBtn) backToHomeBtn.style.display = 'none'
-    } else if (fromYice && isRootGua) {
-        if (backToYiceBtn) backToYiceBtn.style.display = 'inline-block'
-        if (backToPrevBtn) backToPrevBtn.style.display = 'none'
-        if (backToRootBtn) backToRootBtn.style.display = 'none'
-        if (backToHomeBtn) backToHomeBtn.style.display = 'none'
-    } else if (fromLiuYao && isRootGua) {
-        if (backToYiceBtn) backToYiceBtn.style.display = 'none'
-        if (backToLiuYaoBtn) backToLiuYaoBtn.style.display = 'inline-block'
-        if (backToPrevBtn) backToPrevBtn.style.display = 'none'
-        if (backToRootBtn) backToRootBtn.style.display = 'none'
-        if (backToHomeBtn) backToHomeBtn.style.display = 'none'
-    } else if (fromMeihua && isRootGua) {
-        if (backToYiceBtn) backToYiceBtn.style.display = 'none'
-        if (backToMeihuaBtn) backToMeihuaBtn.style.display = 'inline-block'
-        if (backToPrevBtn) backToPrevBtn.style.display = 'none'
-        if (backToRootBtn) backToRootBtn.style.display = 'none'
-        if (backToHomeBtn) backToHomeBtn.style.display = 'none'
-    } else if (fromHuafu && isRootGua) {
-        if (backToYiceBtn) backToYiceBtn.style.display = 'none'
-        if (backToHuafuBtn) backToHuafuBtn.style.display = 'inline-block'
-        if (backToPrevBtn) backToPrevBtn.style.display = 'none'
-        if (backToRootBtn) backToRootBtn.style.display = 'none'
-        if (backToHomeBtn) backToHomeBtn.style.display = 'none'
-    } else {
-        if (backToYiceBtn) backToYiceBtn.style.display = 'none'
-        if (backToPrevBtn) backToPrevBtn.style.display = 'inline-block'
-        if (backToHomeBtn) backToHomeBtn.style.display = 'inline-block'
-        if (backToRootBtn) {
-            backToRootBtn.style.display = (cxRootGua && cxRootGua.number !== gua.number) ? 'inline-block' : 'none'
-        }
-    }
-
     document.getElementById('cxBaguaSelect').style.display = 'none'
     document.getElementById('cxGuaDetail').style.display = 'block'
 
@@ -1540,6 +1475,7 @@ function jumpToGua(type) {
     if (targetGuaName) {
         const targetGua = liushisiGua.find(g => g.name === targetGuaName)
         if (targetGua && targetGua.number !== cxCurrentGua.number) {
+            cxGuaPageStack.push({ gua: cxCurrentGua, isRoot: cxRootGua && cxRootGua.number === cxCurrentGua.number })
             showGuaDetail(targetGua, false)
             cxChangedYaoci = savedChangedYaoci
         }
@@ -1551,12 +1487,14 @@ function jumpToBianGua() {
     const savedChangedYaoci = [...cxChangedYaoci]
     const bianGua = getBianGua(cxCurrentGua, cxChangedYaoci)
     if (bianGua && bianGua.number !== cxCurrentGua.number) {
+        cxGuaPageStack.push({ gua: cxCurrentGua, isRoot: cxRootGua && cxRootGua.number === cxCurrentGua.number })
         showGuaDetail(bianGua, false)
         cxChangedYaoci = savedChangedYaoci
     }
 }
 
 function backToBaguaSelect() {
+    cxGuaPageStack = []
     document.getElementById('cxBaguaSelect').style.display = 'block'
     document.getElementById('cxGuaDetail').style.display = 'none'
     closeCxInterpretationModal()
@@ -1573,15 +1511,11 @@ function backToBaguaSelect() {
     window.yiceMeasureTime = null
     window.yiceRecordId = null
     window.fromGuaLibrary = false
-
-    const backToYiceBtn = document.getElementById('cxBackToYiceBtn')
-    if (backToYiceBtn) backToYiceBtn.style.display = 'none'
-    const backToGuaLibraryBtn = document.getElementById('cxBackToGuaLibraryBtn')
-    if (backToGuaLibraryBtn) backToGuaLibraryBtn.style.display = 'none'
 }
 
 function backToRootGua() {
     if (cxRootGua) {
+        cxGuaPageStack = []
         showGuaDetail(cxRootGua, true)
     }
 }

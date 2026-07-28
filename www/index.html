@@ -21,6 +21,11 @@
             <p>易经学习与练习工具</p>
         </header>
 
+        <div id="navToolbar" class="nav-toolbar" style="display: none;">
+            <button class="back-btn" onclick="goHome()">← 首页</button>
+            <button class="back-btn" onclick="goBack()" style="margin-left: 10px;">← 上一页</button>
+        </div>
+
         <div id="homeSettingsModal" class="home-settings-modal" onclick="handleHomeSettingsBackdrop(event)">
             <div class="home-settings-panel" role="dialog" aria-modal="true" aria-labelledby="homeSettingsTitle">
                 <div class="home-settings-header">
@@ -91,7 +96,7 @@
 
         <!-- 卦象练习模块 -->
         <div id="guaxiangModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             <div class="progress-info" id="gxProgress"></div>
             <div class="gua-image">
                 <div class="gua-symbol" id="gxSymbol"></div>
@@ -103,7 +108,7 @@
 
         <!-- 卦名记忆模块 -->
         <div id="guamingModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             <div class="progress-info" id="gmProgress"></div>
             <div class="gua-name-display" id="gmGuaName"></div>
             <div class="selected-bagua" id="gmSelected"></div>
@@ -114,7 +119,7 @@
 
         <!-- 爻辞卦辞练习模块 -->
         <div id="yaociModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             <div class="score-display" id="ycScore"></div>
             <div class="gua-image">
                 <div class="gua-symbol" id="ycSymbol"></div>
@@ -127,7 +132,7 @@
 
         <!-- 六爻起卦模块 -->
         <div id="liuyaoModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             
             <!-- 铜钱投掷区域 -->
             <div id="lyTossArea">
@@ -213,7 +218,7 @@
 
         <!-- 梅花易数模块 -->
         <div id="meihuaModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             <h2 style="text-align: center; color: #667eea; margin-bottom: 5px;">🌸 梅花易数</h2>
             <p style="text-align: center; color: #666; margin-bottom: 15px;">以数起卦，万物皆可占</p>
             
@@ -290,7 +295,7 @@
 
         <!-- 画符起卦模块 -->
         <div id="huafuModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             <h2 style="text-align: center; color: #667eea; margin-bottom: 5px;">🖌️ 画符起卦</h2>
             <p style="text-align: center; color: #666; margin-bottom: 15px;">以符入卦，心诚则灵</p>
             
@@ -376,8 +381,6 @@
 
         <!-- 六十四卦查询模块 -->
         <div id="chaxunModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()" id="cxBackToHomeBtn">← 返回首页</button>
-            
             <!-- 八卦选择区域 -->
             <div id="cxBaguaSelect">
                 <h3 style="text-align: center; margin-bottom: 15px;">选择上卦</h3>
@@ -391,15 +394,6 @@
             <div id="cxGuaDetail" style="display: none;">
                 <div class="cx-detail-layout">
                     <div>
-                        <div style="margin-bottom: 15px;">
-                            <button class="back-btn" onclick="backToBaguaSelect()" id="cxBackToPrevBtn">← 返回上一页</button>
-                            <button class="back-btn" onclick="backToRootGua()" id="cxBackToRootBtn" style="display: none; margin-left: 10px;">← 返回本卦</button>
-                            <button class="back-btn" onclick="backToYiceDetail()" id="cxBackToYiceBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回易策详情</button>
-                            <button class="back-btn" onclick="backToLiuYaoFromCx()" id="cxBackToLiuYaoBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回六爻起卦</button>
-                            <button class="back-btn" onclick="backToMeihuaFromCx()" id="cxBackToMeihuaBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回梅花易数</button>
-                            <button class="back-btn" onclick="backToHuafuFromCx()" id="cxBackToHuafuBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回画符起卦</button>
-                            <button class="back-btn" onclick="backToGuaLibrary()" id="cxBackToGuaLibraryBtn" style="display: none; margin-left: 10px; background: #667eea;">← 返回卦库</button>
-                        </div>
                         <button class="back-btn" onclick="copyCxGuaDescription()" id="cxCopyGuaDescriptionBtn" style="margin-bottom: 15px; background: #38a169;">复制卦文描述</button>
 
                         <div id="cxGanzhiTime" class="cx-ganzhi-time"></div>
@@ -488,7 +482,7 @@
 
         <!-- 六十四卦卦库模块 -->
         <div id="gualibraryModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             <h2 style="text-align: center; margin-bottom: 20px;">六十四卦卦库</h2>
             <div style="max-width: 800px; margin: 0 auto 15px;">
                 <input type="text" id="guaLibrarySearch" placeholder="输入卦名搜索..."
@@ -499,7 +493,7 @@
 
         <!-- 易策模块 -->
         <div id="yiceModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             
             <!-- 搜索栏（可折叠） -->
             <details id="yiceSearchDetails" style="background: #f9f9f9; border-radius: 10px; margin-bottom: 20px; overflow: hidden;">
@@ -566,7 +560,7 @@
 
         <!-- 风水罗盘模块 -->
         <div id="fengshuiCompassModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             <div class="fs-compass-page">
                 <div class="fs-compass-header">
                     <h2>风水罗盘</h2>
@@ -613,7 +607,7 @@
 
         <!-- 黄道吉日模块 -->
         <div id="huangdaoModule" class="practice-area">
-            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+
             <div class="hd-page">
                 <div class="hd-header">
                     <h2>黄道吉日</h2>
