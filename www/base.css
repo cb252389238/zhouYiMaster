@@ -335,27 +335,32 @@ header p {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    width: calc(25% - 8px);
-    padding: 8px;
-    margin: 4px;
-    border: 1px solid #eee;
-    border-radius: 6px;
+    width: calc(25% - 12px);
+    padding: 14px 8px;
+    margin: 6px;
+    background: #f8f9ff;
+    border: 1px solid #e8ebf5;
+    border-radius: 12px;
     cursor: pointer;
     font-size: 0.85em;
-    transition: background 0.2s, box-shadow 0.2s;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
     box-sizing: border-box;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
 
 .gua-library-row:hover {
-    background: #f0f0ff;
-    box-shadow: 0 2px 6px rgba(102,126,234,0.15);
+    background: #eef0ff;
+    border-color: #c8cef0;
+    box-shadow: 0 4px 14px rgba(102,126,234,0.16);
+    transform: translateY(-2px);
 }
 
 .gua-library-name {
-    font-weight: 500;
-    color: #333;
-    margin-top: 4px;
-    font-size: 0.9em;
+    font-weight: 600;
+    color: #2f365f;
+    margin-top: 6px;
+    font-size: 0.85em;
+    letter-spacing: 0.3px;
 }
 
 .gua-library-symbol {
@@ -368,6 +373,28 @@ header p {
     width: 12px;
     height: 2px;
     margin: 1px 0;
+}
+
+.gua-library-search {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e0e3ef;
+    border-radius: 10px;
+    font-size: 0.95em;
+    box-sizing: border-box;
+    background: #f8f9ff;
+    color: #2f365f;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.gua-library-search:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+}
+
+.gua-library-search::placeholder {
+    color: #9aa3b8;
 }
 
 .gua-image {
@@ -677,5 +704,15 @@ header p {
     .nav-toolbar .back-btn {
         padding: 6px 14px;
         font-size: 0.85em;
+    }
+
+    .gua-library-row {
+        width: calc(50% - 12px);
+        padding: 12px 6px;
+    }
+
+    .gua-library-search {
+        padding: 10px 14px;
+        font-size: 0.9em;
     }
 }
