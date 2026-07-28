@@ -1,4 +1,7 @@
 /* ==================== 易策模块样式 ==================== */
+.yice-search-collapsed { display: none; }
+.yice-search-expanded { display: block; }
+
 #yiceModule {
     padding: 20px;
 }

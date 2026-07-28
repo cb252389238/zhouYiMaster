@@ -595,11 +595,6 @@ function formatCxCurrentTime(date) {
     })
 }
 
-function createNajiaYaoLine(isYang, isOld = false) {
-    const line = createYaoElement(isYang, isOld)
-    return line
-}
-
 function createCxNajiaGuaElement(gua, changedIndices = []) {
     const ganzhiTime = getCxNajiaEffectiveGanzhiTime()
     const rows = getNajiaRows(gua, ganzhiTime)

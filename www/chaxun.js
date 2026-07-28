@@ -94,15 +94,6 @@ function setElementHtmlFromString(element, html) {
     element.innerHTML = html
 }
 
-function escapeHtml(text) {
-    return String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-}
-
 function buildCxInterpretationButton(label, onClick, extraClass = '') {
     const button = document.createElement('button')
     button.type = 'button'

@@ -1,6 +1,6 @@
 // ==================== 文本渲染公共层 ====================
 function escapeHtml(text) {
-    return String(text)
+    return String(text || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')

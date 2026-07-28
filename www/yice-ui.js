@@ -1149,7 +1149,7 @@ async function importSqliteDb(uint8Array) {
                     await yiceDB.closeConnection({ database: DB_NAME })
                 }
             } catch (e) {
-                console.log('关闭连接:', e.message)
+                console.warn('关闭连接:', e.message)
             }
             dbInitialized = false
             yiceDB = null

@@ -61,7 +61,6 @@ async function initYiceDB() {
 
         yiceDB = sqlite
         dbInitialized = true
-        console.log('SQLite 数据库初始化成功')
     } catch (e) {
         alert('【错误】SQLite 初始化失败: ' + e.message)
         throw e
@@ -110,27 +109,20 @@ async function saveYiceDataToDB() {
     await initYiceDB()
 
     try {
+        const recordSqls = ycRecords.map(r => buildYiceRecordInsertSql(r))
+        const uniqueCategories = [...new Set(ycCategories)]
+        const categorySqls = uniqueCategories.map(cat =>
+            "INSERT OR IGNORE INTO yice_categories (name) VALUES ('" + escapeSqlString(cat) + "')"
+        )
+
         await yiceDB.execute({
             database: DB_NAME,
-            statements: 'DELETE FROM yice_records; DELETE FROM yice_categories;'
+            statements: 'DELETE FROM yice_records; DELETE FROM yice_categories;' +
+                (recordSqls.length ? ' ' + recordSqls.join('; ') : '') +
+                (categorySqls.length ? '; ' + categorySqls.join('; ') : '')
         })
 
-        for (const record of ycRecords) {
-            await yiceDB.execute({
-                database: DB_NAME,
-                statements: buildYiceRecordInsertSql(record)
-            })
-        }
-
-        const uniqueCategories = [...new Set(ycCategories)]
-        for (const cat of uniqueCategories) {
-            await yiceDB.execute({
-                database: DB_NAME,
-                statements: "INSERT OR IGNORE INTO yice_categories (name) VALUES ('" + cat.replace(/'/g, "''") + "')"
-            })
-        }
-
-        console.log('数据保存到 SQLite 成功')
+        showAppToast('数据保存成功')
     } catch (e) {
         alert('【错误】保存数据到 SQLite 失败: ' + e.message)
         throw e
@@ -179,33 +171,38 @@ async function deleteYiceRecordFromDB(recordId) {
 
 async function saveYiceCategoriesToDB() {
     await initYiceDB()
-    await yiceDB.execute({ database: DB_NAME, statements: 'DELETE FROM yice_categories;' })
 
     const uniqueCategories = [...new Set(ycCategories)]
-    for (const cat of uniqueCategories) {
-        await yiceDB.execute({
-            database: DB_NAME,
-            statements: "INSERT OR IGNORE INTO yice_categories (name) VALUES ('" + escapeSqlString(cat) + "')"
-        })
-    }
+    const categorySqls = uniqueCategories.map(cat =>
+        "INSERT OR IGNORE INTO yice_categories (name) VALUES ('" + escapeSqlString(cat) + "')"
+    )
+
+    await yiceDB.execute({
+        database: DB_NAME,
+        statements: 'DELETE FROM yice_categories;' +
+            (categorySqls.length ? ' ' + categorySqls.join('; ') : '')
+    })
 }
 
 async function replaceAllYiceDataInDB(records, categories) {
     await initYiceDB()
+
+    const recordSqls = records.map(r => buildYiceRecordInsertSql(r))
+    const allCategories = Array.isArray(categories) && categories.length > 0
+        ? [...new Set(categories)]
+        : [...DEFAULT_YICE_CATEGORIES]
+    const categorySqls = allCategories.map(cat =>
+        "INSERT OR IGNORE INTO yice_categories (name) VALUES ('" + escapeSqlString(cat) + "')"
+    )
+
     await yiceDB.execute({
         database: DB_NAME,
-        statements: 'DELETE FROM yice_records; DELETE FROM yice_categories;'
+        statements: 'DELETE FROM yice_records; DELETE FROM yice_categories;' +
+            (recordSqls.length ? ' ' + recordSqls.join('; ') : '') +
+            (categorySqls.length ? '; ' + categorySqls.join('; ') : '')
     })
 
-    for (const record of records) {
-        await insertYiceRecordToDB(record)
-    }
-
-    ycCategories = Array.isArray(categories) && categories.length > 0
-        ? [...new Set(categories)]
-        : ['事业', '感情', '财运', '学业', '健康', '其他']
-
-    await saveYiceCategoriesToDB()
+    ycCategories = allCategories
 }
 
 async function loadYiceData() {
@@ -216,15 +213,15 @@ async function loadYiceData() {
             ycRecords = data.records.map(normalizeYiceRecord)
             ycCategories = data.categories && data.categories.length > 0
                 ? [...new Set(data.categories.map(normalizeYiceText).filter(Boolean))]
-                : ['事业', '感情', '财运', '学业', '健康', '其他']
+                : [...DEFAULT_YICE_CATEGORIES]
         } else {
             ycRecords = []
-            ycCategories = ['事业', '感情', '财运', '学业', '健康', '其他']
+            ycCategories = [...DEFAULT_YICE_CATEGORIES]
         }
     } catch (e) {
         console.error('加载数据失败:', e)
         ycRecords = []
-        ycCategories = ['事业', '感情', '财运', '学业', '健康', '其他']
+        ycCategories = [...DEFAULT_YICE_CATEGORIES]
     }
 }
 

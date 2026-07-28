@@ -1,6 +1,7 @@
 // ==================== 易策状态层 ====================
+const DEFAULT_YICE_CATEGORIES = ['事业', '感情', '财运', '学业', '健康', '其他']
 let ycRecords = []
-let ycCategories = ['事业', '感情', '财运', '学业', '健康', '其他']
+let ycCategories = [...DEFAULT_YICE_CATEGORIES]
 let ycCurrentRecord = null
 let ycSelectedUpper = null
 let ycSelectedLower = null
