@@ -779,7 +779,6 @@
 
         <!-- 卦象详情页面 -->
         <div id="yiceDetailModule" class="practice-area">
-            <button class="back-btn" onclick="showYiceList()">← 返回列表</button>
             
             <div id="ycDetailContent" style="max-width: 800px; margin: 0 auto;"></div>
             
@@ -874,6 +873,10 @@
         <button type="button" class="cx-tool-sidebar-tab" id="cxToolSidebarTab">工具</button>
     </aside>
 
+    <aside id="cxYiceNoteSidebar" class="cx-tool-sidebar cx-tool-dock-right" style="display:none;">
+        <button type="button" class="cx-tool-sidebar-tab" id="cxYiceNoteTab">✎</button>
+    </aside>
+
     <div id="cxToolModal" class="cx-tool-modal" aria-hidden="true">
         <div class="cx-tool-modal-panel" role="dialog" aria-modal="true" aria-labelledby="cxToolModalTitle">
             <div class="cx-tool-modal-header">
@@ -898,6 +901,24 @@
                 <button type="button" class="cx-tool-modal-close" onclick="closeCxToolGuaModal()" aria-label="关闭卦象内容">✕</button>
             </div>
             <div class="cx-tool-gua-content" id="cxToolGuaContent"></div>
+        </div>
+    </div>
+
+    <div id="cxYiceNoteModal" class="cx-tool-modal" aria-hidden="true">
+        <div class="cx-tool-modal-panel" role="dialog" aria-modal="true">
+            <div class="cx-tool-modal-header">
+                <div>
+                    <div class="cx-tool-modal-title">解卦笔记</div>
+                    <div class="cx-tool-modal-subtitle" id="cxYiceNoteSubtitle"></div>
+                </div>
+                <button type="button" class="cx-tool-modal-close" onclick="closeCxYiceNoteModal()">✕</button>
+            </div>
+            <div class="cx-tool-modal-content" id="cxYiceNoteContent">
+                <textarea id="cxYiceNoteTextarea" style="width:100%;min-height:200px;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;resize:vertical;" placeholder="输入您的解卦思路..."></textarea>
+                <div style="text-align:center;margin-top:16px;">
+                    <button class="option-btn" onclick="saveCxYiceNote()">保存笔记</button>
+                </div>
+            </div>
         </div>
     </div>
 

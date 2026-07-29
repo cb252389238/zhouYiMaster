@@ -20,7 +20,7 @@ npx @capacitor/cli@5 copy android --inline
 ### 2. Set up Java environment
 
 ```bash
-export JAVA_HOME=/tmp/jdk-21.0.12+8
+export JAVA_HOME=$HOME/.local/jdk-21
 ```
 
 ### 3. Build release APK

@@ -482,11 +482,9 @@ function closeCxToolGuaModal() {
     modal.setAttribute('aria-hidden', 'true')
 }
 
-function bindCxToolSidebarEvents() {
-    if (cxToolSidebarBound) return
-
-    const sidebar = document.getElementById('cxToolSidebar')
-    const tab = document.getElementById('cxToolSidebarTab')
+function createDraggableSidebar(sidebarId, tabId, onClick) {
+    const sidebar = document.getElementById(sidebarId)
+    const tab = document.getElementById(tabId)
     if (!sidebar || !tab) return
 
     let longPressTimer = null
@@ -631,12 +629,19 @@ function bindCxToolSidebarEvents() {
         event.stopPropagation()
         if (suppressNextClick) return
 
-        toggleCxToolSidebar()
+        onClick()
     })
     tab.addEventListener('contextmenu', event => event.preventDefault())
+}
+
+function bindCxToolSidebarEvents() {
+    if (cxToolSidebarBound) return
+
+    createDraggableSidebar('cxToolSidebar', 'cxToolSidebarTab', toggleCxToolSidebar)
 
     const toolModal = document.getElementById('cxToolModal')
     const guaModal = document.getElementById('cxToolGuaModal')
+    const yiceNoteModal = document.getElementById('cxYiceNoteModal')
     if (toolModal) {
         toolModal.addEventListener('click', event => {
             if (event.target === toolModal) {
@@ -651,6 +656,13 @@ function bindCxToolSidebarEvents() {
             }
         })
     }
+    if (yiceNoteModal) {
+        yiceNoteModal.addEventListener('click', event => {
+            if (event.target === yiceNoteModal) {
+                closeCxYiceNoteModal()
+            }
+        })
+    }
 
     document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return
@@ -661,10 +673,113 @@ function bindCxToolSidebarEvents() {
         }
         if (toolModal && toolModal.style.display === 'flex') {
             closeCxToolModal()
+            return
+        }
+        if (yiceNoteModal && yiceNoteModal.style.display === 'flex') {
+            closeCxYiceNoteModal()
         }
     })
 
     cxToolSidebarBound = true
+}
+
+let cxYiceNoteSidebarBound = false
+let cxYiceNoteDraft = null
+
+function showCxYiceNoteSidebar() {
+    const sidebar = document.getElementById('cxYiceNoteSidebar')
+    if (!sidebar) return
+    sidebar.style.display = 'block'
+    if (!cxYiceNoteSidebarBound) {
+        createDraggableSidebar('cxYiceNoteSidebar', 'cxYiceNoteTab', openCxYiceNoteModal)
+        document.getElementById('cxYiceNoteTextarea')?.addEventListener('input', function () {
+            cxYiceNoteDraft = this.value
+        })
+        cxYiceNoteSidebarBound = true
+    }
+}
+
+function hideCxYiceNoteSidebar() {
+    cxYiceNoteDraft = null
+    const sidebar = document.getElementById('cxYiceNoteSidebar')
+    if (sidebar) sidebar.style.display = 'none'
+    closeCxYiceNoteModal()
+}
+
+function openCxYiceNoteModal() {
+    const modal = document.getElementById('cxYiceNoteModal')
+    const textarea = document.getElementById('cxYiceNoteTextarea')
+    const subtitle = document.getElementById('cxYiceNoteSubtitle')
+    if (!modal) return
+
+    if (textarea) {
+        if (cxYiceNoteDraft !== null) {
+            textarea.value = cxYiceNoteDraft
+        } else if (typeof ycRecords !== 'undefined' && window.yiceRecordId) {
+            const record = ycRecords.find(r => r.id === window.yiceRecordId)
+            textarea.value = (record && record.analysis) || ''
+            cxYiceNoteDraft = textarea.value
+        } else {
+            textarea.value = ''
+        }
+    }
+    if (subtitle) {
+        const guaNameEl = document.getElementById('cxGuaName')
+        subtitle.textContent = guaNameEl ? guaNameEl.textContent : ''
+    }
+
+    const sidebar = document.getElementById('cxYiceNoteSidebar')
+    if (sidebar) {
+        const rect = sidebar.getBoundingClientRect()
+        modal.style.setProperty('--cx-tool-origin-x', `${rect.left + rect.width / 2}px`)
+        modal.style.setProperty('--cx-tool-origin-y', `${rect.top + rect.height / 2}px`)
+    }
+
+    modal.style.display = 'flex'
+}
+
+function closeCxYiceNoteModal() {
+    const modal = document.getElementById('cxYiceNoteModal')
+    if (modal) modal.style.display = 'none'
+}
+
+async function saveCxYiceNote() {
+    const textarea = document.getElementById('cxYiceNoteTextarea')
+    if (!textarea) return
+
+    const analysis = textarea.value.trim()
+    const recordId = window.yiceRecordId
+    if (!recordId) {
+        showAppToast('无法找到对应的易策记录')
+        return
+    }
+
+    if (typeof runYiceAction !== 'function' || typeof queueYiceWrite !== 'function') {
+        showAppToast('易策模块未加载')
+        return
+    }
+
+    await runYiceAction('saveYiceNote', async function () {
+        await loadYiceData()
+        const recordIndex = ycRecords.findIndex(r => r.id === recordId)
+        if (recordIndex === -1) {
+            showAppToast('记录不存在')
+            return
+        }
+
+        const updatedRecord = normalizeYiceRecord({
+            ...ycRecords[recordIndex],
+            analysis: analysis,
+            updateTime: new Date().toISOString()
+        })
+
+        await updateYiceRecordInDB(updatedRecord)
+        ycRecords[recordIndex] = updatedRecord
+
+        cxYiceNoteDraft = null
+        closeCxYiceNoteModal()
+        showAppToast('笔记已保存')
+    })
 }
 
 function openCxToolModal(toolName) {
@@ -1255,6 +1370,12 @@ function showGuaDetail(gua, isRootGua = false) {
         setCxNajiaSelectedDate(new Date(window.yiceMeasureTime))
     }
 
+    if (window.fromYiceDetail && !window.fromGuaLibrary) {
+        showCxYiceNoteSidebar()
+    } else {
+        hideCxYiceNoteSidebar()
+    }
+
     document.getElementById('cxBaguaSelect').style.display = 'none'
     document.getElementById('cxGuaDetail').style.display = 'block'
 
@@ -1494,6 +1615,7 @@ function jumpToBianGua() {
 }
 
 function backToBaguaSelect() {
+    hideCxYiceNoteSidebar()
     cxGuaPageStack = []
     document.getElementById('cxBaguaSelect').style.display = 'block'
     document.getElementById('cxGuaDetail').style.display = 'none'

@@ -330,6 +330,26 @@ function goBack() {
         if (window.fromYiceDetail) { backToYiceDetail(); return }
     }
 
+    // 易策模块内子页面导航
+    if (currentModule === 'yice') {
+        if (document.getElementById('yiceDetailModule').classList.contains('active')) {
+            showYiceList()
+            return
+        }
+        if (document.getElementById('yiceEditModule').classList.contains('active')) {
+            showYiceDetail()
+            return
+        }
+        if (document.getElementById('yiceAddModule').classList.contains('active')) {
+            showYiceList()
+            return
+        }
+        if (document.getElementById('yiceCategoryModule').classList.contains('active')) {
+            showYiceList()
+            return
+        }
+    }
+
     // 弹模块栈
     if (navModuleStack.length > 0) {
         const prev = navModuleStack.pop()

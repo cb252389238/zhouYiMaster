@@ -724,6 +724,14 @@ function jumpToGuaDetailFromYice() {
 }
 
 async function backToYiceDetail() {
+    if (typeof hideCxYiceNoteSidebar === 'function') {
+        hideCxYiceNoteSidebar()
+    }
+    // 消费模块栈中的 yice 项（由 jumpToGuaDetailFromYice 推入）
+    if (typeof navModuleStack !== 'undefined' && navModuleStack.length > 0 && navModuleStack[navModuleStack.length - 1] === 'yice') {
+        navModuleStack.pop()
+    }
+    currentModule = 'yice'
     window.fromYiceDetail = false
     window.yiceDongyao = null
     window.yiceMeasureTime = null
@@ -809,10 +817,17 @@ function buildYiceDetailContent(record) {
     categoryNode.textContent = normalizeYiceText(record.category) || '未分类'
     wrapper.appendChild(createYiceDetailSection('分类', categoryNode))
 
+    const verifyWrapper = document.createElement('span')
+    verifyWrapper.style.cssText = 'position: relative; cursor: pointer;'
     const verifyNode = document.createElement('span')
     verifyNode.className = `yc-verify-badge ${normalizeYiceVerifyStatus(record.verifyStatus)}`
     verifyNode.textContent = getYiceVerifyStatusLabel(record.verifyStatus)
-    wrapper.appendChild(createYiceDetailSection('状态', verifyNode))
+    verifyWrapper.appendChild(verifyNode)
+    verifyWrapper.onclick = function (e) {
+        e.stopPropagation()
+        showVerifyStatusPicker(verifyWrapper, record)
+    }
+    wrapper.appendChild(createYiceDetailSection('状态', verifyWrapper))
 
     const contentNode = document.createElement('span')
     contentNode.textContent = normalizeYiceText(record.content) || '无'
@@ -872,6 +887,76 @@ function renderYiceDetailHtml() {
     const container = document.getElementById('ycDetailContent')
     container.innerHTML = ''
     container.appendChild(buildYiceDetailContent(ycCurrentRecord))
+}
+
+function showVerifyStatusPicker(anchor, record) {
+    document.querySelectorAll('.yc-status-picker').forEach(el => el.remove())
+
+    const statuses = [
+        { value: 'pending', label: '待验' },
+        { value: 'fulfilled', label: '应验' },
+        { value: 'wrong', label: '失误' }
+    ]
+
+    const picker = document.createElement('div')
+    picker.className = 'yc-status-picker'
+
+    statuses.forEach(s => {
+        const btn = document.createElement('button')
+        btn.className = 'yc-status-picker-btn ' + s.value
+        btn.textContent = s.label
+        if (normalizeYiceVerifyStatus(record.verifyStatus) === s.value) {
+            btn.classList.add('selected')
+        }
+        btn.onclick = async function (e) {
+            e.stopPropagation()
+            if (normalizeYiceVerifyStatus(record.verifyStatus) === s.value) {
+                picker.remove()
+                return
+            }
+            await runYiceAction('updateVerifyStatus', async function () {
+                const updatedRecord = normalizeYiceRecord({
+                    ...record,
+                    verifyStatus: s.value,
+                    updateTime: new Date().toISOString()
+                })
+                await queueYiceWrite(async function () {
+                    await loadYiceData()
+                    const recordIndex = ycRecords.findIndex(r => r.id === record.id)
+                    if (recordIndex === -1) return
+                    await updateYiceRecordInDB(updatedRecord)
+                    ycRecords[recordIndex] = updatedRecord
+                    ycCurrentRecord = ycRecords[recordIndex]
+                })
+                picker.remove()
+                renderYiceDetailHtml()
+                showAppToast('状态已更新为「' + s.label + '」')
+            })
+        }
+        picker.appendChild(btn)
+    })
+
+    document.body.appendChild(picker)
+
+    const rect = anchor.getBoundingClientRect()
+    const pickerRect = picker.getBoundingClientRect()
+    let top = rect.bottom + 4
+    let left = rect.left
+    if (left + pickerRect.width > window.innerWidth - 8) {
+        left = window.innerWidth - pickerRect.width - 8
+    }
+    if (left < 8) left = 8
+    picker.style.top = top + 'px'
+    picker.style.left = left + 'px'
+
+    setTimeout(function () {
+        document.addEventListener('click', function closePicker(e) {
+            if (!picker.contains(e.target)) {
+                picker.remove()
+                document.removeEventListener('click', closePicker)
+            }
+        })
+    }, 10)
 }
 
 function toggleYcDetailActions() {

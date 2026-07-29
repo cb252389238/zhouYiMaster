@@ -23,8 +23,19 @@ This is a vanilla HTML/JS/CSS single-page application for learning the I Ching (
 - Console.log for debugging - no formal logging framework
 - Test across different browsers (Chrome, Firefox, Edge)
 
-### No Build/Lint/Tests
-This is a vanilla JS project with no build system, tests, or linting. No commands available.
+### Release Build (APK)
+JDK 和 Android SDK 已安装在固定路径（`~/.local/`），无需重复下载：
+```bash
+export JAVA_HOME=$HOME/.local/jdk-21
+npx @capacitor/cli@5 copy android --inline
+cd android && ./gradlew assembleRelease
+cp app/build/outputs/apk/release/app-release.apk ../release/zhouYiMaster-<version>.apk
+```
+- Gradle 缓存：`~/.gradle/caches/`（持久化，~1.2G）
+- SDK 路径：`~/.local/android-sdk/`（由 `android/local.properties` 指定）
+
+### No Lint/Tests
+This is a vanilla JS project with no formal linting or test framework.
 
 ---
 
@@ -38,6 +49,7 @@ This is a vanilla JS project with no build system, tests, or linting. No command
 - `image/` - Static images (tongqian.jpg, 无字面.png, 有字面.png)
 
 ### JavaScript Conventions
+- **Language**: 始终使用中文与用户交互，所有回复、注释、UI 文本均使用中文
 - **Naming**: `camelCase` for variables/functions, `PascalCase` for objects/constants
   - Examples: `baguaData`, `pinyinMap`, `currentModule`, `gxCorrectAnswer`
 - **Const/Let**: Use `const` for data objects and constants, `let` for mutable state
