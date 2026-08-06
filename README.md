@@ -1,6 +1,7 @@
 # 易师
 
 易师是一个面向移动端的周易学习与占测记录工具，当前基于 `Vanilla HTML + CSS + JavaScript + Capacitor Android` 实现。
+想要安装包的直接在项目的release目录获取。
 
 项目包含以下核心模块：
 

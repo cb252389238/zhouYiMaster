@@ -818,7 +818,7 @@ function buildYiceDetailContent(record) {
     wrapper.appendChild(createYiceDetailSection('分类', categoryNode))
 
     const verifyWrapper = document.createElement('span')
-    verifyWrapper.style.cssText = 'position: relative; cursor: pointer;'
+    verifyWrapper.style.cssText = 'position: relative; display: inline-block; cursor: pointer;'
     const verifyNode = document.createElement('span')
     verifyNode.className = `yc-verify-badge ${normalizeYiceVerifyStatus(record.verifyStatus)}`
     verifyNode.textContent = getYiceVerifyStatusLabel(record.verifyStatus)
@@ -936,18 +936,9 @@ function showVerifyStatusPicker(anchor, record) {
         picker.appendChild(btn)
     })
 
-    document.body.appendChild(picker)
-
-    const rect = anchor.getBoundingClientRect()
-    const pickerRect = picker.getBoundingClientRect()
-    let top = rect.bottom + 4
-    let left = rect.left
-    if (left + pickerRect.width > window.innerWidth - 8) {
-        left = window.innerWidth - pickerRect.width - 8
-    }
-    if (left < 8) left = 8
-    picker.style.top = top + 'px'
-    picker.style.left = left + 'px'
+    anchor.appendChild(picker)
+    picker.style.top = 'calc(100% + 4px)'
+    picker.style.left = '0'
 
     setTimeout(function () {
         document.addEventListener('click', function closePicker(e) {
